@@ -24,7 +24,6 @@ namespace NetSnifferApp
 
             _itemsBuilder = new ActionBlock<Packet>(packet => AddItemCore(packet));
 
-
             #region Columns
             lstvPackets.Columns.Clear();
 
@@ -97,51 +96,24 @@ namespace NetSnifferApp
         {
             string[] subItems = new string[7];
             subItems[0] = "";
+            var analyzer = PacketAnalyzer.GetAnalyzer(packet);
 
-            var timestamp = PacketHelper.GetTimeStamp(packet);
-            subItems[1] = timestamp.ToString("HH:mm:ss.ffff");
-
-            var layer = PacketHelper.GetLayer(packet);
-            bool result;
-
-            if (layer == PacketHelper.OSILayer.TransportLayer)
+            if (analyzer != null)
             {
-                result = PacketHelper.GetTransportData(packet, out var protocol, out var payloadLength, out var sourcePort, out var destPort);
-                if (!result)
-                    return null;
-
-                subItems[2] = protocol.ToString();
-                if (sourcePort != 0 && destPort != 0)
-                {
-                    result = PacketHelper.GetIpData(packet, out payloadLength, out var sourceIp, out var destIp);
-                    if (!result)
-                        return null;
-                    subItems[3] = sourceIp + ":" + sourcePort.ToString();
-                    subItems[4] = destIp + ":" + destPort.ToString();
-                }
-                subItems[5] = payloadLength != 0 ? payloadLength.ToString() : "";
-            }
-
-            if (layer == PacketHelper.OSILayer.NetworkLayer)
-            {
-                result = PacketHelper.GetIpData(packet, out var payloadLength, out var source, out var dest);
-                if (!result)
-                    return null;
-                subItems[2] = "IP";
-                subItems[3] = source.ToString();
-                subItems[4] = dest.ToString();
-                subItems[5] = payloadLength != 0 ? payloadLength.ToString() : "";
-            }
-
-            if (layer == PacketHelper.OSILayer.BetweenDataLinkAndNetwork)
-            {
-                result = PacketHelper.GetArpData(packet, out var source, out var dest);
-                if (!result)
-                    return null;
-
-                subItems[2] = "ARP";
-                subItems[3] = source.ToString();
-                subItems[4] = dest.ToString();
+                //Time
+                var timestamp = analyzer.GetTimeStamp(packet);
+                subItems[1] = timestamp.ToString("HH:mm:ss.ffff");
+                //Protocol
+                subItems[2] = analyzer.GetProtocol(packet);
+                //Source
+                subItems[3] = analyzer.GetPacketSource(packet);
+                //"Destination
+                subItems[4] = analyzer.GetPacketDestination(packet);
+                //Payload Length
+                var payloadLength = analyzer.GetPayloadLength(packet);
+                subItems[5] = payloadLength == 0 ? string.Empty : payloadLength.ToString();
+                //Info
+                subItems[6] = analyzer.GetPacketInfo(packet);
             }
 
             return subItems;
