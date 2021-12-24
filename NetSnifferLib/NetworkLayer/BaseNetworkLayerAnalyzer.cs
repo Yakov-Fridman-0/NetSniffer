@@ -7,13 +7,30 @@ using NetSnifferLib.General;
 using NetSnifferLib.NetworkLayer;
 using PcapDotNet.Packets;
 using PcapDotNet.Packets.Ip;
+using PcapDotNet.Packets.IpV4;
+using PcapDotNet.Packets.IpV6;
 using System.Net;
 
 namespace NetSnifferLib.NetworkLayer
 {
     public abstract class BaseNetworkLayerAnalyzer<T> : BaseAnalyzer, INetworkLayerAnalyzer<T> where T : IpDatagram
     {
+        protected IPAddress GetIPAddress(IpV4Address address)
+        {
+            return IPAddress.Parse(address.ToString());
+        }
+
+        protected IPAddress GetIPAddress(IpV6Address address)
+        {
+            return IPAddress.Parse(address.ToString());
+        }
+
         public virtual string GetDatagramSourceString(T datagram)
+        {
+            return GetDatagramSource(datagram).ToString();
+        }
+
+        public override string GetDatagramSourceString(Datagram datagram)
         {
             return GetDatagramSource(datagram).ToString();
         }

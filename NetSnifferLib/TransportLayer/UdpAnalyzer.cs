@@ -26,9 +26,6 @@ namespace NetSnifferLib.TransportLayer
             return $"{GetSourcePort(datagram)} → {GetDestinationPort(datagram)} Len={GetPayloadLength(datagram)}";
         }
 
-        public override string GetDatagramProtoclString(Datagram datagram)
-        {
-            return "UDP";
-        }
+        public override string ProtocolString => "UDP";
     }
 }

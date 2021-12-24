@@ -581,7 +581,7 @@ namespace NetSnifferLib
         }
     }
 
-    public static class PacketAnalyzer
+    public static class PacketAnalyzer2
     {
         static readonly IPacketAnalyzer[] _analyzers;
 

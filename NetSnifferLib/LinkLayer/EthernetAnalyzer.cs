@@ -48,17 +48,14 @@ namespace NetSnifferLib.LinkLayer
 
             return ethernetDatagram.EtherType switch
             {
-                EthernetType.IpV4 => null,
-                EthernetType.IpV6 => null,
+                EthernetType.IpV4 => DatagramAnalyzer.IpV4Analyzer,
+                EthernetType.IpV6 => DatagramAnalyzer.IpV6Analyzer,
                 EthernetType.Arp => null,
                 EthernetType.VLanTaggedFrame => null,
                 _ => null
             };
         }
 
-        public override string GetDatagramProtoclString(Datagram datagram)
-        {
-            return "Ethernet";
-        }
+        public override string ProtocolString => "Etherent";
     }
 }

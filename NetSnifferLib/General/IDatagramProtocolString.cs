@@ -9,6 +9,6 @@ namespace NetSnifferLib.General
 {
     public interface IDatagramProtocolString
     {
-        public string GetDatagramProtoclString(Datagram datagram);
+        public abstract string ProtocolString { get; }
     }
 }

@@ -22,6 +22,6 @@ namespace NetSnifferLib.General
 
         public abstract IAnalyzer GetDatagramPayloadAnalyzer(Datagram datagram);
 
-        public abstract string GetDatagramProtoclString(Datagram datagram);
+        public abstract string ProtocolString { get; }
     }
 }

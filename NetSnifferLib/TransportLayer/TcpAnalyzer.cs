@@ -56,9 +56,6 @@ namespace NetSnifferLib.TransportLayer
             return string.Join(" ", new[] { portsInfo, flagsInfo, optionsInfo });
         }
 
-        public override string GetDatagramProtoclString(Datagram datagram)
-        {
-            return "TCP";
-        }
+        public override string ProtocolString => "TCP";
     }
 }
