@@ -5,10 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using PcapDotNet.Packets;
 
-namespace NetSnifferLib
+namespace NetSnifferLib.General
 {
-    public interface IDatagramInfo<T> where T: Datagram
+    public interface IDatagramProtocolString
     {
-        string GetDatagramInfo(T datagram);
+        public string GetDatagramProtoclString(Datagram datagram);
     }
 }

@@ -1,8 +1,9 @@
 ﻿using PcapDotNet.Packets.Transport;
+using NetSnifferLib.General;
 
 namespace NetSnifferLib.TransportLayer
 {
-    public interface ITransportLayerAnalyzer<T> : IDatagramInfo<T> where T : TransportDatagram
+    public interface ITransportLayerAnalyzer<T> : IAnalyzer where T : TransportDatagram
     {
         ushort GetSourcePort(T datagram);
 

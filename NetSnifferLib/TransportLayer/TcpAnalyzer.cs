@@ -5,11 +5,23 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using PcapDotNet.Packets.Transport;
+using PcapDotNet.Packets;
+using NetSnifferLib.General;
 
 namespace NetSnifferLib.TransportLayer
 {
     public class TcpAnalyzer : BaseTransportLayerAnalyzer<TcpDatagram>
     {
+        public override Datagram GetDatagramPayload(Datagram datagram)
+        {
+            return null;
+        }
+
+        public override IAnalyzer GetDatagramPayloadAnalyzer(Datagram datagram)
+        {
+            return null;
+        }
+
         public override string GetDatagramInfo(TcpDatagram datagram)
         {
             var portsInfo = $"{GetSourcePort(datagram)} → {GetDestinationPort(datagram)}";
@@ -42,6 +54,11 @@ namespace NetSnifferLib.TransportLayer
             var optionsInfo = string.Join(" ", from kvp in options select $"{ kvp.Key}: {kvp.Value}");
 
             return string.Join(" ", new[] { portsInfo, flagsInfo, optionsInfo });
+        }
+
+        public override string GetDatagramProtoclString(Datagram datagram)
+        {
+            return "TCP";
         }
     }
 }

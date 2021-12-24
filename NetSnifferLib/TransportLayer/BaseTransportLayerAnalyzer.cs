@@ -4,12 +4,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using PcapDotNet.Packets.Transport;
+using PcapDotNet.Packets;
+using NetSnifferLib.General;
 
 namespace NetSnifferLib.TransportLayer
 {
-    public abstract class BaseTransportLayerAnalyzer<T> : ITransportLayerAnalyzer<T> where T : TransportDatagram
+    public abstract class BaseTransportLayerAnalyzer<T> : BaseHostlessAnalyzer, ITransportLayerAnalyzer<T> where T : TransportDatagram
     {
+        public override abstract Datagram GetDatagramPayload(Datagram datagram);
+
         public abstract string GetDatagramInfo(T datagram);
+
+        public override string GetDatagramInfo(Datagram datagram)
+        {
+            return GetDatagramInfo((T)datagram);
+        }
 
         public virtual ushort GetDestinationPort(T datagram)
         {
