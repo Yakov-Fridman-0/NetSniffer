@@ -40,22 +40,6 @@ namespace NetSnifferLib
             return ToString(physicalAddress);
         }
     }
-    public interface IPacketAnalyzer
-    {
-        bool IsMatch(Packet packet);
-
-        DateTime GetTimeStamp(Packet packet);
-
-        string GetProtocol(Packet packet);
-
-        string GetPacketSource(Packet packet);
-       
-        string GetPacketDestination(Packet packet);
-
-        ushort GetPayloadLength(Packet packet);
-
-        string GetPacketInfo(Packet packet);
-    }
    
     public class ArpAnalyzer : IPacketAnalyzer
     {
@@ -63,29 +47,19 @@ namespace NetSnifferLib
         {
             return packet.Ethernet.EtherType == EthernetType.Arp;
         }
-        public DateTime GetTimeStamp(Packet packet)
-        {
-            return packet.Timestamp;
-        }
 
         public string GetProtocol(Packet packet)
         {
             return EthernetType.Arp.ToString();
         }
-        PhysicalAddress GetPhysicalAddress(ReadOnlyCollection<byte> address)
-        {
 
+        static PhysicalAddress GetPhysicalAddress(ReadOnlyCollection<byte> address)
+        {
             byte[] byteArray = new byte[address.Count];
             address.CopyTo(byteArray, 0);
             var physicalAddress = new PhysicalAddress(byteArray);
 
             return physicalAddress;
-        }
-        public string GetPacketDestination(Packet packet)
-        {
-            var ip = packet.Ethernet.Arp.TargetProtocolIpV4Address;
-            
-            return $"{ ip }";
         }
 
         public string GetPacketSource(Packet packet)
@@ -95,14 +69,221 @@ namespace NetSnifferLib
             return PacketHelper.ToString(address);
         }
 
-        public ushort GetPayloadLength(Packet packet)
+        public string GetPacketDestination(Packet packet)
+        {
+            var address = GetPhysicalAddress(packet.Ethernet.Arp.TargetHardwareAddress);
+
+            return PacketHelper.ToString(address);
+        }
+
+        public ushort GetLength(Packet packet)
         {
             return 0;
         }
 
+        static string GetPacketSourceIpV4(Packet packet)
+        {
+            var ip = packet.Ethernet.Arp.SenderProtocolIpV4Address;
+
+            return ip.ToString();
+        }
+
+        static string GetPacketDestinationIpV4(Packet packet)
+        {
+            var ip = packet.Ethernet.Arp.TargetProtocolIpV4Address;
+
+            return ip.ToString();
+        }
+
         public string GetPacketInfo(Packet packet)
         {
+            return packet.Ethernet.Arp.Operation switch
+            {
+                PcapDotNet.Packets.Arp.ArpOperation.Request => $"Who has {GetPacketDestinationIpV4(packet)}? Tell {GetPacketSourceIpV4(packet)}",
+
+                PcapDotNet.Packets.Arp.ArpOperation.Reply => $"{GetPacketSourceIpV4(packet)} is at {GetPacketSource(packet)}",
+
+                _ => string.Empty
+            };
+        }
+
+    }
+
+    public abstract class IpAnalyzer : IPacketAnalyzer
+    {
+        public abstract bool IsMatch(Packet packet);
+
+        public abstract string GetProtocol(Packet packet);
+
+        public abstract string GetPacketSource(Packet packet);
+
+        public abstract string GetPacketDestination(Packet packet);
+
+        public abstract ushort GetLength(Packet packet);
+
+        public abstract string GetPacketInfo(Packet packet);
+    }
+
+    public class IpV4Analyzer : IpAnalyzer
+    {
+        public override bool IsMatch(Packet packet)
+        {
+            return packet.Ethernet.EtherType == EthernetType.IpV4;
+        }
+
+        public override string GetProtocol(Packet packet)
+        {
+            return EthernetType.IpV4.ToString();
+        }
+
+        public override string GetPacketSource(Packet packet)
+        {
+            var ip = packet.Ethernet.IpV4.Source;
+
+            return ip.ToString();
+        }
+
+        public override string GetPacketDestination(Packet packet)
+        {
+            var ip = packet.Ethernet.IpV4.Destination;
+
+            return ip.ToString();
+        }
+
+        public override ushort GetLength(Packet packet)
+        {
+            var ethernetLayer = packet.Ethernet.ExtractLayer() as EthernetLayer;
+            var length = (ushort)ethernetLayer.Length;
+
+            return length;
+        }
+
+        public override string GetPacketInfo(Packet packet)
+        {
             return string.Empty;
+        }
+    }
+
+    public class IpV6Analyzer : IpAnalyzer
+    {
+        public override bool IsMatch(Packet packet)
+        {
+            return packet.Ethernet.EtherType == EthernetType.IpV6;
+        }
+
+        public override string GetProtocol(Packet packet)
+        {
+            return EthernetType.IpV6.ToString();
+        }
+
+        public override string GetPacketDestination(Packet packet)
+        {
+            //TODO: Check this
+            var ip = packet.Ethernet.IpV6.CurrentDestination;
+
+            return ip.ToString();
+        }
+
+        public override string GetPacketSource(Packet packet)
+        {
+            var ip = packet.Ethernet.IpV6.Source;
+
+            return ip.ToString();
+        }
+
+        public override ushort GetLength(Packet packet)
+        {
+            var ethernetLayer = packet.Ethernet.ExtractLayer() as EthernetLayer;
+            var length = (ushort)ethernetLayer.Length;
+
+            return length;
+        }
+
+        public override string GetPacketInfo(Packet packet)
+        {
+            return string.Empty;
+        }
+    }
+
+    public abstract class UdpAnalyzer : IPacketAnalyzer
+    {
+        public bool IsMatch(Packet packet)
+        {
+            return IpAnalyzer.IsMatch(packet) && ProtocolMatches(packet);
+        }
+
+        public string GetProtocol(Packet packet)
+        {
+            return IpV4Protocol.Udp.ToString();
+        }
+
+        public string GetPacketSource(Packet packet)
+        {
+            return IpAnalyzer.GetPacketSource(packet);
+        }
+        
+        public string GetPacketDestination(Packet packet)
+        {
+            return IpAnalyzer.GetPacketDestination(packet);
+        }
+
+        public ushort GetLength(Packet packet)
+        {
+            return (ushort)GetUdpDatagram(packet).Length;
+        }
+
+        protected ushort GetPacketSourcePort(Packet pakcet)
+        {
+            return GetUdpDatagram(pakcet).SourcePort;
+        }
+
+        protected ushort GetPacketDestinationPort(Packet pakcet)
+        {
+            return GetUdpDatagram(pakcet).DestinationPort;
+        }
+
+        public string GetPacketInfo(Packet packet)
+        {
+            return $"{GetUdpDatagram(packet)} → {GetPacketDestinationPort(packet)}, Len={GetLength(packet)}";
+        }
+
+        protected abstract bool ProtocolMatches(Packet packet);
+
+        protected abstract IpAnalyzer IpAnalyzer
+        {
+            get;
+        }
+
+        protected abstract PcapDotNet.Packets.Transport.UdpDatagram GetUdpDatagram(Packet packet);
+    }
+
+    public class UdpIpV4Analyzer : UdpAnalyzer
+    {
+        protected override bool ProtocolMatches(Packet packet)
+        {
+            return packet.Ethernet.IpV4.Protocol == IpV4Protocol.Udp;
+        }
+
+        protected override IpAnalyzer IpAnalyzer => PacketAnalyzer.IpV4Analyzer;
+
+        protected override PcapDotNet.Packets.Transport.UdpDatagram GetUdpDatagram(Packet packet)
+        {
+            return packet.Ethernet.IpV4.Udp;
+        }
+    }
+
+    public class UdpIpV6Analyzer : UdpAnalyzer
+    {
+        protected override bool ProtocolMatches(Packet packet)
+        {
+            return packet.Ethernet.IpV6.Protocol == IpV4Protocol.Udp;
+        }
+
+        protected override IpAnalyzer IpAnalyzer => PacketAnalyzer.IpV6Analyzer;
+
+        protected override PcapDotNet.Packets.Transport.UdpDatagram GetUdpDatagram(Packet packet)
+        {
+            return packet.Ethernet.IpV6.Udp;
         }
 
     }
@@ -116,20 +297,14 @@ namespace NetSnifferLib
              DHCP messages that a client sends to a server are sent to well-known port 67 (UDP—Bootstrap Protocol and DHCP). 
              DHCP Messages that a server sends to a client are sent to port 68.
              */
-            return packet.Ethernet.EtherType == EthernetType.IpV4 
-                && packet.Ethernet.IpV4.Protocol == IpV4Protocol.Udp
+            return Pack
                 && (packet.Ethernet.IpV4.Udp.DestinationPort == 67 || packet.Ethernet.IpV4.Udp.DestinationPort == 68)
                 && (packet.Ethernet.IpV4.Udp.SourcePort == 67 || packet.Ethernet.IpV4.Udp.SourcePort == 68);
         }
 
         public string GetProtocol(Packet packet)
         {
-            return "DHCP(v4)";
-        }
-
-        public DateTime GetTimeStamp(Packet packet)
-        {
-            return packet.Timestamp;
+            return "DHCPv4";
         }
 
         public string GetPacketDestination(Packet packet)
@@ -149,190 +324,9 @@ namespace NetSnifferLib
             return $"{ip}:{port}";
         }
 
-        public ushort GetPayloadLength(Packet packet)
+        public ushort GetLength(Packet packet)
         {
             return (ushort)packet.Ethernet.IpV4.Udp.Length;
-        }
-
-        public string GetPacketInfo(Packet packet)
-        {
-            return string.Empty;
-        }
-    }
-
-    public class UdpIpV4Analyzer : IPacketAnalyzer
-    {
-        public bool IsMatch(Packet packet)
-        {
-            return packet.Ethernet.EtherType == PcapDotNet.Packets.Ethernet.EthernetType.IpV4 && packet.Ethernet.IpV4.Protocol == IpV4Protocol.Udp;
-        }
-
-        public string GetProtocol(Packet packet)
-        {
-            return IpV4Protocol.Udp.ToString();
-        }
-
-        public DateTime GetTimeStamp(Packet packet)
-        {
-            return packet.Timestamp;
-        }
-
-        public string GetPacketDestination(Packet packet)
-        {
-            var ip = packet.Ethernet.IpV4.Destination;
-            var port = packet.Ethernet.IpV4.Udp.DestinationPort;
-
-            return $"{ip}:{port}";
-        }
-
-        public string GetPacketSource(Packet packet)
-        {
-            var ip = packet.Ethernet.IpV4.Source;
-            var port = packet.Ethernet.IpV4.Udp.SourcePort;
-            var length = packet.Ethernet.IpV4.Udp.Length;
-
-            return $"{ip}:{port}";
-        }
-
-        public ushort GetPayloadLength(Packet packet)
-        {
-            return (ushort)packet.Ethernet.IpV4.Udp.Length;
-        }
-
-        public string GetPacketInfo(Packet packet)
-        {
-            return string.Empty;
-        }
-
-    }
-
-    public class HTTP80Analyzer : IPacketAnalyzer
-    {
-        public bool IsMatch(Packet packet)
-        {
-            return packet.Ethernet.EtherType == EthernetType.IpV4
-                && packet.Ethernet.IpV4.Protocol == IpV4Protocol.Tcp
-                && (packet.Ethernet.IpV4.Tcp.SourcePort == 80 || packet.Ethernet.IpV4.Tcp.DestinationPort == 80);
-        }
-
-        public string GetProtocol(Packet packet)
-        {
-            return "HTTPS";
-        }
-
-        public DateTime GetTimeStamp(Packet packet)
-        {
-            return packet.Timestamp;
-        }
-
-        public string GetPacketDestination(Packet packet)
-        {
-            var ip = packet.Ethernet.IpV4.Destination;
-            var port = packet.Ethernet.IpV4.Tcp.DestinationPort;
-
-            return $"{ip}:{port}";
-        }
-
-        public string GetPacketSource(Packet packet)
-        {
-            var ip = packet.Ethernet.IpV4.Source;
-            var port = packet.Ethernet.IpV4.Tcp.SourcePort;
-
-            return $"{ip}:{port}";
-        }
-
-        public ushort GetPayloadLength(Packet packet)
-        {
-            return (ushort)packet.Ethernet.IpV4.Tcp.Length;
-        }
-
-        public string GetPacketInfo(Packet packet)
-        {
-            return string.Empty;
-        }
-    }
-    public class HTTPS443Analyzer : IPacketAnalyzer
-    {
-        public bool IsMatch(Packet packet)
-        {
-            return packet.Ethernet.EtherType == EthernetType.IpV4 
-                && packet.Ethernet.IpV4.Protocol == IpV4Protocol.Tcp
-                && (packet.Ethernet.IpV4.Tcp.SourcePort == 443 || packet.Ethernet.IpV4.Tcp.DestinationPort == 443);
-        }
-
-        public string GetProtocol(Packet packet)
-        {
-            return "HTTPS";
-        }
-
-        public DateTime GetTimeStamp(Packet packet)
-        {
-            return packet.Timestamp;
-        }
-
-        public string GetPacketDestination(Packet packet)
-        {
-            var ip = packet.Ethernet.IpV4.Destination;
-            var port = packet.Ethernet.IpV4.Tcp.DestinationPort;
-
-            return $"{ip}:{port}";
-        }
-
-        public string GetPacketSource(Packet packet)
-        {
-            var ip = packet.Ethernet.IpV4.Source;
-            var port = packet.Ethernet.IpV4.Tcp.SourcePort;
-
-            return $"{ip}:{port}";
-        }
-
-        public ushort GetPayloadLength(Packet packet)
-        {
-            return (ushort)packet.Ethernet.IpV4.Tcp.Length;
-        }
-
-        public string GetPacketInfo(Packet packet)
-        {
-            return string.Empty;
-        }
-    }
-  
-    public class TcpIpV4Analyzer : IPacketAnalyzer
-    {
-        public bool IsMatch(Packet packet)
-        {
-            return packet.Ethernet.EtherType == EthernetType.IpV4 && packet.Ethernet.IpV4.Protocol == IpV4Protocol.Tcp;
-        }
-
-        public string GetProtocol(Packet packet)
-        {
-            return IpV4Protocol.Tcp.ToString();
-        }
-
-        public DateTime GetTimeStamp(Packet packet)
-        {
-            return packet.Timestamp;
-        }
-
-        public string GetPacketDestination(Packet packet)
-        {
-            var ip = packet.Ethernet.IpV4.Destination;
-            var port = packet.Ethernet.IpV4.Tcp.DestinationPort;
-          
-            return $"{ip}:{port}";
-        }
-
-        public string GetPacketSource(Packet packet)
-        {
-            var ip = packet.Ethernet.IpV4.Source;
-            var port = packet.Ethernet.IpV4.Tcp.SourcePort;
-          
-            return $"{ip}:{port}";
-        }
-
-        public ushort GetPayloadLength(Packet packet)
-        {
-            return (ushort)packet.Ethernet.IpV4.Tcp.Length;
         }
 
         public string GetPacketInfo(Packet packet)
@@ -357,12 +351,7 @@ namespace NetSnifferLib
 
         public string GetProtocol(Packet packet)
         {
-            return "DHCP(v6)";
-        }
-
-        public DateTime GetTimeStamp(Packet packet)
-        {
-            return packet.Timestamp;
+            return "DHCPv6";
         }
 
         public string GetPacketDestination(Packet packet)
@@ -381,7 +370,7 @@ namespace NetSnifferLib
             return $"{ip}";
         }
 
-        public ushort GetPayloadLength(Packet packet)
+        public ushort GetLength(Packet packet)
         {
             var ethernetLayer = packet.Ethernet.ExtractLayer() as EthernetLayer;
             var length = (ushort)ethernetLayer.Length;
@@ -394,46 +383,40 @@ namespace NetSnifferLib
             return string.Empty;
         }
     }
-   
-    public class IpV6Analyzer : IPacketAnalyzer
+
+    public class HTTP80Analyzer : IPacketAnalyzer
     {
         public bool IsMatch(Packet packet)
         {
-            return packet.Ethernet.EtherType == EthernetType.IpV6;
+            return packet.Ethernet.EtherType == EthernetType.IpV4
+                && packet.Ethernet.IpV4.Protocol == IpV4Protocol.Tcp
+                && (packet.Ethernet.IpV4.Tcp.SourcePort == 80 || packet.Ethernet.IpV4.Tcp.DestinationPort == 80);
         }
 
         public string GetProtocol(Packet packet)
         {
-            return EthernetType.IpV6.ToString();
+            return "HTTPS";
         }
 
-        public DateTime GetTimeStamp(Packet packet)
-        {
-            return packet.Timestamp;
-        }
-        
         public string GetPacketDestination(Packet packet)
         {
-            var ethernetLayer = packet.Ethernet.ExtractLayer() as EthernetLayer;
-            var ip = ethernetLayer.Destination;
+            var ip = packet.Ethernet.IpV4.Destination;
+            var port = packet.Ethernet.IpV4.Tcp.DestinationPort;
 
-            return $"{ip}";
+            return $"{ip}:{port}";
         }
 
         public string GetPacketSource(Packet packet)
         {
-            var ethernetLayer = packet.Ethernet.ExtractLayer() as EthernetLayer;
-            var ip = ethernetLayer.Source;
+            var ip = packet.Ethernet.IpV4.Source;
+            var port = packet.Ethernet.IpV4.Tcp.SourcePort;
 
-            return $"{ip}";
+            return $"{ip}:{port}";
         }
 
-        public ushort GetPayloadLength(Packet packet)
+        public ushort GetLength(Packet packet)
         {
-            var ethernetLayer = packet.Ethernet.ExtractLayer() as EthernetLayer;
-            var length = (ushort)ethernetLayer.Length;
-          
-            return length;
+            return (ushort)packet.Ethernet.IpV4.Tcp.Length;
         }
 
         public string GetPacketInfo(Packet packet)
@@ -442,6 +425,124 @@ namespace NetSnifferLib
         }
     }
 
+    public class HTTPS443Analyzer : IPacketAnalyzer
+    {
+        public bool IsMatch(Packet packet)
+        {
+            return packet.Ethernet.EtherType == EthernetType.IpV4 
+                && packet.Ethernet.IpV4.Protocol == IpV4Protocol.Tcp
+                && (packet.Ethernet.IpV4.Tcp.SourcePort == 443 || packet.Ethernet.IpV4.Tcp.DestinationPort == 443);
+        }
+
+        public string GetProtocol(Packet packet)
+        {
+            return "HTTPS";
+        }
+
+        public string GetPacketDestination(Packet packet)
+        {
+            var ip = packet.Ethernet.IpV4.Destination;
+            var port = packet.Ethernet.IpV4.Tcp.DestinationPort;
+
+            return $"{ip}:{port}";
+        }
+
+        public string GetPacketSource(Packet packet)
+        {
+            var ip = packet.Ethernet.IpV4.Source;
+            var port = packet.Ethernet.IpV4.Tcp.SourcePort;
+
+            return $"{ip}:{port}";
+        }
+
+        public ushort GetLength(Packet packet)
+        {
+            return (ushort)packet.Ethernet.IpV4.Tcp.Length;
+        }
+
+        public string GetPacketInfo(Packet packet)
+        {
+            return string.Empty;
+        }
+    }
+  
+    public class TcpIpV4Analyzer : IPacketAnalyzer
+    {
+        public bool IsMatch(Packet packet)
+        {
+            return packet.Ethernet.EtherType == EthernetType.IpV4 && packet.Ethernet.IpV4.Protocol == IpV4Protocol.Tcp;
+        }
+
+        public string GetProtocol(Packet packet)
+        {
+            return IpV4Protocol.Tcp.ToString();
+        }
+
+        public string GetPacketDestination(Packet packet)
+        {
+            var ip = packet.Ethernet.IpV4.Destination;
+            var port = packet.Ethernet.IpV4.Tcp.DestinationPort;
+          
+            return $"{ip}:{port}";
+        }
+
+        public string GetPacketSource(Packet packet)
+        {
+            var ip = packet.Ethernet.IpV4.Source;
+            var port = packet.Ethernet.IpV4.Tcp.SourcePort;
+          
+            return $"{ip}:{port}";
+        }
+
+        public ushort GetLength(Packet packet)
+        {
+            return (ushort)packet.Ethernet.IpV4.Tcp.Length;
+        }
+
+        public string GetPacketInfo(Packet packet)
+        {
+            return string.Empty;
+        }
+    }
+
+    public class TcpIpV6Analyzer : IPacketAnalyzer
+    {
+        public bool IsMatch(Packet packet)
+        {
+            return packet.Ethernet.EtherType == EthernetType.IpV4 && packet.Ethernet.IpV4.Protocol == IpV4Protocol.Tcp;
+        }
+
+        public string GetProtocol(Packet packet)
+        {
+            return IpV4Protocol.Tcp.ToString();
+        }
+
+        public string GetPacketDestination(Packet packet)
+        {
+            var ip = packet.Ethernet.IpV4.Destination;
+            var port = packet.Ethernet.IpV4.Tcp.DestinationPort;
+
+            return $"{ip}:{port}";
+        }
+
+        public string GetPacketSource(Packet packet)
+        {
+            var ip = packet.Ethernet.IpV4.Source;
+            var port = packet.Ethernet.IpV4.Tcp.SourcePort;
+
+            return $"{ip}:{port}";
+        }
+
+        public ushort GetLength(Packet packet)
+        {
+            return (ushort)packet.Ethernet.IpV4.Tcp.Length;
+        }
+
+        public string GetPacketInfo(Packet packet)
+        {
+            return string.Empty;
+        }
+    }
 
     public class GeneralAnalyzer : IPacketAnalyzer
     {
@@ -455,10 +556,6 @@ namespace NetSnifferLib
             return packet.Ethernet.EtherType.ToString();
         }
 
-        public DateTime GetTimeStamp(Packet packet)
-        {
-            return packet.Timestamp;
-        }
 
         public string GetPacketDestination(Packet packet)
         {
@@ -470,7 +567,7 @@ namespace NetSnifferLib
             return PacketHelper.ToString(packet.Ethernet.Source);
         }
 
-        public ushort GetPayloadLength(Packet packet)
+        public ushort GetLength(Packet packet)
         {
             var ethernetLayer = packet.Ethernet.ExtractLayer() as EthernetLayer;
             var length = (ushort)ethernetLayer.Length;
@@ -483,28 +580,61 @@ namespace NetSnifferLib
             return string.Empty;
         }
     }
+
     public static class PacketAnalyzer
     {
-        static IPacketAnalyzer[] _analyzers;
+        static readonly IPacketAnalyzer[] _analyzers;
+
+        static readonly IpV4Analyzer _ipV4Analyzer;
+        static readonly IpV6Analyzer _ipV6Analyzer;
+
+        static readonly UdpIpV4Analyzer _udpV4Analyzer;
+        static readonly UdpIpV6Analyzer _udpV6Analyzer;
+
         static PacketAnalyzer()
         {
+            _ipV4Analyzer = new IpV4Analyzer();
+            _ipV6Analyzer = new IpV6Analyzer();
+
+            _udpV4Analyzer = new UdpIpV4Analyzer();
+            _udpV6Analyzer = new UdpIpV6Analyzer();
+
             _analyzers = new IPacketAnalyzer[] {
                 new ArpAnalyzer(),
-                new DHCPv4Analyzer(),
-                new UdpIpV4Analyzer(),
+
                 new HTTP80Analyzer(),
                 new HTTPS443Analyzer(),
-                new TcpIpV4Analyzer(),
+
                 new DHCPv6V6Analyzer(),
-                new IpV6Analyzer(),
+                _udpV4Analyzer,
+
+                new TcpIpV6Analyzer(),
+                _ipV6Analyzer,
+
+                new DHCPv4Analyzer(),
+                new UdpIpV4Analyzer(),
+
+                new TcpIpV4Analyzer(),
+                _ipV4Analyzer,
+
                 new GeneralAnalyzer(),
             };
         }
+
+        public static IpV4Analyzer IpV4Analyzer
+        {
+            get => _ipV4Analyzer;
+        }
+
+        public static IpV6Analyzer IpV6Analyzer
+        {
+            get => _ipV6Analyzer;
+        }
+
         public static IPacketAnalyzer GetAnalyzer(Packet packet)
         {
             var analyzer = _analyzers.FirstOrDefault(item => item.IsMatch(packet));
             return analyzer;
         }
     }
-
 }

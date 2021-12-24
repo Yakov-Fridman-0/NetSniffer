@@ -110,7 +110,7 @@ namespace NetSnifferApp
                 //"Destination
                 subItems[4] = analyzer.GetPacketDestination(packet);
                 //Payload Length
-                var payloadLength = analyzer.GetPayloadLength(packet);
+                var payloadLength = analyzer.GetLength(packet);
                 subItems[5] = payloadLength == 0 ? string.Empty : payloadLength.ToString();
                 //Info
                 subItems[6] = analyzer.GetPacketInfo(packet);

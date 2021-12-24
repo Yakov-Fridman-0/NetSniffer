@@ -10,7 +10,6 @@ namespace NetSnifferLib
 {
     public class NetSniffer : IDisposable
     {
-
         private LivePacketCommunicator _communicator;
 
         private readonly ActionBlock<Packet> _eventRaiser;
