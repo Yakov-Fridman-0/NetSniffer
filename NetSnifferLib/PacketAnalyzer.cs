@@ -30,15 +30,17 @@ namespace NetSnifferLib
 
             Datagram datagram = packet.Ethernet;
             IAnalyzer analyzer = DatagramAnalyzer.EthernetAnalyzer;
+            IAnalyzer nextAnalyzer;
 
-            string protocol = analyzer.ProtocolString;
+            string protocol = default;
 
             while (analyzer is not null)
             {
-                datagram = analyzer.GetDatagramPayload(datagram);
-                analyzer = analyzer.GetDatagramPayloadAnalyzer(datagram);
+                protocol = analyzer.ProtocolString;
 
-                protocol = analyzer.GetDatagramSourceString(datagram);
+                nextAnalyzer = analyzer.GetDatagramPayloadAnalyzer(datagram);
+                datagram = analyzer.GetDatagramPayload(datagram);
+                analyzer = nextAnalyzer; 
             }
 
             return protocol;
@@ -51,16 +53,18 @@ namespace NetSnifferLib
 
             Datagram datagram = packet.Ethernet;
             IAnalyzer analyzer = DatagramAnalyzer.EthernetAnalyzer;
+            IAnalyzer nextAnalyzer;
 
-            string source = analyzer.GetDatagramSourceString(datagram);
+            string source = string.Empty;
 
             while (analyzer is not null)
             {
-                datagram = analyzer.GetDatagramPayload(datagram);
-                analyzer = analyzer.GetDatagramPayloadAnalyzer(datagram);
-
                 if (analyzer.SupportsHosts)
                     source = analyzer.GetDatagramSourceString(datagram);
+
+                nextAnalyzer = analyzer.GetDatagramPayloadAnalyzer(datagram);
+                datagram = analyzer.GetDatagramPayload(datagram);
+                analyzer = nextAnalyzer;
             }
 
             return source;
@@ -73,16 +77,18 @@ namespace NetSnifferLib
 
             Datagram datagram = packet.Ethernet;
             IAnalyzer analyzer = DatagramAnalyzer.EthernetAnalyzer;
+            IAnalyzer nextAnalyzer;
 
-            string destination = analyzer.GetDatagramDestinationString(datagram);
+            string destination = default;
 
             while (analyzer is not null)
             {
-                datagram = analyzer.GetDatagramPayload(datagram);
-                analyzer = analyzer.GetDatagramPayloadAnalyzer(datagram);
-
                 if (analyzer.SupportsHosts)
                     destination = analyzer.GetDatagramDestinationString(datagram);
+
+                nextAnalyzer = analyzer.GetDatagramPayloadAnalyzer(datagram);
+                datagram = analyzer.GetDatagramPayload(datagram);
+                analyzer = nextAnalyzer;
             }
 
             return destination;
@@ -103,15 +109,17 @@ namespace NetSnifferLib
 
             Datagram datagram = packet.Ethernet;
             IAnalyzer analyzer = DatagramAnalyzer.EthernetAnalyzer;
+            IAnalyzer nextAnalyzer;
 
-            string info = analyzer.GetDatagramInfo(datagram);
+            string info = default;
 
             while (analyzer is not null)
             {
-                datagram = analyzer.GetDatagramPayload(datagram);
-                analyzer = analyzer.GetDatagramPayloadAnalyzer(datagram);
-
                 info = analyzer.GetDatagramInfo(datagram);
+
+                nextAnalyzer = analyzer.GetDatagramPayloadAnalyzer(datagram);
+                datagram = analyzer.GetDatagramPayload(datagram);
+                analyzer = nextAnalyzer;
             }
 
             return info;
