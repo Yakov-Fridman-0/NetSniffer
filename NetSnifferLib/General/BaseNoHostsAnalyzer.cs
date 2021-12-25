@@ -7,18 +7,18 @@ using System.Threading.Tasks;
 
 namespace NetSnifferLib.General
 {
-    public abstract class BaseHostlessAnalyzer : BaseAnalyzer
+    public abstract class BaseNoHostsAnalyzer : BaseAnalyzer
     {
-        public override bool SupportsHosts => false;
+        public override bool SupportsHosts => HostsNotSupported.SupportsHosts;
 
         public override string GetDatagramSourceString(Datagram datagram)
         {
-            throw new NotImplementedException();
+            return HostsNotSupported.GetDatagramSourceString(datagram);
         }
 
         public override string GetDatagramDestinationString(Datagram datagram)
         {
-            throw new NotImplementedException();
+            return HostsNotSupported.GetDatagramDestinationString(datagram);
         }
     }
 }

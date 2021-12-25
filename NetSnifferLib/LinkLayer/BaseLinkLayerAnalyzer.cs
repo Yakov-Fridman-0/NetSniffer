@@ -55,7 +55,7 @@ namespace NetSnifferLib.LinkLayer
 
         public override string GetDatagramDestinationString(Datagram datagram)
         {
-            return GetDatagramSourceString((T)datagram);
+            return GetDatagramDestinationString((T)datagram);
         }
     }
 }

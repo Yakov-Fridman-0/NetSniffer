@@ -42,7 +42,7 @@ namespace NetSnifferLib.NetworkLayer
 
         public override string GetDatagramDestinationString(Datagram datagram)
         {
-            return GetDatagramSourceString((T)datagram);
+            return GetDatagramDestinationString((T)datagram);
         }
 
         public abstract string GetDatagramInfo(T datagram);

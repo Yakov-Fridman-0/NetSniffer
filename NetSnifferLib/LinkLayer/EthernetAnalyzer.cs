@@ -50,8 +50,7 @@ namespace NetSnifferLib.LinkLayer
             {
                 EthernetType.IpV4 => DatagramAnalyzer.IpV4Analyzer,
                 EthernetType.IpV6 => DatagramAnalyzer.IpV6Analyzer,
-                EthernetType.Arp => null,
-                EthernetType.VLanTaggedFrame => null,
+                EthernetType.Arp => DatagramAnalyzer.ArpAnalyzer,
                 _ => null
             };
         }

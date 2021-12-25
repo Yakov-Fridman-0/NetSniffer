@@ -40,8 +40,8 @@ namespace NetSnifferLib
 
                 nextAnalyzer = analyzer.GetDatagramPayloadAnalyzer(datagram);
                 datagram = analyzer.GetDatagramPayload(datagram);
-                analyzer = nextAnalyzer; 
-            }
+                analyzer = nextAnalyzer;
+            } 
 
             return protocol;
         }
@@ -55,7 +55,7 @@ namespace NetSnifferLib
             IAnalyzer analyzer = DatagramAnalyzer.EthernetAnalyzer;
             IAnalyzer nextAnalyzer;
 
-            string source = string.Empty;
+            string source = default;
 
             while (analyzer is not null)
             {
@@ -65,7 +65,7 @@ namespace NetSnifferLib
                 nextAnalyzer = analyzer.GetDatagramPayloadAnalyzer(datagram);
                 datagram = analyzer.GetDatagramPayload(datagram);
                 analyzer = nextAnalyzer;
-            }
+            } 
 
             return source;
         }
@@ -81,7 +81,7 @@ namespace NetSnifferLib
 
             string destination = default;
 
-            while (analyzer is not null)
+            while(analyzer is not null)
             {
                 if (analyzer.SupportsHosts)
                     destination = analyzer.GetDatagramDestinationString(datagram);
@@ -89,7 +89,7 @@ namespace NetSnifferLib
                 nextAnalyzer = analyzer.GetDatagramPayloadAnalyzer(datagram);
                 datagram = analyzer.GetDatagramPayload(datagram);
                 analyzer = nextAnalyzer;
-            }
+            } 
 
             return destination;
         }

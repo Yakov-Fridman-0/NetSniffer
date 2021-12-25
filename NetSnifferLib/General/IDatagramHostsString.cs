@@ -9,7 +9,7 @@ namespace NetSnifferLib.General
 {
     public interface IDatagramHostsString
     {
-        public string GetDatagramSourceString(Datagram datagram);
+        public abstract string GetDatagramSourceString(Datagram datagram);
 
         public string GetDatagramDestinationString(Datagram datagram);
 

@@ -9,8 +9,13 @@ namespace NetSnifferLib.General
 {
     public interface IDatagramPayload
     {
-        public Datagram GetDatagramPayload(Datagram datagram);
+        public abstract Datagram GetDatagramPayload(Datagram datagram);
 
-        public IAnalyzer GetDatagramPayloadAnalyzer(Datagram datagram);
+        public abstract IAnalyzer GetDatagramPayloadAnalyzer(Datagram datagram);
+
+        public bool SupportsPayload
+        {
+            get;
+        }
     }
 }

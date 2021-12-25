@@ -9,7 +9,7 @@ using NetSnifferLib.General;
 
 namespace NetSnifferLib.TransportLayer
 {
-    public abstract class BaseTransportLayerAnalyzer<T> : BaseHostlessAnalyzer, ITransportLayerAnalyzer<T> where T : TransportDatagram
+    public abstract class BaseTransportLayerAnalyzer<T> : BaseNoHostsAnalyzer, ITransportLayerAnalyzer<T> where T : TransportDatagram
     {
         public override abstract Datagram GetDatagramPayload(Datagram datagram);
 

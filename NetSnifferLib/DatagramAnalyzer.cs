@@ -11,6 +11,8 @@ namespace NetSnifferLib
     {
         static readonly LinkLayer.EthernetAnalyzer _ethernetAnalyzer;
 
+        static readonly Miscellaneous.ArpAnalyzer _arpAnalyzer;
+
         static readonly NetworkLayer.IpV4Analyzer _ipV4Analyzer;
         static readonly NetworkLayer.IpV6Analyzer _ipV6Analyzer;
 
@@ -21,6 +23,8 @@ namespace NetSnifferLib
         {
             _ethernetAnalyzer = new LinkLayer.EthernetAnalyzer();
 
+            _arpAnalyzer = new Miscellaneous.ArpAnalyzer();
+
             _ipV4Analyzer = new NetworkLayer.IpV4Analyzer();
             _ipV6Analyzer = new NetworkLayer.IpV6Analyzer();
 
@@ -29,6 +33,8 @@ namespace NetSnifferLib
         }
 
         public static LinkLayer.EthernetAnalyzer EthernetAnalyzer => _ethernetAnalyzer;
+
+        public static Miscellaneous.ArpAnalyzer ArpAnalyzer => _arpAnalyzer;
 
         public static NetworkLayer.IpV4Analyzer IpV4Analyzer => _ipV4Analyzer;
 

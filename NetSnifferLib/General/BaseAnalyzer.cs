@@ -11,6 +11,8 @@ namespace NetSnifferLib.General
     {
         public virtual bool SupportsHosts => true;
 
+        public virtual bool SupportsPayload => true;
+
         public abstract string GetDatagramSourceString(Datagram datagram);
 
         public abstract string GetDatagramDestinationString(Datagram datagram);
