@@ -264,7 +264,7 @@ namespace NetSnifferLib
             return packet.Ethernet.IpV4.Protocol == IpV4Protocol.Udp;
         }
 
-        protected override IpAnalyzer IpAnalyzer => PacketAnalyzer.IpV4Analyzer;
+        protected override IpAnalyzer IpAnalyzer => PacketAnalyzer2.IpV4Analyzer;
 
         protected override PcapDotNet.Packets.Transport.UdpDatagram GetUdpDatagram(Packet packet)
         {
@@ -276,10 +276,11 @@ namespace NetSnifferLib
     {
         protected override bool ProtocolMatches(Packet packet)
         {
-            return packet.Ethernet.IpV6.Protocol == IpV4Protocol.Udp;
+            return false;
+            //return packet.Ethernet.IpV6.Protocol == IpV4Protocol.Udp;
         }
 
-        protected override IpAnalyzer IpAnalyzer => PacketAnalyzer.IpV6Analyzer;
+        protected override IpAnalyzer IpAnalyzer => PacketAnalyzer2.IpV6Analyzer;
 
         protected override PcapDotNet.Packets.Transport.UdpDatagram GetUdpDatagram(Packet packet)
         {
@@ -297,7 +298,7 @@ namespace NetSnifferLib
              DHCP messages that a client sends to a server are sent to well-known port 67 (UDP—Bootstrap Protocol and DHCP). 
              DHCP Messages that a server sends to a client are sent to port 68.
              */
-            return Pack
+            return true
                 && (packet.Ethernet.IpV4.Udp.DestinationPort == 67 || packet.Ethernet.IpV4.Udp.DestinationPort == 68)
                 && (packet.Ethernet.IpV4.Udp.SourcePort == 67 || packet.Ethernet.IpV4.Udp.SourcePort == 68);
         }
@@ -591,7 +592,7 @@ namespace NetSnifferLib
         static readonly UdpIpV4Analyzer _udpV4Analyzer;
         static readonly UdpIpV6Analyzer _udpV6Analyzer;
 
-        static PacketAnalyzer()
+        static PacketAnalyzer2()
         {
             _ipV4Analyzer = new IpV4Analyzer();
             _ipV6Analyzer = new IpV6Analyzer();

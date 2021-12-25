@@ -55,8 +55,8 @@ namespace NetSnifferApp
 
             lstvPackets.Invoke(new MethodInvoker(delegate ()
             {
-                //set item index
-                item.SubItems[0].Text = (lstvPackets.Items.Count + 1).ToString();//(this.lstvPackets.Items.Count + 1).ToString();//(++_index).ToString()
+                //Set item index
+                item.SubItems[0].Text = (lstvPackets.Items.Count + 1).ToString();
                 lstvPackets.Items.Add(item);
             }));
         }
@@ -96,7 +96,28 @@ namespace NetSnifferApp
         {
             string[] subItems = new string[7];
             subItems[0] = "";
-            var analyzer = PacketAnalyzer.GetAnalyzer(packet);
+
+            if (PacketAnalyzer.IsEthernet(packet))
+            {
+                subItems[1] = PacketAnalyzer.GetPacketTimestamp(packet);
+                subItems[2] = PacketAnalyzer.GetPakcetProtocol(packet);
+                subItems[3] = PacketAnalyzer.GetPakcetSource(packet);
+                subItems[4] = PacketAnalyzer.GetPakcetDestination(packet);
+                subItems[5] = PacketAnalyzer.GetPacketLength(packet);
+                subItems[6] = PacketAnalyzer.GetPacketInfo(packet);
+            }
+            else
+            {
+                subItems[1] = "";
+                subItems[2] = "";
+                subItems[3] = "";
+                subItems[4] = "";
+                subItems[5] = "";
+                subItems[6] = "Only Ethernet packets are supported";
+            }
+
+            return subItems;
+            /*var analyzer = PacketAnalyzer.GetAnalyzer(packet);
 
             if (analyzer != null)
             {
@@ -116,7 +137,7 @@ namespace NetSnifferApp
                 subItems[6] = analyzer.GetPacketInfo(packet);
             }
 
-            return subItems;
+            return subItems;*/
         }
     }
 }

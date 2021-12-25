@@ -26,26 +26,36 @@ namespace NetSnifferLib.NetworkLayer
 
         public override Datagram GetDatagramPayload(Datagram datagram)
         {
+            //TODO: Add logic
             IpV6Datagram ipDatagram = (IpV6Datagram)datagram;
 
-            return ipDatagram.Protocol switch
+            if (ipDatagram.ExtensionHeaders == IpV6ExtensionHeaders.Empty)
+                return ipDatagram.Payload;
+
+            return ipDatagram.Payload;
+/*            return ipDatagram.Protocol switch
             {
                 IpV4Protocol.Udp => ipDatagram.Udp,
                 IpV4Protocol.Tcp => ipDatagram.Tcp,
                 _ => null
-            };
+            };*/
         }
 
         public override IAnalyzer GetDatagramPayloadAnalyzer(Datagram datagram)
         {
+            //TODO: Add logic
             IpV6Datagram ipDatagram = (IpV6Datagram)datagram;
 
-            return ipDatagram.Protocol switch
+            if (ipDatagram.ExtensionHeaders == IpV6ExtensionHeaders.Empty)
+                return null;
+
+            return null;
+/*            return ipDatagram.Protocol switch
             {
                 IpV4Protocol.Udp => DatagramAnalyzer.UdpAnalyzer,
                 IpV4Protocol.Tcp => DatagramAnalyzer.TcpAnalyzer,
                 _ => null
-            };
+            };*/
         }
 
         public override string GetDatagramInfo(IpV6Datagram datagram)

@@ -85,7 +85,7 @@ namespace NetSnifferLib
 
         public void Dispose()
         {
-            //TODO: add dispose logic here
+            //TODO: Add dispose logic here
             GC.SuppressFinalize(this);
         }
     }
