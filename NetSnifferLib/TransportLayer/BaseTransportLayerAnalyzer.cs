@@ -11,6 +11,11 @@ namespace NetSnifferLib.TransportLayer
 {
     public abstract class BaseTransportLayerAnalyzer<T> : BaseNoHostsAnalyzer, ITransportLayerAnalyzer<T> where T : TransportDatagram
     {
+        protected static bool OneOf(ushort sourcePort, ushort destinationPort, ushort port)
+        {
+            return sourcePort == port || destinationPort == port;
+        }
+
         public override abstract Datagram GetDatagramPayload(Datagram datagram);
 
         public abstract string GetDatagramInfo(T datagram);

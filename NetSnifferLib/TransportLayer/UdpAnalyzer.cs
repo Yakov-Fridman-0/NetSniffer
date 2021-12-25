@@ -11,14 +11,32 @@ namespace NetSnifferLib.TransportLayer
 {
     public class UdpAnalyzer : BaseTransportLayerAnalyzer<UdpDatagram>
     {
+        private const ushort DnsPort = 53;
+
         public override Datagram GetDatagramPayload(Datagram datagram)
         {
-            return null;
+            var udpDatagram = (UdpDatagram)datagram;
+
+            ushort sourcePort = GetSourcePort(udpDatagram);
+            ushort destinationPort = GetDestinationPort(udpDatagram);
+
+            if (OneOf(sourcePort, destinationPort, DnsPort))
+                return udpDatagram.Dns;
+            else
+                return udpDatagram.Payload;
         }
 
         public override IAnalyzer GetDatagramPayloadAnalyzer(Datagram datagram)
         {
-            return null;
+            var udpDatagram = (UdpDatagram)datagram;
+
+            ushort sourcePort = GetSourcePort(udpDatagram);
+            ushort destinationPort = GetDestinationPort(udpDatagram);
+
+            if (OneOf(sourcePort, destinationPort, DnsPort))
+                return DatagramAnalyzer.DnsAnalyzer;
+            else
+                return null;
         }
 
         public override string GetDatagramInfo(UdpDatagram datagram)

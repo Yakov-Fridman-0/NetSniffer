@@ -19,6 +19,8 @@ namespace NetSnifferLib
         static readonly TransportLayer.UdpAnalyzer _udpAnalyzer;
         static readonly TransportLayer.TcpAnalyzer _tcpAnalyzer;
 
+        static readonly Miscellaneous.DnsAnalyzer _dnsAnalyzer;
+
         static DatagramAnalyzer()
         {
             _ethernetAnalyzer = new LinkLayer.EthernetAnalyzer();
@@ -30,6 +32,8 @@ namespace NetSnifferLib
 
             _udpAnalyzer = new TransportLayer.UdpAnalyzer();
             _tcpAnalyzer = new TransportLayer.TcpAnalyzer();
+
+            _dnsAnalyzer = new Miscellaneous.DnsAnalyzer();
         }
 
         public static LinkLayer.EthernetAnalyzer EthernetAnalyzer => _ethernetAnalyzer;
@@ -43,5 +47,7 @@ namespace NetSnifferLib
         public static TransportLayer.UdpAnalyzer UdpAnalyzer => _udpAnalyzer;
 
         public static TransportLayer.TcpAnalyzer TcpAnalyzer => _tcpAnalyzer;
+
+        public static Miscellaneous.DnsAnalyzer DnsAnalyzer => _dnsAnalyzer;
     }
 }
