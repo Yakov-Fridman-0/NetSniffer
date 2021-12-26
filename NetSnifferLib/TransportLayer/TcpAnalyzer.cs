@@ -7,19 +7,46 @@ using System.Threading.Tasks;
 using PcapDotNet.Packets.Transport;
 using PcapDotNet.Packets;
 using NetSnifferLib.General;
+using NetSnifferLib.Miscellaneous;
 
 namespace NetSnifferLib.TransportLayer
 {
     public class TcpAnalyzer : BaseTransportLayerAnalyzer<TcpDatagram>
     {
+        private const ushort HttpPort = 80;
+
         public override Datagram GetDatagramPayload(Datagram datagram)
         {
-            return null;
+            var tcpDatagram = (TcpDatagram)datagram;
+            Datagram payload = tcpDatagram.Payload;
+
+            ushort sourcePort = GetSourcePort(tcpDatagram), destinationPort = GetDestinationPort(tcpDatagram);
+
+            if (OneOf(sourcePort, destinationPort, HttpPort) && HttpAnalyzer.DatagramMatches(payload))
+            {
+                return tcpDatagram.Http;
+            }
+            else
+            {
+                return tcpDatagram.Payload;
+            }
         }
 
         public override IAnalyzer GetDatagramPayloadAnalyzer(Datagram datagram)
         {
-            return null;
+            var tcpDatagram = (TcpDatagram)datagram;
+            Datagram payload = tcpDatagram.Payload;
+
+            ushort sourcePort = GetSourcePort(tcpDatagram), destinationPort = GetDestinationPort(tcpDatagram);
+
+            if (OneOf(sourcePort, destinationPort, HttpPort) && HttpAnalyzer.DatagramMatches(payload))
+            {
+                return DatagramAnalyzer.HttpAnalyzer;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public override string GetDatagramInfo(TcpDatagram datagram)

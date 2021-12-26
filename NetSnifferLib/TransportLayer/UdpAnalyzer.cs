@@ -13,6 +13,9 @@ namespace NetSnifferLib.TransportLayer
     {
         private const ushort DnsPort = 53;
 
+        private const ushort DhcpPort1 = 67;
+        private const ushort DhcpPort2 = 68;
+
         public override Datagram GetDatagramPayload(Datagram datagram)
         {
             var udpDatagram = (UdpDatagram)datagram;
@@ -20,8 +23,11 @@ namespace NetSnifferLib.TransportLayer
             ushort sourcePort = GetSourcePort(udpDatagram);
             ushort destinationPort = GetDestinationPort(udpDatagram);
 
-            if (OneOf(sourcePort, destinationPort, DnsPort))
+            //TODO: 
+            if (udpDatagram.Dns.IsValid)
                 return udpDatagram.Dns;
+            else if (TwoOf(sourcePort, destinationPort, DhcpPort1, DhcpPort2))
+                return null;
             else
                 return udpDatagram.Payload;
         }

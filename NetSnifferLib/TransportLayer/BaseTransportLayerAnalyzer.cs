@@ -16,6 +16,11 @@ namespace NetSnifferLib.TransportLayer
             return sourcePort == port || destinationPort == port;
         }
 
+        protected static bool TwoOf(ushort sourcePort, ushort destinationPort, ushort port1, ushort port2)
+        {
+            return OneOf(sourcePort, destinationPort, port1) && OneOf(sourcePort, destinationPort, port2);
+        }
+
         public override abstract Datagram GetDatagramPayload(Datagram datagram);
 
         public abstract string GetDatagramInfo(T datagram);
