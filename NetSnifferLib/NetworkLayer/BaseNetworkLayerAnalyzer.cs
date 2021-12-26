@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NetSnifferLib.General;
-using NetSnifferLib.NetworkLayer;
 using PcapDotNet.Packets;
 using PcapDotNet.Packets.Ip;
 using PcapDotNet.Packets.IpV4;

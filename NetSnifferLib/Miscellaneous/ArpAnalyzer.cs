@@ -18,10 +18,10 @@ namespace NetSnifferLib.Miscellaneous
         {
             ArpDatagram arpDatagram = (ArpDatagram)datagram;
 
-            var senderIp = AddressConverter.GetIPAddress(arpDatagram.SenderProtocolIpV4Address);
-            var targetIp = AddressConverter.GetIPAddress(arpDatagram.TargetProtocolIpV4Address);
+            var senderIp = AddressConvert.ToIPAddress(arpDatagram.SenderProtocolIpV4Address);
+            var targetIp = AddressConvert.ToIPAddress(arpDatagram.TargetProtocolIpV4Address);
 
-            var senderMac = AddressConverter.GetPhysicalAddress(arpDatagram.SenderHardwareAddress);
+            var senderMac = AddressConvert.ToPhysicalAddress(arpDatagram.SenderHardwareAddress);
 
             return arpDatagram.Operation switch
             {
