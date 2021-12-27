@@ -1,9 +1,9 @@
-﻿using System;
+﻿using NetSnifferLib.Miscellaneous;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using NetSnifferLib.NetworkLayer;
 
 namespace NetSnifferLib
 {
@@ -19,9 +19,13 @@ namespace NetSnifferLib
         static readonly TransportLayer.UdpAnalyzer _udpAnalyzer;
         static readonly TransportLayer.TcpAnalyzer _tcpAnalyzer;
 
-        static readonly Miscellaneous.DnsAnalyzer _dnsAnalyzer;
+        static readonly DnsAnalyzer _dnsAnalyzer;
 
-        static readonly Miscellaneous.HttpAnalyzer _httpAnalyzer;
+        static readonly HttpAnalyzer _httpAnalyzer;
+
+        static readonly BootpAnalyzer bootpAnalyzer;
+
+        static readonly DhcpAnalyzer dhcpAnalyzer;
 
         static DatagramAnalyzer()
         {
@@ -35,9 +39,13 @@ namespace NetSnifferLib
             _udpAnalyzer = new TransportLayer.UdpAnalyzer();
             _tcpAnalyzer = new TransportLayer.TcpAnalyzer();
 
-            _dnsAnalyzer = new Miscellaneous.DnsAnalyzer();
+            _dnsAnalyzer = new DnsAnalyzer();
 
-            _httpAnalyzer = new Miscellaneous.HttpAnalyzer();
+            _httpAnalyzer = new HttpAnalyzer();
+
+            bootpAnalyzer = new BootpAnalyzer();
+
+            dhcpAnalyzer = new DhcpAnalyzer();
         }
 
         public static LinkLayer.EthernetAnalyzer EthernetAnalyzer => _ethernetAnalyzer;
@@ -55,5 +63,9 @@ namespace NetSnifferLib
         public static Miscellaneous.DnsAnalyzer DnsAnalyzer => _dnsAnalyzer;
 
         public static Miscellaneous.HttpAnalyzer HttpAnalyzer => _httpAnalyzer;
+
+        public static DhcpAnalyzer DhcpAnalyzer => dhcpAnalyzer;
+
+        internal static BootpAnalyzer BootpAnalyzer => bootpAnalyzer;
     }
 }

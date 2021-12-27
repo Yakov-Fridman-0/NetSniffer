@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using NetSnifferLib.General;
 using PcapDotNet.Packets;
+using NetSnifferLib.General;
 
 namespace NetSnifferLib.Miscellaneous
 {
-    public class DhcpAnalyzer : BaseNoHostsNoPayloadAnalyzer
+    class BootpAnalyzer : BaseNoHostsNoPayloadAnalyzer
     {
-        public override string ProtocolString => "DHCP";
+        public override string ProtocolString => "BOOTP";
 
         public override string GetDatagramInfo(Datagram datagram)
         {
