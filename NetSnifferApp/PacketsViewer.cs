@@ -9,6 +9,7 @@ namespace NetSnifferApp
     public partial class PacketViewer : UserControl
     {
         private readonly ActionBlock<Packet> _itemsBuilder;
+        private PacketAnalyzer _packetAnalyzer;
 
         public PacketViewer()
         {
@@ -36,6 +37,11 @@ namespace NetSnifferApp
             lstvPackets.Columns.Add(new ColumnHeader() { Text = "Info" });
 
             #endregion
+        }
+
+        public void SetAnalyzer(PacketAnalyzer packetAnalyzer)
+        {
+            _packetAnalyzer = packetAnalyzer;
         }
 
         public IEnumerable<Packet> GetSelectedPackets()
@@ -92,19 +98,22 @@ namespace NetSnifferApp
             return listViewItem;
         }
 
-        private static string[] GetSubitems(Packet packet)
+        private string[] GetSubitems(Packet packet)
         {
             string[] subItems = new string[7];
             subItems[0] = "";
 
+            
             if (PacketAnalyzer.IsEthernet(packet))
             {
-                subItems[1] = PacketAnalyzer.GetPacketTimestamp(packet);
-                subItems[2] = PacketAnalyzer.GetPakcetProtocol(packet);
-                subItems[3] = PacketAnalyzer.GetPakcetSource(packet);
-                subItems[4] = PacketAnalyzer.GetPakcetDestination(packet);
-                subItems[5] = PacketAnalyzer.GetPacketLength(packet);
-                subItems[6] = PacketAnalyzer.GetPacketInfo(packet);
+                PacketDescription packetDescription = _packetAnalyzer.AnalyzePacket(packet);
+
+                subItems[1] = packetDescription.TimeStamp;
+                subItems[2] = packetDescription.Protocol;
+                subItems[3] = packetDescription.Source;
+                subItems[4] = packetDescription.Destination;
+                subItems[5] = packetDescription.Length;
+                subItems[6] = packetDescription.Info;
             }
             else
             {
