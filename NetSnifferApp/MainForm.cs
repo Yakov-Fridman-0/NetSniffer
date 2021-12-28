@@ -8,10 +8,14 @@ namespace NetSnifferApp
     public partial class MainForm : Form
     {
         NetSniffer _netSniffer;
+        readonly PacketAnalyzer packetAnalyzer;
 
         public MainForm()
         {
             InitializeComponent();
+
+            packetAnalyzer = new();
+            CtrlPacketViewer.SetAnalyzer(packetAnalyzer);
         }
 
         protected override void OnLoad(EventArgs e)
@@ -73,7 +77,83 @@ namespace NetSnifferApp
             netSniffer.Stop();
         }
 
-        private async void btnSave_Click(object sender, EventArgs e)
+        private Task<bool> SaveFile(string fileName)
+        {    
+            var packets = CtrlPacketViewer.GetSelectedPackets();
+
+            return Task<bool>.Factory.StartNew(() => 
+            {
+                try
+                {
+                    var tmpFileName = System.IO.Path.Combine(System.IO.Path.GetTempPath(), System.IO.Path.ChangeExtension(System.IO.Path.GetRandomFileName(), ".pcap"));
+
+                    PcapFile.Save(tmpFileName, packets);
+
+                    if (System.IO.File.Exists(tmpFileName) == false)
+                        return false;
+
+                    System.IO.File.Copy(tmpFileName, fileName, true);
+
+                    System.IO.File.Delete(tmpFileName);
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex);
+                    return false;
+                }
+            });
+        }
+
+        private Task<bool> OpenFile(string fileName)
+        {
+            return Task<bool>.Factory.StartNew(() =>
+            {
+                try
+                {
+                    CtrlPacketViewer.Clear();
+
+                    var pakects = PcapFile.Read(fileName);
+
+                    CtrlPacketViewer.AddRange(pakects);
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex);
+                    return false;
+                }
+            });
+        }
+
+        private async void openToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var opneFileDialog = new OpenFileDialog()
+            {
+                FileName = "Select a file",
+                Filter = "Pcap files (*.pcap)|*.pcap",
+                Title = "Opne pcap file",
+            };
+
+            var result = opneFileDialog.ShowDialog();
+            if (result != DialogResult.OK)
+                return;
+            var fileName = opneFileDialog.FileName;
+
+            var saveResult = await OpenFile(fileName);
+
+            if (saveResult == false)
+            {
+                var message = $"Failed to opne file \"{fileName}\".";
+                var caption = "File Error";
+
+                MessageBox.Show(message, caption, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private async void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var saveFileDialog = new SaveFileDialog()
             {
@@ -99,92 +179,25 @@ namespace NetSnifferApp
             }
         }
 
-        private Task<bool> SaveFile(string fileName)
-        {    
-            var packets = CtrlPacketViewer.GetSelectedPackets();
-
-            return Task<bool>.Factory.StartNew(() => 
-            {
-                try
-                {
-                   //ctlPacketsViewer.Invoke(new MethodInvoker(delegate ()
-                   //{
-                   //    packets = ctlPacketsViewer.GetSelectedPackets();
-                   //}));
-
-                    var tmpFileName = System.IO.Path.Combine(System.IO.Path.GetTempPath(), System.IO.Path.ChangeExtension(System.IO.Path.GetRandomFileName(), ".pcap"));
-
-                    PcapFile.Save(tmpFileName, packets);
-
-                    if (System.IO.File.Exists(tmpFileName) == false)
-                        return false;
-
-                    System.IO.File.Copy(tmpFileName, fileName, true);
-
-                    System.IO.File.Delete(tmpFileName);
-
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine(ex);
-                    return false;
-                }
-            });
-        }
-
-        private async void btnOpen_Click(object sender, EventArgs e)
+        private void generalToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var opneFileDialog = new OpenFileDialog()
-            {
-                FileName = "Select a file",
-                Filter = "Pcap files (*.pcap)|*.pcap",
-                Title = "Opne pcap file",
-            };
+            var packetStatisticsLogger = packetAnalyzer.PackeStatisticsLogger;
 
-            var result = opneFileDialog.ShowDialog();
-            if (result != DialogResult.OK)
-                return;
-            var fileName = opneFileDialog.FileName;
+            StatisticsForm statisticForm = new(
+                packetStatisticsLogger.TotalPacketNumber,
+                packetStatisticsLogger.TotalBytes,
+                packetStatisticsLogger.EthernetPacketNumber,
+                packetStatisticsLogger.EthernetTotalPayloadBytes,
+                packetStatisticsLogger.IpV4PacketNumber,
+                packetStatisticsLogger.IpV4TotalPayloadBytes,
+                packetStatisticsLogger.IpV6PacketNumber,
+                packetStatisticsLogger.IpV6TotalPayloadBytes,
+                packetStatisticsLogger.UdpPacketNumber,
+                packetStatisticsLogger.UdpTotalPayloadBytes,
+                packetStatisticsLogger.TcpPacketNumber,
+                packetStatisticsLogger.TcpTotalPayloadBytes);
 
-            var saveResult = await OpenFile(fileName);
-
-            if (saveResult == false)
-            {
-                var message = $"Failed to opne file \"{fileName}\".";
-                var caption = "File Error";
-
-                MessageBox.Show(message, caption, MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private Task<bool> OpenFile(string fileName)
-        {
-            return Task<bool>.Factory.StartNew(() =>
-            {
-                try
-                {
-                    CtrlPacketViewer.Clear();
-
-                    //var pcapFile = new PcapFile();
-
-                    var pakects = PcapFile.Read(fileName);
-
-                    CtrlPacketViewer.AddRange(pakects);
-
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine(ex);
-                    return false;
-                }
-            });
-        }
-
-        private void MainForm_Load(object sender, EventArgs e)
-        {
-
+            statisticForm.Show();
         }
     }
 }

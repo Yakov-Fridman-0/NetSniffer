@@ -25,7 +25,7 @@ namespace NetSnifferLib.NetworkLayer
             {
                 IpV4Protocol.Udp => ipDatagram.Udp,
                 IpV4Protocol.Tcp => ipDatagram.Tcp,
-                _ => null
+                _ => ipDatagram.Payload
             };
         }
 
