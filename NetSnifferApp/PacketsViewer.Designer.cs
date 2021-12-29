@@ -31,8 +31,8 @@ namespace NetSnifferApp
         {
             this.lstvPackets = new System.Windows.Forms.ListView();
             this.Index = new System.Windows.Forms.ColumnHeader();
-            this.Protocol = new System.Windows.Forms.ColumnHeader();
             this.Time = new System.Windows.Forms.ColumnHeader();
+            this.Protocol = new System.Windows.Forms.ColumnHeader();
             this.Source = new System.Windows.Forms.ColumnHeader();
             this.Destination = new System.Windows.Forms.ColumnHeader();
             this.PayloadLength = new System.Windows.Forms.ColumnHeader();
@@ -67,16 +67,16 @@ namespace NetSnifferApp
             this.Index.Text = "Index";
             this.Index.Width = 80;
             // 
+            // Time
+            // 
+            this.Time.Text = "Time";
+            this.Time.Width = 80;
+            // 
             // Protocol
             // 
             this.Protocol.Text = "Protocol";
             this.Protocol.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.Protocol.Width = 80;
-            // 
-            // Time
-            // 
-            this.Time.Text = "Time";
-            this.Time.Width = 80;
             // 
             // Source
             // 

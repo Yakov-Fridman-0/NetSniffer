@@ -7,16 +7,16 @@
 
   <ItemGroup>
     <Reference Include="PcapDotNet.Base">
-      <HintPath>..\Dependencies\PcapDotNet\x64\PcapDotNet.Base.dll</HintPath>
+      <HintPath>..\ThirdParty\PcapDotNet.Binaries.1.0.4\PcapDotNet.Binaries.1.0.4.x64\PcapDotNet.Base.dll</HintPath>
     </Reference>
     <Reference Include="PcapDotNet.Core">
-      <HintPath>..\Dependencies\PcapDotNet\x64\PcapDotNet.Core.dll</HintPath>
+      <HintPath>..\ThirdParty\PcapDotNet.Binaries.1.0.4\PcapDotNet.Binaries.1.0.4.x64\PcapDotNet.Core.dll</HintPath>
     </Reference>
     <Reference Include="PcapDotNet.Core.Extensions">
-      <HintPath>..\Dependencies\PcapDotNet\x64\PcapDotNet.Core.Extensions.dll</HintPath>
+      <HintPath>..\ThirdParty\PcapDotNet.Binaries.1.0.4\PcapDotNet.Binaries.1.0.4.x64\PcapDotNet.Core.Extensions.dll</HintPath>
     </Reference>
     <Reference Include="PcapDotNet.Packets">
-      <HintPath>..\Dependencies\PcapDotNet\x64\PcapDotNet.Packets.dll</HintPath>
+      <HintPath>..\ThirdParty\PcapDotNet.Binaries.1.0.4\PcapDotNet.Binaries.1.0.4.x64\PcapDotNet.Packets.dll</HintPath>
     </Reference>
   </ItemGroup>
 

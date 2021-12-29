@@ -10,10 +10,11 @@ namespace NetSnifferLib
 {
     public class NetSniffer : IDisposable
     {
-
         private LivePacketCommunicator _communicator;
+        public PacketAnalyzer _packetAnalyzer;
 
         private readonly ActionBlock<Packet> _eventRaiser;
+
         private Task _snifferTask;
 
         public event EventHandler<Packet> PacketReceived = delegate { };
@@ -45,12 +46,7 @@ namespace NetSnifferLib
 
         public Task StartAsync(NetworkInterface networkInterface)
         {
-            _snifferTask = Task.Factory.StartNew(() =>
-            {
-                StartCore(networkInterface);
-            });
-
-            return _snifferTask;
+            return _snifferTask = Task.Run(() => StartCore(networkInterface));
         }
 
         public void Stop()
@@ -64,7 +60,6 @@ namespace NetSnifferLib
 
         private void StartCore(NetworkInterface networkInterface)
         {
-
             var livePacketDevice = FindLivePacketDevice(networkInterface);
 
             var communicator =
@@ -73,20 +68,22 @@ namespace NetSnifferLib
                                      PacketDeviceOpenAttributes.Promiscuous, // promiscuous mode
                                      1000);                                  // read timeout
 
+
             if (communicator.DataLink.Kind != DataLinkKind.Ethernet)
             {
                 throw new Exception("This program works only on Ethernet networks.");
             }
 
-            _communicator = communicator as LivePacketCommunicator;
+            _communicator = (LivePacketCommunicator)communicator;
 
             // start the capture
             communicator.ReceivePackets(0, packet => _eventRaiser.Post(packet));
         }
 
+
         public void Dispose()
         {
-            //TODO: add dispose logic here
+            //TODO: Add dispose logic here
             GC.SuppressFinalize(this);
         }
     }

@@ -9,6 +9,7 @@ namespace NetSnifferApp
     public partial class PacketViewer : UserControl
     {
         private readonly ActionBlock<Packet> _itemsBuilder;
+        private PacketAnalyzer _packetAnalyzer;
 
         public PacketViewer()
         {
@@ -24,7 +25,6 @@ namespace NetSnifferApp
 
             _itemsBuilder = new ActionBlock<Packet>(packet => AddItemCore(packet));
 
-
             #region Columns
             lstvPackets.Columns.Clear();
 
@@ -37,6 +37,11 @@ namespace NetSnifferApp
             lstvPackets.Columns.Add(new ColumnHeader() { Text = "Info" });
 
             #endregion
+        }
+
+        public void SetAnalyzer(PacketAnalyzer packetAnalyzer)
+        {
+            _packetAnalyzer = packetAnalyzer;
         }
 
         public IEnumerable<Packet> GetSelectedPackets()
@@ -56,8 +61,8 @@ namespace NetSnifferApp
 
             lstvPackets.Invoke(new MethodInvoker(delegate ()
             {
-                //set item index
-                item.SubItems[0].Text = (lstvPackets.Items.Count + 1).ToString();//(this.lstvPackets.Items.Count + 1).ToString();//(++_index).ToString()
+                //Set item index
+                item.SubItems[0].Text = (lstvPackets.Items.Count + 1).ToString();
                 lstvPackets.Items.Add(item);
             }));
         }
@@ -93,58 +98,55 @@ namespace NetSnifferApp
             return listViewItem;
         }
 
-        private static string[] GetSubitems(Packet packet)
+        private string[] GetSubitems(Packet packet)
         {
             string[] subItems = new string[7];
             subItems[0] = "";
 
-            var timestamp = PacketHelper.GetTimeStamp(packet);
-            subItems[1] = timestamp.ToString("HH:mm:ss.ffff");
-
-            var layer = PacketHelper.GetLayer(packet);
-            bool result;
-
-            if (layer == PacketHelper.OSILayer.TransportLayer)
+            
+            if (PacketAnalyzer.IsEthernet(packet))
             {
-                result = PacketHelper.GetTransportData(packet, out var protocol, out var payloadLength, out var sourcePort, out var destPort);
-                if (!result)
-                    return null;
+                PacketDescription packetDescription = _packetAnalyzer.AnalyzePacket(packet);
 
-                subItems[2] = protocol.ToString();
-                if (sourcePort != 0 && destPort != 0)
-                {
-                    result = PacketHelper.GetIpData(packet, out payloadLength, out var sourceIp, out var destIp);
-                    if (!result)
-                        return null;
-                    subItems[3] = sourceIp + ":" + sourcePort.ToString();
-                    subItems[4] = destIp + ":" + destPort.ToString();
-                }
-                subItems[5] = payloadLength != 0 ? payloadLength.ToString() : "";
+                subItems[1] = packetDescription.TimeStamp;
+                subItems[2] = packetDescription.Protocol;
+                subItems[3] = packetDescription.Source;
+                subItems[4] = packetDescription.Destination;
+                subItems[5] = packetDescription.Length;
+                subItems[6] = packetDescription.Info;
             }
-
-            if (layer == PacketHelper.OSILayer.NetworkLayer)
+            else
             {
-                result = PacketHelper.GetIpData(packet, out var payloadLength, out var source, out var dest);
-                if (!result)
-                    return null;
-                subItems[2] = "IP";
-                subItems[3] = source.ToString();
-                subItems[4] = dest.ToString();
-                subItems[5] = payloadLength != 0 ? payloadLength.ToString() : "";
-            }
-
-            if (layer == PacketHelper.OSILayer.BetweenDataLinkAndNetwork)
-            {
-                result = PacketHelper.GetArpData(packet, out var source, out var dest);
-                if (!result)
-                    return null;
-
-                subItems[2] = "ARP";
-                subItems[3] = source.ToString();
-                subItems[4] = dest.ToString();
+                subItems[1] = "";
+                subItems[2] = "";
+                subItems[3] = "";
+                subItems[4] = "";
+                subItems[5] = "";
+                subItems[6] = "Only Ethernet packets are supported";
             }
 
             return subItems;
+            /*var analyzer = PacketAnalyzer.GetAnalyzer(packet);
+
+            if (analyzer != null)
+            {
+                //Time
+                var timestamp = analyzer.GetTimeStamp(packet);
+                subItems[1] = timestamp.ToString("HH:mm:ss.ffff");
+                //Protocol
+                subItems[2] = analyzer.GetProtocol(packet);
+                //Source
+                subItems[3] = analyzer.GetPacketSource(packet);
+                //"Destination
+                subItems[4] = analyzer.GetPacketDestination(packet);
+                //Payload Length
+                var payloadLength = analyzer.GetLength(packet);
+                subItems[5] = payloadLength == 0 ? string.Empty : payloadLength.ToString();
+                //Info
+                subItems[6] = analyzer.GetPacketInfo(packet);
+            }
+
+            return subItems;*/
         }
     }
 }
