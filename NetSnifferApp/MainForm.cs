@@ -179,11 +179,14 @@ namespace NetSnifferApp
             }
         }
 
+        private StatisticsForm _statisticsForm;
+
         private void generalToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var packetStatisticsLogger = packetAnalyzer.PackeStatisticsLogger;
 
-            StatisticsForm statisticForm = new(
+            StatisticsForm statisticForm = new();
+            statisticForm.UpdateStatistics(
                 packetStatisticsLogger.TotalPacketNumber,
                 packetStatisticsLogger.TotalBytes,
                 packetStatisticsLogger.EthernetPacketNumber,
@@ -197,7 +200,36 @@ namespace NetSnifferApp
                 packetStatisticsLogger.TcpPacketNumber,
                 packetStatisticsLogger.TcpTotalPayloadBytes);
 
+
+            _statisticsForm = statisticForm;
+            statisticsTimer.Start();
+
+            statisticForm.FormClosed += statisticsForm_Closed;
             statisticForm.Show();
+        }
+
+        private void statisticsForm_Closed(object sender, EventArgs e)
+        {
+            statisticsTimer.Stop();
+        }
+
+        private void statisticsTimer_Tick(object sender, EventArgs e)
+        {
+            var packetStatisticsLogger = packetAnalyzer.PackeStatisticsLogger;
+
+            _statisticsForm.UpdateStatistics(
+                packetStatisticsLogger.TotalPacketNumber,
+                packetStatisticsLogger.TotalBytes,
+                packetStatisticsLogger.EthernetPacketNumber,
+                packetStatisticsLogger.EthernetTotalPayloadBytes,
+                packetStatisticsLogger.IpV4PacketNumber,
+                packetStatisticsLogger.IpV4TotalPayloadBytes,
+                packetStatisticsLogger.IpV6PacketNumber,
+                packetStatisticsLogger.IpV6TotalPayloadBytes,
+                packetStatisticsLogger.UdpPacketNumber,
+                packetStatisticsLogger.UdpTotalPayloadBytes,
+                packetStatisticsLogger.TcpPacketNumber,
+                packetStatisticsLogger.TcpTotalPayloadBytes);
         }
     }
 }
