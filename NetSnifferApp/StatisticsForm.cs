@@ -15,16 +15,19 @@ namespace NetSnifferApp
         private const string PacketsFormat = "{0:N}";
         private const string BytesFormat = "{0:N} Bytes";
 
-        public StatisticsForm(
-            int tNum, int tBytes, 
-            int eNum, int eBytes, 
-            int ip4Num, int ip4Bytes, 
+        public StatisticsForm()
+        {
+            InitializeComponent();
+        }
+
+        public void UpdateStatistics(
+            int tNum, int tBytes,
+            int eNum, int eBytes,
+            int ip4Num, int ip4Bytes,
             int ip6Num, int ip6Bytes,
             int udpNum, int udpBytes,
             int tcpNum, int tcpBytes)
         {
-            InitializeComponent();
-
             tNumLbl.Text = string.Format(PacketsFormat, tNum.ToString());
 
             eNumLbl.Text = string.Format(PacketsFormat, eNum.ToString());

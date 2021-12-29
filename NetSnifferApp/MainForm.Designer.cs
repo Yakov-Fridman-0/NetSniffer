@@ -31,6 +31,7 @@ namespace NetSnifferApp
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.LblNetInterface = new System.Windows.Forms.Label();
             this.CmbNetInterface = new System.Windows.Forms.ComboBox();
             this.BtnStart = new System.Windows.Forms.Button();
@@ -42,6 +43,7 @@ namespace NetSnifferApp
             this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statisticsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.generalToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.statisticsTimer = new System.Windows.Forms.Timer(this.components);
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -149,6 +151,10 @@ namespace NetSnifferApp
             this.generalToolStripMenuItem.Text = "General";
             this.generalToolStripMenuItem.Click += new System.EventHandler(this.generalToolStripMenuItem_Click);
             // 
+            // statisticsTimer
+            // 
+            this.statisticsTimer.Tick += new System.EventHandler(this.statisticsTimer_Tick);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
@@ -185,6 +191,7 @@ namespace NetSnifferApp
         private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem statisticsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem generalToolStripMenuItem;
+        private System.Windows.Forms.Timer statisticsTimer;
     }
 }
 
