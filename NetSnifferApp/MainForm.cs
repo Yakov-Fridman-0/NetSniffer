@@ -7,15 +7,22 @@ namespace NetSnifferApp
 {
     public partial class MainForm : Form
     {
-        NetSniffer _netSniffer;
+        private SniffingOptions _sniffingOptions;
+        private NetworkSniffer _netSniffer;
+
         readonly PacketAnalyzer packetAnalyzer;
+
+        bool capturing = false;
 
         public MainForm()
         {
             InitializeComponent();
 
-            packetAnalyzer = new();
+            packetAnalyzer = new PacketAnalyzer();
             CtrlPacketViewer.SetAnalyzer(packetAnalyzer);
+
+            _sniffingOptions = new SniffingOptions();
+            _netSniffer = null;
         }
 
         protected override void OnLoad(EventArgs e)
@@ -25,7 +32,7 @@ namespace NetSnifferApp
             CmbNetInterface.Items.AddRange(NetInterfaceItem.GetItems());
         }
 
-        private void btnStart_Click(object sender, EventArgs e)
+        private void BtnStart_Click(object sender, EventArgs e)
         {
             if (CmbNetInterface.SelectedItem == null)
             {
@@ -36,22 +43,33 @@ namespace NetSnifferApp
 
                 return;
             }
+            if (!packetFilter.ValidFilter)
+            {
+                var text = "Please choose a valid capture filter";
+                var caption = "Sniffing Error";
 
-            var networkInterface = ((NetInterfaceItem)CmbNetInterface.SelectedItem).NetworkInterface;
+                MessageBox.Show(text, caption, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
 
+            packetFilter.Enabled = false;
             CtrlPacketViewer.Clear();
 
-            SartAsync(networkInterface);
+            _sniffingOptions.NetworkInterface = ((NetInterfaceItem)CmbNetInterface.SelectedItem).NetworkInterface;
+
+            SartAsync();
         }
 
-        private void SartAsync(System.Net.NetworkInformation.NetworkInterface networkInterface)
+        private void SartAsync()
         {
-            var netSniffer = new NetSniffer();
+            _netSniffer = NetworkSniffer.CreateLiveSniffer(_sniffingOptions);
+            _sniffingOptions = new SniffingOptions();
+
+            var netSniffer = _netSniffer;
 
             netSniffer.PacketReceived += NetSniffer_PacketReceived;
-            netSniffer.StartAsync(networkInterface);
-            
-            _netSniffer = netSniffer;
+            netSniffer.StartAsync();
+
+            capturing = true;
         }
 
         private void NetSniffer_PacketReceived(object sender, PcapDotNet.Packets.Packet e)
@@ -65,16 +83,20 @@ namespace NetSnifferApp
             CtrlPacketViewer.Add(packet);
         }
 
-        private void btnStop_Click(object sender, EventArgs e)
+        private void BtnStop_Click(object sender, EventArgs e)
         {
+
             var netSniffer = _netSniffer;
-            _netSniffer = null;
 
             if (netSniffer == null)
                 return;
 
             netSniffer.PacketReceived -= NetSniffer_PacketReceived;
             netSniffer.Stop();
+
+            capturing = false;
+
+            packetFilter.Enabled = true;
         }
 
         private Task<bool> SaveFile(string fileName)
@@ -128,7 +150,7 @@ namespace NetSnifferApp
             });
         }
 
-        private async void openToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void OpenToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var opneFileDialog = new OpenFileDialog()
             {
@@ -153,7 +175,7 @@ namespace NetSnifferApp
             }
         }
 
-        private async void saveToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void SaveToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var saveFileDialog = new SaveFileDialog()
             {
@@ -181,7 +203,7 @@ namespace NetSnifferApp
 
         private StatisticsForm _statisticsForm;
 
-        private void generalToolStripMenuItem_Click(object sender, EventArgs e)
+        private void GeneralToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var packetStatisticsLogger = packetAnalyzer.PackeStatisticsLogger;
 
@@ -204,16 +226,16 @@ namespace NetSnifferApp
             _statisticsForm = statisticForm;
             statisticsTimer.Start();
 
-            statisticForm.FormClosed += statisticsForm_Closed;
+            statisticForm.FormClosed += StatisticsForm_Closed;
             statisticForm.Show();
         }
 
-        private void statisticsForm_Closed(object sender, EventArgs e)
+        private void StatisticsForm_Closed(object sender, EventArgs e)
         {
             statisticsTimer.Stop();
         }
 
-        private void statisticsTimer_Tick(object sender, EventArgs e)
+        private void StatisticsTimer_Tick(object sender, EventArgs e)
         {
             var packetStatisticsLogger = packetAnalyzer.PackeStatisticsLogger;
 
@@ -230,6 +252,24 @@ namespace NetSnifferApp
                 packetStatisticsLogger.UdpTotalPayloadBytes,
                 packetStatisticsLogger.TcpPacketNumber,
                 packetStatisticsLogger.TcpTotalPayloadBytes);
+        }
+
+        private void PacketFilter_FilterChanged(object sender, string e)
+        {
+            if (string.IsNullOrEmpty(e))
+                return;
+
+            string filter = e;
+
+            if (NetworkSniffer.IsValidFilter(filter))
+            {
+                packetFilter.ValidFilter = true;
+                _sniffingOptions.Filter = filter;
+            }
+            else
+            {
+                packetFilter.ValidFilter = false;
+            }
         }
     }
 }
