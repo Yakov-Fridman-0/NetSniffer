@@ -101,7 +101,20 @@ namespace NetSnifferLib
 
         public static bool IsValidFilter(string filter)
         {
-            return true;
+            BerkeleyPacketFilter packetFilter = null;
+            try
+            {
+                packetFilter = new BerkeleyPacketFilter(filter, 65536, DataLinkKind.Ethernet);
+                return true;
+            }
+            catch (ArgumentException)
+            {
+                return false;
+            }
+            finally
+            {
+                packetFilter?.Dispose();
+            }
         }
 
         public void Dispose()

@@ -43,6 +43,13 @@ namespace NetSnifferApp
 
                 return;
             }
+            if (!packetFilter.ValidFilter)
+            {
+                var text = "Please choose a valid capture filter";
+                var caption = "Sniffing Error";
+
+                MessageBox.Show(text, caption, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
 
             packetFilter.Enabled = false;
             CtrlPacketViewer.Clear();
@@ -78,6 +85,7 @@ namespace NetSnifferApp
 
         private void BtnStop_Click(object sender, EventArgs e)
         {
+
             var netSniffer = _netSniffer;
 
             if (netSniffer == null)
