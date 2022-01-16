@@ -44,6 +44,8 @@ namespace NetSnifferApp
             this.statisticsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.generalToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statisticsTimer = new System.Windows.Forms.Timer(this.components);
+            this.packetFilter = new NetSnifferApp.PacketFilter();
+            this.label1 = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -52,9 +54,9 @@ namespace NetSnifferApp
             this.LblNetInterface.AutoSize = true;
             this.LblNetInterface.Location = new System.Drawing.Point(15, 44);
             this.LblNetInterface.Name = "LblNetInterface";
-            this.LblNetInterface.Size = new System.Drawing.Size(172, 20);
+            this.LblNetInterface.Size = new System.Drawing.Size(177, 20);
             this.LblNetInterface.TabIndex = 0;
-            this.LblNetInterface.Text = "Choise network interface";
+            this.LblNetInterface.Text = "Choose network interface";
             // 
             // CmbNetInterface
             // 
@@ -77,7 +79,7 @@ namespace NetSnifferApp
             this.BtnStart.TabIndex = 2;
             this.BtnStart.Text = "Start";
             this.BtnStart.UseVisualStyleBackColor = true;
-            this.BtnStart.Click += new System.EventHandler(this.btnStart_Click);
+            this.BtnStart.Click += new System.EventHandler(this.BtnStart_Click);
             // 
             // BtnStop
             // 
@@ -88,17 +90,17 @@ namespace NetSnifferApp
             this.BtnStop.TabIndex = 3;
             this.BtnStop.Text = "Stop";
             this.BtnStop.UseVisualStyleBackColor = true;
-            this.BtnStop.Click += new System.EventHandler(this.btnStop_Click);
+            this.BtnStop.Click += new System.EventHandler(this.BtnStop_Click);
             // 
             // CtrlPacketViewer
             // 
             this.CtrlPacketViewer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.CtrlPacketViewer.Location = new System.Drawing.Point(14, 155);
+            this.CtrlPacketViewer.Location = new System.Drawing.Point(14, 240);
             this.CtrlPacketViewer.Margin = new System.Windows.Forms.Padding(3, 5, 3, 5);
             this.CtrlPacketViewer.Name = "CtrlPacketViewer";
-            this.CtrlPacketViewer.Size = new System.Drawing.Size(886, 476);
+            this.CtrlPacketViewer.Size = new System.Drawing.Size(886, 485);
             this.CtrlPacketViewer.TabIndex = 4;
             // 
             // menuStrip1
@@ -109,7 +111,8 @@ namespace NetSnifferApp
             this.statisticsToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(914, 28);
+            this.menuStrip1.Padding = new System.Windows.Forms.Padding(6, 3, 0, 3);
+            this.menuStrip1.Size = new System.Drawing.Size(914, 30);
             this.menuStrip1.TabIndex = 7;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -127,14 +130,14 @@ namespace NetSnifferApp
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
             this.openToolStripMenuItem.Size = new System.Drawing.Size(128, 26);
             this.openToolStripMenuItem.Text = "Open";
-            this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
+            this.openToolStripMenuItem.Click += new System.EventHandler(this.OpenToolStripMenuItem_Click);
             // 
             // saveToolStripMenuItem
             // 
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
             this.saveToolStripMenuItem.Size = new System.Drawing.Size(128, 26);
             this.saveToolStripMenuItem.Text = "Save";
-            this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
+            this.saveToolStripMenuItem.Click += new System.EventHandler(this.SaveToolStripMenuItem_Click);
             // 
             // statisticsToolStripMenuItem
             // 
@@ -149,17 +152,38 @@ namespace NetSnifferApp
             this.generalToolStripMenuItem.Name = "generalToolStripMenuItem";
             this.generalToolStripMenuItem.Size = new System.Drawing.Size(143, 26);
             this.generalToolStripMenuItem.Text = "General";
-            this.generalToolStripMenuItem.Click += new System.EventHandler(this.generalToolStripMenuItem_Click);
+            this.generalToolStripMenuItem.Click += new System.EventHandler(this.GeneralToolStripMenuItem_Click);
             // 
             // statisticsTimer
             // 
-            this.statisticsTimer.Tick += new System.EventHandler(this.statisticsTimer_Tick);
+            this.statisticsTimer.Tick += new System.EventHandler(this.StatisticsTimer_Tick);
+            // 
+            // packetFilter1
+            // 
+            this.packetFilter.Location = new System.Drawing.Point(15, 181);
+            this.packetFilter.Margin = new System.Windows.Forms.Padding(3, 5, 3, 5);
+            this.packetFilter.Name = "packetFilter1";
+            this.packetFilter.Size = new System.Drawing.Size(885, 49);
+            this.packetFilter.TabIndex = 8;
+            this.packetFilter.ValidFilter = true;
+            this.packetFilter.FilterChanged += new System.EventHandler<string>(this.PacketFilter_FilterChanged);
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(15, 157);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(150, 20);
+            this.label1.TabIndex = 9;
+            this.label1.Text = "Choose capture filter:";
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(914, 645);
+            this.ClientSize = new System.Drawing.Size(914, 740);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.packetFilter);
             this.Controls.Add(this.CtrlPacketViewer);
             this.Controls.Add(this.BtnStop);
             this.Controls.Add(this.BtnStart);
@@ -192,6 +216,8 @@ namespace NetSnifferApp
         private System.Windows.Forms.ToolStripMenuItem statisticsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem generalToolStripMenuItem;
         private System.Windows.Forms.Timer statisticsTimer;
+        private PacketFilter packetFilter;
+        private System.Windows.Forms.Label label1;
     }
 }
 
