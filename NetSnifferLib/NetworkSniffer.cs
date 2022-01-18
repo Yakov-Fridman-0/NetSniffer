@@ -8,21 +8,16 @@ using System.Threading.Tasks.Dataflow;
 
 namespace NetSnifferLib
 {
-    public class NetworkSniffer : IDisposable
+    public class NetworkSniffer
     {
-        private LivePacketCommunicator _communicator;
+        protected PacketCommunicator _communicator;
         public PacketAnalyzer _packetAnalyzer;
 
-        
-        private readonly ActionBlock<Packet> _eventRaiser;
+        protected readonly ActionBlock<Packet> _eventRaiser;
 
-        private Task _snifferTask;
+        protected Task _snifferTask;
 
         public event EventHandler<Packet> PacketReceived = delegate { };
-
-        public NetworkInterface NetworkInterface { get; private set; }
-        public string Filter { get; set; }
-        public bool Promiscous { get; set; }
 
         private static LivePacketDevice FindLivePacketDevice(NetworkInterface networkInterface)
         {
@@ -38,8 +33,8 @@ namespace NetSnifferLib
 
             return livePacketDevice;
         }
-
-        private NetworkSniffer()
+   
+        protected NetworkSniffer()
         {
             _eventRaiser = new ActionBlock<Packet>(packet => PacketReceived(this, packet));         
         }
@@ -50,12 +45,7 @@ namespace NetSnifferLib
             var filter = sniffingOptions.Filter;
             var promiscuous = sniffingOptions.Promiscuous;
 
-            var networkSniffer = new NetworkSniffer()
-            {
-                NetworkInterface = networkInterface,
-                Filter = filter,
-                Promiscous = promiscuous
-            };
+            var networkSniffer = new NetworkSniffer();
 
             var livePacketDevice = FindLivePacketDevice(networkInterface);
 
@@ -69,11 +59,42 @@ namespace NetSnifferLib
 
             communicator.SetFilter(filter);
 
-            networkSniffer._communicator = (LivePacketCommunicator)communicator;
+            networkSniffer._communicator = communicator;
 
             return networkSniffer;
         }
 
+        public static NetworkSniffer CreateOfflineSniffer(string fileName)
+        {
+            var offlinePacketDevice = new OfflinePacketDevice(fileName);
+           
+            PacketDeviceOpenAttributes openAttributes = PacketDeviceOpenAttributes.Promiscuous;
+            var communicator = offlinePacketDevice.Open(65536, openAttributes, 1000);
+
+            var offlineNetworkSniffer = new NetworkSniffer
+            {
+                _communicator = communicator
+            };
+
+            return offlineNetworkSniffer;
+        }
+
+
+        /// <summary>
+        /// Starts capturing traffic
+        /// </summary>
+        private void Start()
+        {
+            if (_communicator != null)
+            {
+                _communicator.ReceivePackets(0, packet => _eventRaiser.Post(packet));
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns>A task where the capturing takes place</returns>
         public Task StartAsync()
         {
             return _snifferTask = Task.Run(() => Start());
@@ -86,17 +107,6 @@ namespace NetSnifferLib
             communicator.Dispose();
 
             _communicator = null;
-        }
-
-        /// <summary>
-        /// Starts capturing traffic
-        /// </summary>
-        private void Start()
-        {
-            if (_communicator != null)
-            {
-                _communicator.ReceivePackets(0, packet => _eventRaiser.Post(packet));
-            }
         }
 
         public static bool IsValidFilter(string filter)
@@ -115,12 +125,6 @@ namespace NetSnifferLib
             {
                 packetFilter?.Dispose();
             }
-        }
-
-        public void Dispose()
-        {
-            //TODO: Add dispose logic here
-            GC.SuppressFinalize(this);
         }
     }
 }

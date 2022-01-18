@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using PcapDotNet.Packets.Ethernet;
 using PcapDotNet.Packets.IpV4;
 using PcapDotNet.Packets.IpV6;
-using PcapDotNet.Packets.Ethernet;
-using System.Net.NetworkInformation;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Net;
+using System.Net.NetworkInformation;
 
 namespace NetSnifferLib.General
 {
@@ -29,6 +25,7 @@ namespace NetSnifferLib.General
             PhysicalAddress physicalAddress = new(byteArray);
             return physicalAddress;
         }
+
         public static IPAddress ToIPAddress(IpV4Address address)
         {
             return IPAddress.Parse(address.ToString());
@@ -44,7 +41,7 @@ namespace NetSnifferLib.General
             var lower = address.ToString().ToLowerInvariant();
 
             List<string> parts = new();
-            for (int i=0; i < PhysicalAddressStringLength; i++)
+            for (int i = 0; i < PhysicalAddressStringLength; i++)
             {
                 parts.Add(lower.Substring(i, (int)PhysicalAddressStringPartLenght));
             }

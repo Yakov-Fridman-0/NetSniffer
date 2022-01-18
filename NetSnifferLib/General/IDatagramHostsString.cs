@@ -13,9 +13,6 @@ namespace NetSnifferLib.General
 
         public string GetDatagramDestinationString(Datagram datagram);
 
-        public bool SupportsHosts 
-        { 
-            get; 
-        }
+        public bool SupportsHosts { get; }
     }
 }

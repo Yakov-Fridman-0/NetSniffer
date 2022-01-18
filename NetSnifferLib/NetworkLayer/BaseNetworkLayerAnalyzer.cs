@@ -26,7 +26,7 @@ namespace NetSnifferLib.NetworkLayer
 
         public virtual string GetDatagramSourceString(T datagram)
         {
-            return GetDatagramSource(datagram).ToString();
+            return AddressConvert.ToString(GetDatagramSource(datagram));
         }
 
         public override string GetDatagramSourceString(Datagram datagram)

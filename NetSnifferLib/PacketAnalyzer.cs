@@ -1,13 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using PcapDotNet.Packets;
 using NetSnifferLib.General;
-using NetSnifferLib.LinkLayer;
-using NetSnifferLib.NetworkLayer;
-using NetSnifferLib.TransportLayer;
 
 namespace NetSnifferLib
 {
@@ -63,7 +56,6 @@ namespace NetSnifferLib
                         PackeStatisticsLogger.LogTcpPacket(GetPayloadLength(datagram));
                         break;
                 }
-
 
 
                 if (analyzer.SupportsHosts)

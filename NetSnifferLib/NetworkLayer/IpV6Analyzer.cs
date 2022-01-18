@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Net;
 using PcapDotNet.Packets;
 using PcapDotNet.Packets.IpV6;
-using PcapDotNet.Packets.IpV4;
 using NetSnifferLib.General;
 
 namespace NetSnifferLib.NetworkLayer
