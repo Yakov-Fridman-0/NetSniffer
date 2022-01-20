@@ -1,0 +1,55 @@
+﻿using System.Net;
+
+using PcapDotNet.Packets;
+using PcapDotNet.Packets.IpV4;
+
+using NetSnifferLib.General;
+
+namespace NetSnifferLib.Analysis.Network
+{
+    class IpV4Analyzer : BaseNetworkAnalyzer<IpV4Datagram>
+    {
+        private int _packets;
+        private int _bytes;
+
+        public override string Protocol => "IPv4";
+
+        protected override IPAddress GetSource(IpV4Datagram datagram)
+        {
+            return AddressConvert.ToIpAddress(datagram.Source);
+        }
+
+        protected override IPAddress GetDestination(IpV4Datagram datagram)
+        {
+            return AddressConvert.ToIpAddress(datagram.Destination);
+        }
+
+        protected override Datagram GetPayloadAndAnalyzer(IpV4Datagram datagram, out IAnalyzer analyzer)
+        {
+            Datagram payload;
+
+            switch(datagram.Protocol)
+            {
+                case IpV4Protocol.Udp:
+                    payload = datagram.Udp;
+                    analyzer = DatagramAnalyzer.UdpAnalyzer;
+                    break;
+                case IpV4Protocol.Tcp:
+                    payload = datagram.Tcp;
+                    analyzer = DatagramAnalyzer.TcpAnalyzer;
+                    break;
+                default:
+                    payload = datagram.Payload;
+                    analyzer = null;
+                    break;
+            }
+
+            return payload;
+        }
+
+        protected override string GetInfo(IpV4Datagram datagram)
+        {
+            return string.Empty;
+        }
+    }
+}
