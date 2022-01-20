@@ -9,7 +9,6 @@ namespace NetSnifferApp
     public partial class PacketViewer : UserControl
     {
         private readonly ActionBlock<Packet> _itemsBuilder;
-        private PacketAnalyzer _packetAnalyzer;
 
         public PacketViewer()
         {
@@ -33,15 +32,10 @@ namespace NetSnifferApp
             lstvPackets.Columns.Add(new ColumnHeader() { Text = "Protocol", Width = -2 });
             lstvPackets.Columns.Add(new ColumnHeader() { Text = "Source", Width = 150 });
             lstvPackets.Columns.Add(new ColumnHeader() { Text = "Destination", Width = 150 });
-            lstvPackets.Columns.Add(new ColumnHeader() { Text = "Payload Length", Width = 150 });
-            lstvPackets.Columns.Add(new ColumnHeader() { Text = "Info" });
+            lstvPackets.Columns.Add(new ColumnHeader() { Text = "Length", Width = 150 });
+            lstvPackets.Columns.Add(new ColumnHeader() { Text = "Info"});
 
             #endregion
-        }
-
-        public void SetAnalyzer(PacketAnalyzer packetAnalyzer)
-        {
-            _packetAnalyzer = packetAnalyzer;
         }
 
         public IEnumerable<Packet> GetSelectedPackets()
@@ -106,7 +100,7 @@ namespace NetSnifferApp
             
             if (PacketAnalyzer.IsEthernet(packet))
             {
-                PacketDescription packetDescription = _packetAnalyzer.AnalyzePacket(packet);
+                PacketDescription packetDescription = PacketAnalyzer.AnalyzePacket(packet);
 
                 subItems[1] = packetDescription.TimeStamp;
                 subItems[2] = packetDescription.Protocol;
