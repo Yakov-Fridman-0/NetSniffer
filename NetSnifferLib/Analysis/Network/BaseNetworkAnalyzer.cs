@@ -10,6 +10,12 @@ namespace NetSnifferLib.Analysis.Network
 {
     abstract class BaseNetworkAnalyzer<T> : BaseAnalyzer<T, DataLinkContext>, INetworkAnalyzer where T: IpDatagram
     {
+        public int SentPackets { get; protected set; } = 0;
+
+        public int SentBytes { get; protected set; } = 0;
+
+        protected abstract int GetPayloadLength(T datgram);
+
         protected abstract IPAddress GetSource(T datagram);
 
         protected abstract IPAddress GetDestination(T datagram);
@@ -18,9 +24,12 @@ namespace NetSnifferLib.Analysis.Network
 
         protected override NetworkAnalysis AnalyzeDatagramCore(T datagram, DataLinkContext context)
         {
+            SentPackets++;
+            SentBytes += GetPayloadLength(datagram);
+
             var analysis = new NetworkAnalysis();
 
-            var info = GetInfo(datagram);
+            var info = GetInfo(datagram, context);
             analysis.AddInfo(info);
 
             var source = GetSource(datagram);

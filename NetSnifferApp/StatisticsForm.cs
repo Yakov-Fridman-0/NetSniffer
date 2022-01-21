@@ -6,9 +6,9 @@ namespace NetSnifferApp
 {
     public partial class GeneralStatisticsForm : Form
     {
-        private const string NumberFormat = "{0:N}";
-        private const string BytesFormat = "{0:N} B";
-        private const string MsFormat = "{0:N} ms";
+        const string NumberFormat = "{0:N}";
+        const string BytesFormat = "{0:N} B";
+        const string SecondsFormat = "{0:N} s";
 
         public event EventHandler NewStatisticsRequired;
 
@@ -16,6 +16,8 @@ namespace NetSnifferApp
         DateTime baseTime = default;
 
         GeneralStatistics currentStatistics;
+
+        bool frozen = false;
 
         public GeneralStatisticsForm()
         {
@@ -32,8 +34,8 @@ namespace NetSnifferApp
 
         private void SetStatistics(GeneralStatistics statistics)
         {
-            tNumLbl.Text = string.Format(NumberFormat, statistics.Packets.ToString());
-            tBytesLbl.Text = string.Format(BytesFormat, statistics.Bytes.ToString());
+            tNumLbl.Text = string.Format(NumberFormat, statistics.TransmittedPackets.ToString());
+            tBytesLbl.Text = string.Format(BytesFormat, statistics.TransmittedBytes.ToString());
 
             eNumLbl.Text = string.Format(NumberFormat, statistics.EthernetPackets.ToString());
             eBytesLbl.Text = string.Format(BytesFormat, statistics.EthernetPayloadBytes.ToString());
@@ -51,47 +53,48 @@ namespace NetSnifferApp
             tcpBytesLbl.Text = string.Format(BytesFormat, statistics.TcpPayloadBytes.ToString());
         }
 
-        private void refreshStatisicsCheckBox_CheckedChanged(object sender, EventArgs e)
-        {
-            if (refreshStatisicsCheckBox.Checked)
-            {
-                refreshTimer.Start();
-                elapsedTimeTimer.Start();
-            }
-            else
-            {
-                refreshTimer.Stop();
-                elapsedTimeTimer.Stop();
-            }               
-        }
-
         private void refreshTimer_Tick(object sender, EventArgs e)
         {
             NewStatisticsRequired.Invoke(this, EventArgs.Empty);
         }
 
-        private void clearButton_Click(object sender, EventArgs e)
+        private void zeroButton_Click(object sender, EventArgs e)
         {
             baseStatistics = currentStatistics;
             baseTime = DateTime.Now;
 
             SetStatistics(default);
+            elapsedTimeLabel.Text = string.Format(SecondsFormat, 0);
         }
 
         private void GeneralStatisticsForm_Load(object sender, EventArgs e)
         {
-            refreshStatisicsCheckBox.Checked = true;
+            frozen = false;
             refreshTimer.Start();
+            elapsedTimeTimer.Start();
         }
 
         private void elapsedTimeTimer_Tick(object sender, EventArgs e)
         {
-            elpasedTimeLabel.Text = string.Format(MsFormat, (DateTime.Now - baseTime).TotalMilliseconds);
+            elapsedTimeLabel.Text = string.Format(SecondsFormat, (DateTime.Now - baseTime).TotalSeconds);
         }
 
-        private void tableLayoutPanel1_Paint(object sender, PaintEventArgs e)
+        private void freezeButtom_Click(object sender, EventArgs e)
         {
+            if (frozen)
+            {
+                freezeButtom.Text = "Freeze";
+                refreshTimer.Start();
+                elapsedTimeTimer.Start();
+            }
+            else
+            {
+                freezeButtom.Text = "Unfreeze";
+                refreshTimer.Stop();
+                elapsedTimeTimer.Stop();
+            }
 
+            frozen = !frozen;
         }
     }
 }

@@ -1,7 +1,10 @@
 ﻿using System.Net;
+
 using PcapDotNet.Packets;
 using PcapDotNet.Packets.IpV6;
+
 using NetSnifferLib.General;
+using NetSnifferLib.Analysis.DataLink;
 
 namespace NetSnifferLib.Analysis.Network
 {
@@ -16,6 +19,11 @@ namespace NetSnifferLib.Analysis.Network
         {
             //TODO: Check options
             return AddressConvert.ToIpAddress(datagram.CurrentDestination);
+        }
+
+        protected override int GetPayloadLength(IpV6Datagram datgram)
+        {
+            return datgram.PayloadLength;
         }
 
         protected override Datagram GetPayloadAndAnalyzer(IpV6Datagram datagram, out IAnalyzer analyzer)
@@ -37,7 +45,7 @@ namespace NetSnifferLib.Analysis.Network
             return payload;
         }
 
-        protected override string GetInfo(IpV6Datagram datagram)
+        protected override string GetInfo(IpV6Datagram datagram, DataLinkContext context)
         {
             return string.Empty;
         }

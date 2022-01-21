@@ -2,9 +2,9 @@
 {
     public struct GeneralStatistics
     {
-        public int Packets { get; internal set; }
+        public int TransmittedPackets { get; internal set; }
 
-        public int Bytes { get; internal set; }
+        public int TransmittedBytes { get; internal set; }
 
         public int EthernetPackets { get; internal set; }
 
@@ -29,8 +29,8 @@
         public static GeneralStatistics operator - (GeneralStatistics stat1, GeneralStatistics stat2)
         {
             var result = (GeneralStatistics)stat1.MemberwiseClone();
-            result.Packets = stat1.Packets - stat2.Packets;
-            result.Bytes = stat1.Bytes - stat2.Bytes;
+            result.TransmittedPackets = stat1.TransmittedPackets - stat2.TransmittedPackets;
+            result.TransmittedBytes = stat1.TransmittedBytes - stat2.TransmittedBytes;
 
             result.EthernetPackets = stat1.EthernetPackets - stat2.EthernetPackets;
             result.EthernetPayloadBytes = stat1.EthernetPayloadBytes - stat2.EthernetPayloadBytes;

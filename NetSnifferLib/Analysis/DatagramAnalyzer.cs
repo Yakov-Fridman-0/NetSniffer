@@ -4,6 +4,7 @@ using NetSnifferLib.General;
 using NetSnifferLib.Analysis.DataLink;
 using NetSnifferLib.Analysis.Network;
 using NetSnifferLib.Analysis.Transport;
+using NetSnifferLib.Analysis.Application;
 using NetSnifferLib.Analysis.Miscellaneous;
 
 namespace NetSnifferLib.Analysis
@@ -33,14 +34,12 @@ namespace NetSnifferLib.Analysis
 
         public static DnsAnalyzer DnsAnalyzer { get; } = new();
 
-        public static Dictionary<IAnalyzer, IPortsMatch> AnalyzersOverUdp { get; } = new()
+        public static DhcpAnalyzer DhcpAnalyzer { get; } = new();
+
+        public static Dictionary<IApplicationAnalyzer, IPortsMatch> AnalyzersOverUdp { get; } = new()
         {
             { DhcpAnalyzer, new KnownPortPair(67, 68)},
             { DnsAnalyzer, new KnownPort(53) }
         };
-
-        public static HttpAnalyzer HttpAnalyzer { get; } = new();
-
-        public static DhcpAnalyzer DhcpAnalyzer { get; } = new();
     }
 }

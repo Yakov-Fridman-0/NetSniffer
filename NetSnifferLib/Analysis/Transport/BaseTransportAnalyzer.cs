@@ -1,4 +1,6 @@
-﻿using PcapDotNet.Packets.Transport;
+﻿using System.Net;
+
+using PcapDotNet.Packets.Transport;
 using PcapDotNet.Packets;
 
 using NetSnifferLib.General;
@@ -9,38 +11,64 @@ namespace NetSnifferLib.Analysis.Transport
     abstract class BaseTransportAnalyzer<T> : BaseAnalyzer<T, NetworkContext>, ITransportAnalyzer 
         where T : TransportDatagram
     {
-        protected static bool OneOf(ushort sourcePort, ushort destinationPort, ushort port)
+        public int SentPackets { get; protected set; } = 0;
+
+        public int SentBytes { get; protected set; } = 0;
+
+        protected virtual ushort GetSourcePortCore(T datagram)
         {
-            return sourcePort == port || destinationPort == port;
+            return datagram.SourcePort;
         }
 
-        protected static bool TwoOf(ushort sourcePort, ushort destinationPort, ushort port1, ushort port2)
+        public ushort GetSourcePort(TransportDatagram datagram)
         {
-            return OneOf(sourcePort, destinationPort, port1) && OneOf(sourcePort, destinationPort, port2);
+            return GetSourcePortCore((T)datagram);
         }
 
-        public override abstract Datagram GetPayload(Datagram datagram);
-
-        public abstract string GetDatagramInfo(T datagram);
-
-        public override string GetDatagramInfo(Datagram datagram)
-        {
-            return GetDatagramInfo((T)datagram);
-        }
-
-        public virtual ushort GetDestinationPort(T datagram)
+        protected virtual ushort GetDestinationPortCore(T datagram)
         {
             return datagram.DestinationPort;
         }
 
-        public virtual ushort GetPayloadLength(T datagram)
+        public ushort GetDestinationPort(TransportDatagram datagram)
         {
-            return (ushort)datagram.Payload.Length;
+            return GetDestinationPortCore((T)datagram);
         }
 
-        public virtual ushort GetSourcePort(T datagram)
+        protected virtual int GetPayloadLength(T datagram)
         {
-            return datagram.SourcePort;
+            return datagram.Payload.Length;
+        }
+
+        protected abstract Datagram GetPayloadAndAnalyzer(T datagram, out IAnalyzer analyzer);
+
+        protected override TransportAnalysis AnalyzeDatagramCore(T datagram, NetworkContext context)
+        {
+            SentPackets++;
+            SentBytes += GetPayloadLength(datagram);
+
+            var analysis = new TransportAnalysis();
+
+            var info = GetInfo(datagram, context);
+            analysis.AddInfo(info);
+
+
+            var sourcePort = GetSourcePortCore(datagram);
+            var sourceIpEndPoint = new IPEndPoint(context.Source.IpAddress, sourcePort);
+
+            var destinationPort = GetDestinationPortCore(datagram);
+            var destinationIpEndPoint = new IPEndPoint(context.Destination.IpAddress, destinationPort);
+
+            var sourceIpEndPointContainer = (IpEndPointContainer)AddressConvert.ToIAddress(sourceIpEndPoint);
+            var destinationIpEndPointContainer = (IpEndPointContainer)AddressConvert.ToIAddress(destinationIpEndPoint);
+            analysis.AddHostsInfo(sourceIpEndPointContainer, destinationIpEndPointContainer);
+            
+            var payloadContext = new TransportContext(sourceIpEndPointContainer, destinationIpEndPointContainer);
+
+            var payloadDatagram = GetPayloadAndAnalyzer(datagram, out IAnalyzer analyzer);
+            analysis.AddPayloadInfo(payloadDatagram, payloadContext, analyzer);
+
+            return analysis;
         }
     }
 }

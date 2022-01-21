@@ -2,5 +2,5 @@
 
 namespace NetSnifferLib.Analysis.Network
 {
-    interface INetworkAnalyzer : IAnalyzer { }
+    interface INetworkAnalyzer : IAnalyzer, IStatistics { }
 }

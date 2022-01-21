@@ -3,6 +3,7 @@ using PcapDotNet.Packets;
 using System.Collections.Generic;
 using System.Threading.Tasks.Dataflow;
 using System.Windows.Forms;
+using NetSnifferLib.Analysis;
 
 namespace NetSnifferApp
 {
@@ -102,11 +103,11 @@ namespace NetSnifferApp
             {
                 PacketDescription packetDescription = PacketAnalyzer.AnalyzePacket(packet);
 
-                subItems[1] = packetDescription.TimeStamp;
+                subItems[1] = packetDescription.TimeStamp.ToString("HH:mm:ss:fff");
                 subItems[2] = packetDescription.Protocol;
-                subItems[3] = packetDescription.Source;
-                subItems[4] = packetDescription.Destination;
-                subItems[5] = packetDescription.Length;
+                subItems[3] = AddressFormat.ToString(packetDescription.Source);
+                subItems[4] = AddressFormat.ToString(packetDescription.Destination);
+                subItems[5] = packetDescription.Length.ToString();
                 subItems[6] = packetDescription.Info;
             }
             else
@@ -120,27 +121,6 @@ namespace NetSnifferApp
             }
 
             return subItems;
-            /*var analyzer = PacketAnalyzer.GetAnalyzer(packet);
-
-            if (analyzer != null)
-            {
-                //Time
-                var timestamp = analyzer.GetTimeStamp(packet);
-                subItems[1] = timestamp.ToString("HH:mm:ss.ffff");
-                //Protocol
-                subItems[2] = analyzer.GetProtocol(packet);
-                //Source
-                subItems[3] = analyzer.GetPacketSource(packet);
-                //"Destination
-                subItems[4] = analyzer.GetPacketDestination(packet);
-                //Payload Length
-                var payloadLength = analyzer.GetLength(packet);
-                subItems[5] = payloadLength == 0 ? string.Empty : payloadLength.ToString();
-                //Info
-                subItems[6] = analyzer.GetPacketInfo(packet);
-            }
-
-            return subItems;*/
         }
     }
 }

@@ -54,13 +54,13 @@ namespace NetSnifferApp
             this.tBytesLbl = new System.Windows.Forms.Label();
             this.eBytesLbl = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            this.refreshStatisicsCheckBox = new System.Windows.Forms.CheckBox();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.refreshTimer = new System.Windows.Forms.Timer(this.components);
-            this.clearButton = new System.Windows.Forms.Button();
+            this.zeroButton = new System.Windows.Forms.Button();
             this.label13 = new System.Windows.Forms.Label();
             this.elapsedTimeTimer = new System.Windows.Forms.Timer(this.components);
-            this.elpasedTimeLabel = new System.Windows.Forms.Label();
+            this.elapsedTimeLabel = new System.Windows.Forms.Label();
+            this.freezeButtom = new System.Windows.Forms.Button();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -328,19 +328,6 @@ namespace NetSnifferApp
             this.label4.Text = "Bytes Tx. over Ethernet:";
             this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // refreshStatisicsCheckBox
-            // 
-            this.refreshStatisicsCheckBox.AutoSize = true;
-            this.refreshStatisicsCheckBox.Checked = true;
-            this.refreshStatisicsCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.refreshStatisicsCheckBox.Location = new System.Drawing.Point(53, 435);
-            this.refreshStatisicsCheckBox.Name = "refreshStatisicsCheckBox";
-            this.refreshStatisicsCheckBox.Size = new System.Drawing.Size(65, 19);
-            this.refreshStatisicsCheckBox.TabIndex = 24;
-            this.refreshStatisicsCheckBox.Text = "Refresh";
-            this.refreshStatisicsCheckBox.UseVisualStyleBackColor = true;
-            this.refreshStatisicsCheckBox.CheckedChanged += new System.EventHandler(this.refreshStatisicsCheckBox_CheckedChanged);
-            // 
             // tableLayoutPanel1
             // 
             this.tableLayoutPanel1.ColumnCount = 2;
@@ -392,15 +379,15 @@ namespace NetSnifferApp
             // 
             this.refreshTimer.Tick += new System.EventHandler(this.refreshTimer_Tick);
             // 
-            // clearButton
+            // zeroButton
             // 
-            this.clearButton.Location = new System.Drawing.Point(140, 449);
-            this.clearButton.Name = "clearButton";
-            this.clearButton.Size = new System.Drawing.Size(75, 23);
-            this.clearButton.TabIndex = 26;
-            this.clearButton.Text = "Clear";
-            this.clearButton.UseVisualStyleBackColor = true;
-            this.clearButton.Click += new System.EventHandler(this.clearButton_Click);
+            this.zeroButton.Location = new System.Drawing.Point(226, 435);
+            this.zeroButton.Name = "zeroButton";
+            this.zeroButton.Size = new System.Drawing.Size(84, 23);
+            this.zeroButton.TabIndex = 26;
+            this.zeroButton.Text = "Zero";
+            this.zeroButton.UseVisualStyleBackColor = true;
+            this.zeroButton.Click += new System.EventHandler(this.zeroButton_Click);
             // 
             // label13
             // 
@@ -418,23 +405,33 @@ namespace NetSnifferApp
             // 
             // elpasedTimeLabel
             // 
-            this.elpasedTimeLabel.AutoSize = true;
-            this.elpasedTimeLabel.Location = new System.Drawing.Point(141, 27);
-            this.elpasedTimeLabel.Name = "elpasedTimeLabel";
-            this.elpasedTimeLabel.Size = new System.Drawing.Size(32, 15);
-            this.elpasedTimeLabel.TabIndex = 28;
-            this.elpasedTimeLabel.Text = "0 ms";
+            this.elapsedTimeLabel.AutoSize = true;
+            this.elapsedTimeLabel.Location = new System.Drawing.Point(141, 27);
+            this.elapsedTimeLabel.Name = "elpasedTimeLabel";
+            this.elapsedTimeLabel.Size = new System.Drawing.Size(21, 15);
+            this.elapsedTimeLabel.TabIndex = 28;
+            this.elapsedTimeLabel.Text = "0 s";
+            // 
+            // freezeButtom
+            // 
+            this.freezeButtom.Location = new System.Drawing.Point(53, 435);
+            this.freezeButtom.Name = "freezeButtom";
+            this.freezeButtom.Size = new System.Drawing.Size(75, 23);
+            this.freezeButtom.TabIndex = 29;
+            this.freezeButtom.Text = "Zreeze";
+            this.freezeButtom.UseVisualStyleBackColor = true;
+            this.freezeButtom.Click += new System.EventHandler(this.freezeButtom_Click);
             // 
             // GeneralStatisticsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(405, 499);
-            this.Controls.Add(this.elpasedTimeLabel);
+            this.Controls.Add(this.freezeButtom);
+            this.Controls.Add(this.elapsedTimeLabel);
             this.Controls.Add(this.label13);
-            this.Controls.Add(this.clearButton);
+            this.Controls.Add(this.zeroButton);
             this.Controls.Add(this.tableLayoutPanel1);
-            this.Controls.Add(this.refreshStatisicsCheckBox);
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "GeneralStatisticsForm";
             this.Text = "General Statistics";
@@ -472,12 +469,12 @@ namespace NetSnifferApp
         private System.Windows.Forms.Label tBytesLbl;
         private System.Windows.Forms.Label eBytesLbl;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.CheckBox refreshStatisicsCheckBox;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Timer refreshTimer;
-        private System.Windows.Forms.Button clearButton;
+        private System.Windows.Forms.Button zeroButton;
         private System.Windows.Forms.Label label13;
         private System.Windows.Forms.Timer elapsedTimeTimer;
-        private System.Windows.Forms.Label elpasedTimeLabel;
+        private System.Windows.Forms.Label elapsedTimeLabel;
+        private System.Windows.Forms.Button freezeButtom;
     }
 }

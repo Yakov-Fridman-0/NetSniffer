@@ -1,77 +1,46 @@
-﻿using System.Linq;
-
-using NetSnifferLib.General;
-using NetSnifferLib.Packets.Bootp;
-using NetSnifferLib.Packets.Dhcp;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 using PcapDotNet.Packets.Transport;
 using PcapDotNet.Packets;
 
+using NetSnifferLib.General;
+using NetSnifferLib.Analysis.Network;
+using NetSnifferLib.Analysis.Application;
+using NetSnifferLib.Packets.Bootp;
+using NetSnifferLib.Packets.Dhcp;
 
 namespace NetSnifferLib.Analysis.Transport
 {
     class UdpAnalyzer : BaseTransportAnalyzer<UdpDatagram>
     {
-        private const ushort DnsPort = 53;
+        public override string Protocol => "UDP";
 
-        private const ushort DhcpPort1 = 67;
-        private const ushort DhcpPort2 = 68;
-
-        public override Datagram GetDatagramPayload(Datagram datagram)
+        protected override string GetInfo(UdpDatagram datagram, NetworkContext context)
         {
-            var udpDatagram = (UdpDatagram)datagram;
-
-            ushort sourcePort = GetSourcePort(udpDatagram);
-            ushort destinationPort = GetDestinationPort(udpDatagram);
-
-            if (OneOf(sourcePort, destinationPort, DnsPort) && udpDatagram.Dns.IsValid)
-            {
-                return udpDatagram.Dns;
-            }
-            if (TwoOf(sourcePort, destinationPort, DhcpPort1, DhcpPort2))
-            {
-                if (GetDhcpDatagram(udpDatagram)?.IsValid ?? false)
-                    return GetDhcpDatagram(udpDatagram);
-            }
-                
-            return udpDatagram.Payload;
+            return $"{GetSourcePortCore(datagram)} → {GetDestinationPortCore(datagram)} Len={GetPayloadLength(datagram)}";
         }
 
-        public override IAnalyzer GetDatagramPayloadAnalyzer(Datagram datagram)
+        protected override Datagram GetPayloadAndAnalyzer(UdpDatagram datagram, out IAnalyzer analyzer)
         {
-            var udpDatagram = (UdpDatagram)datagram;
+            ushort sourcePort = GetSourcePortCore(datagram);
+            ushort destinationPort = GetDestinationPortCore(datagram);
 
-            ushort sourcePort = GetSourcePort(udpDatagram);
-            ushort destinationPort = GetDestinationPort(udpDatagram);
+            foreach (KeyValuePair<IApplicationAnalyzer, IPortsMatch> kvp in DatagramAnalyzer.AnalyzersOverUdp)
+            {
+                var portsMatch = kvp.Value;
+                var applicationAnalyzer = kvp.Key;
+                Datagram applicationDatagram = null;
 
-            if (OneOf(sourcePort, destinationPort, DnsPort) && udpDatagram.Dns.IsValid)
-            {
-                return DatagramAnalyzer.DnsAnalyzer;
+                if(portsMatch.PortsMatch(sourcePort, destinationPort) && applicationAnalyzer.TryGetDatagram(datagram, ref applicationDatagram))
+                {
+                    analyzer = applicationAnalyzer;
+                    return applicationDatagram;
+                }
             }
-            if (TwoOf(sourcePort, destinationPort, DhcpPort1, DhcpPort2))
-            {
-                if (GetDhcpDatagram(udpDatagram)?.IsValid ?? false)
-                    return DatagramAnalyzer.DhcpAnalyzer;
-            }
-                
+
+            analyzer = null;
             return null;
         }
-
-        public override string GetDatagramInfo(UdpDatagram datagram)
-        {
-            return $"{GetSourcePort(datagram)} → {GetDestinationPort(datagram)} Len={GetPayloadLength(datagram)}";
-        }
-
-        public static BootpDatagram GetBootpDatagram(UdpDatagram udpDatagram)
-        {
-            return new BootpDatagram(udpDatagram.Payload.ToArray());
-        }
-
-        public static DhcpDatagram GetDhcpDatagram(UdpDatagram udpDatagram)
-        {
-            return new DhcpDatagram(udpDatagram.Payload.ToArray());
-        }
-
-        public override string ProtocolString => "UDP";
     }
 }

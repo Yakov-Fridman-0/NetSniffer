@@ -1,5 +1,7 @@
 ﻿using NetSnifferLib;
+using NetSnifferLib.Analysis;
 using NetSnifferLib.Statistics;
+
 using System;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -10,8 +12,6 @@ namespace NetSnifferApp
     {
         private SniffingOptions _sniffingOptions;
         private NetSniffer _netSniffer;
-
-        bool capturing = false;
 
         public MainForm()
         {
@@ -52,20 +52,21 @@ namespace NetSnifferApp
 
             _sniffingOptions.NetworkInterface = ((NetInterfaceItem)CmbNetInterface.SelectedItem).NetworkInterface;
 
-            SartAsync();
+            StartSniffingAsync();
         }
 
-        private void SartAsync()
+        private Task StartSniffingAsync()
+        {
+            return Task.Run(() => StartSniffing());
+        }
+
+        private void StartSniffing()
         {
             _netSniffer = NetSniffer.CreateLiveSniffer(_sniffingOptions);
             _sniffingOptions = new SniffingOptions();
 
-            var netSniffer = _netSniffer;
-
-            netSniffer.PacketReceived += NetSniffer_PacketReceived;
-            netSniffer.StartAsync();
-
-            capturing = true;
+            _netSniffer.PacketReceived += NetSniffer_PacketReceived;
+            _netSniffer.Start();
         }
 
         private void NetSniffer_PacketReceived(object sender, PcapDotNet.Packets.Packet e)
@@ -89,8 +90,6 @@ namespace NetSnifferApp
 
             netSniffer.PacketReceived -= NetSniffer_PacketReceived;
             netSniffer.Stop();
-
-            capturing = false;
 
             packetFilter.Enabled = true;
         }
@@ -211,7 +210,7 @@ namespace NetSnifferApp
 
         private void statisticsForm_NewStatisticsRequired(object sender, EventArgs e)
         {
-            statisticsForm.SendNewStatistics(PacketAnalyzer.GetGeneralStatisics());
+            statisticsForm.SendNewStatistics(PacketAnalyzer.GetGeneralStatistics());
         }
 
         private void PacketFilter_FilterChanged(object sender, string e)

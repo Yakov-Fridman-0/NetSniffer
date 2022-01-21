@@ -2,5 +2,5 @@
 
 namespace NetSnifferLib.Analysis.DataLink
 {
-    interface IDataLinkAnalyzer : IAnalyzer { }
+    interface IDataLinkAnalyzer : IAnalyzer, IStatistics { }
 }

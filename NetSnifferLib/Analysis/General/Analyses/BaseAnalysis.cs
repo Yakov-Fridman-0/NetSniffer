@@ -1,4 +1,6 @@
-﻿using PcapDotNet.Packets;
+﻿using System;
+
+using PcapDotNet.Packets;
 
 namespace NetSnifferLib.General
 {
@@ -18,6 +20,8 @@ namespace NetSnifferLib.General
         protected bool? _hostsSupplied = null;
         protected bool? _payloadSupplied = null;
 
+        protected bool _faulted = false;
+
         public void AddInfo(
             string info)
         {
@@ -29,6 +33,9 @@ namespace NetSnifferLib.General
             TAddress source,
             TAddress destination)
         {
+            if (!_hostsSupplied.HasValue)
+                _faulted = true;
+
             _hostsSupplied = true;
             _source = source;
             _destination = destination;
@@ -39,6 +46,9 @@ namespace NetSnifferLib.General
             TContext payloadContext,
             IAnalyzer payloadAnalyzer)
         {
+            if (!_payloadSupplied.HasValue)
+                _faulted = true;
+
             _payloadSupplied = true;
             _payload = payload;
             _payloadContext = payloadContext;
@@ -65,5 +75,9 @@ namespace NetSnifferLib.General
             _infoSupplied.GetValueOrDefault(true) && 
             _hostsSupplied.GetValueOrDefault(true) && 
             _hostsSupplied.GetValueOrDefault(true);
+
+        public bool Faulted => _faulted;
+
+        public bool Valid => Complete && !Faulted;
     }
 }

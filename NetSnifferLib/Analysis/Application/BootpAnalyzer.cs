@@ -8,13 +8,13 @@ using NetSnifferLib.General;
 
 namespace NetSnifferLib.Analysis.Miscellaneous
 {
-    class BootpAnalyzer : BaseAnalyzer<>
-    {
-        protected override string Protocol => "BOOTP";
+    //class BootpAnalyzer
+    //{
+    //    protected override string Protocol => "BOOTP";
 
-        public override string GetInfo(Datagram datagram)
-        {
-            return string.Empty;
-        }
-    }
+    //    public override string GetInfo(Datagram datagram)
+    //    {
+    //        return string.Empty;
+    //    }
+    //}
 }

@@ -8,7 +8,7 @@ namespace NetSnifferLib.General
     {
         public abstract string Protocol { get; }
 
-        protected abstract string GetInfo(TDatagram datagram);
+        protected abstract string GetInfo(TDatagram datagram, TContext context);
 
         protected abstract IAnalysis AnalyzeDatagramCore(TDatagram datagram, TContext context);
 

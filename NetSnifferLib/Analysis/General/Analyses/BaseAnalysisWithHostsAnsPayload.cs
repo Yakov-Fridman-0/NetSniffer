@@ -22,7 +22,7 @@ namespace NetSnifferLib.General
 
         public void AddPayloadInfo(Datagram payload, TConext payloadContext, IAnalyzer payloadAnalyzer)
         {
-            AddPayloadInfo(payload, payloadContext, payloadAnalyzer);
+            AddPayloadInfoCore(payload, payloadContext, payloadAnalyzer);
         }
     }
 }

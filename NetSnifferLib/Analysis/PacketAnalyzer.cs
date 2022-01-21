@@ -3,41 +3,59 @@ using PcapDotNet.Packets;
 using NetSnifferLib.General;
 using NetSnifferLib.Statistics;
 
-namespace NetSnifferLib
+namespace NetSnifferLib.Analysis
 {
     public class PacketAnalyzer
-    { 
+    {
+        public static int TransmittedPackets { get; private set; } = 0;
+        public static int TransmittedBytes { get; private set; } = 0;
+        public static bool IsEthernet(Packet packet) => packet.DataLink.Kind == DataLinkKind.Ethernet;
+
         public static PacketDescription AnalyzePacket(Packet packet)
         {
+            TransmittedPackets++;
+            TransmittedBytes += packet.Length;
 
             if (!IsEthernet(packet))
                 throw new InvalidOperationException("Packet datalink must be Ethernet.");
 
-            string timeStamp, protocol = default, source = default, destination = default, length, info = default;
 
-            timeStamp = packet.Timestamp.ToString("HH:mm:ss.ffff");
-            length = packet.Length.ToString();
+            var timeStamp = packet.Timestamp;
+            var length = packet.Length;
+
+            string protocol, info;
+
+            IAddress source = null, destination = null;
+
+            IAnalysis analysis;
 
             Datagram datagram = packet.Ethernet;
+            IContext context = null;
             IAnalyzer analyzer = DatagramAnalyzer.EthernetAnalyzer;
-            IAnalyzer nextAnalyzer;
-            
 
-            while (analyzer is not null)
+
+            do
             {
-                protocol = analyzer.ProtocolString;
-                info = analyzer.GetDatagramInfo(datagram);
+                analysis = analyzer.AnalyzeDatagram(datagram, context);
 
-                if (analyzer.SupportsHosts)
+                info = analysis.Info;
+                protocol = analyzer.Protocol;
+
+                if (analysis.HasAddresses)
                 {
-                    source = analyzer.GetDatagramSourceString(datagram);
-                    destination = analyzer.GetDatagramDestinationString(datagram);
+                    source = analysis.Source;
+                    destination = analysis.Destination;
                 }
 
-                nextAnalyzer = analyzer.GetDatagramPayloadAnalyzer(datagram);
-                datagram = analyzer.GetDatagramPayload(datagram);
-                analyzer = nextAnalyzer;       
-            }
+                if (analysis.HasPayload)
+                {
+                    datagram = analysis.Payload;
+                    context = analysis.PayloadContext;
+                    analyzer = analysis.PayloadAnalyzer;
+                }
+
+            } while (analysis.HasPayload && analyzer != null);
+
 
             return new PacketDescription() 
             { 
@@ -52,9 +70,26 @@ namespace NetSnifferLib
 
         public static GeneralStatistics GetGeneralStatistics()
         {
+            return new GeneralStatistics()
+            {
+                TransmittedPackets = TransmittedPackets,
+                TransmittedBytes = TransmittedBytes,
 
+                EthernetPackets = DatagramAnalyzer.EthernetAnalyzer.SentPackets,
+                EthernetPayloadBytes = DatagramAnalyzer.EthernetAnalyzer.SentBytes,
+
+                IpV4Packets = DatagramAnalyzer.IpV4Analyzer.SentPackets,
+                IpV4PayloadBytes = DatagramAnalyzer.IpV4Analyzer.SentBytes,
+
+                IpV6Packets = DatagramAnalyzer.IpV6Analyzer.SentPackets,
+                IpV6PayloadBytes = DatagramAnalyzer.IpV6Analyzer.SentBytes,
+
+                UdpPackets = DatagramAnalyzer.UdpAnalyzer.SentPackets,
+                UdpPayloadBytes = DatagramAnalyzer.UdpAnalyzer.SentBytes,
+
+                TcpPackets = DatagramAnalyzer.TcpAnalyzer.SentPackets,
+                TcpPayloadBytes = DatagramAnalyzer.TcpAnalyzer.SentBytes,
+            };
         }
-
-        public static bool IsEthernet(Packet packet) => packet.DataLink.Kind == DataLinkKind.Ethernet;
     }
 }

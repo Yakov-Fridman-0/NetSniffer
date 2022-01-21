@@ -9,7 +9,7 @@ namespace NetSnifferLib.Analysis.Miscellaneous
     {
         public override string Protocol => "ARP";
 
-        protected override string GetInfo(ArpDatagram datagram)
+        protected override string GetInfo(ArpDatagram datagram, DataLinkContext context)
         {
             var senderIp = AddressConvert.ToIpAddress(datagram.SenderProtocolIpV4Address);
             var targetIp = AddressConvert.ToIpAddress(datagram.TargetProtocolIpV4Address);
@@ -29,7 +29,7 @@ namespace NetSnifferLib.Analysis.Miscellaneous
         protected override ArpAnalysis AnalyzeDatagramCore(ArpDatagram datagram, DataLinkContext context)
         {
             var analysis = new ArpAnalysis();
-            analysis.AddInfo(datagram);
+            analysis.AddInfo(GetInfo(datagram, context));
 
             return analysis;
         }

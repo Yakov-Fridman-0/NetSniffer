@@ -3,7 +3,7 @@ using System.Net.NetworkInformation;
 
 namespace NetSnifferLib.General
 {
-    interface IAddress
+    public interface IAddress
     {
         PhysicalAddress PhysicalAddress { get; }
 

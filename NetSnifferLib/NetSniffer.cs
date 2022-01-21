@@ -36,7 +36,7 @@ namespace NetSnifferLib
    
         protected NetSniffer()
         {
-            _eventRaiser = new ActionBlock<Packet>(packet => PacketReceived(this, packet));         
+            _eventRaiser = new ActionBlock<Packet>(packet => PacketReceived.Invoke(this, packet));         
         }
 
         public static NetSniffer CreateLiveSniffer(SniffingOptions sniffingOptions)
@@ -64,6 +64,12 @@ namespace NetSnifferLib
             return networkSniffer;
         }
 
+        public static Task<NetSniffer> CreateLiveSnifferAsync(SniffingOptions sniffingOptions)
+        {
+            return Task.Run(() => CreateLiveSniffer(sniffingOptions));
+        }
+
+
         public static NetSniffer CreateOfflineSniffer(string fileName)
         {
             var offlinePacketDevice = new OfflinePacketDevice(fileName);
@@ -83,7 +89,7 @@ namespace NetSnifferLib
         /// <summary>
         /// Starts capturing traffic
         /// </summary>
-        private void Start()
+        public void Start()
         {
             if (_communicator != null)
             {
