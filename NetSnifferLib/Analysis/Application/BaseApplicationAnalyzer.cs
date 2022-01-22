@@ -1,4 +1,7 @@
-﻿using PcapDotNet.Packets;
+﻿using System;
+using System.Net;
+
+using PcapDotNet.Packets;
 using PcapDotNet.Packets.Transport;
 
 using NetSnifferLib.General;
@@ -6,10 +9,12 @@ using NetSnifferLib.Analysis.Transport;
 
 namespace NetSnifferLib.Analysis.Application
 {
-    abstract class BaseApplicationAnalyzer<TDatagram, TTransportDatagram> : BaseAnalyzer<TDatagram, TransportContext>, IApplicationAnalyzer 
+    abstract class BaseApplicationAnalyzer<TDatagram, TTransportDatagram> : BaseAnalyzer<TDatagram, Transport.TransportContext>, IApplicationAnalyzer 
         where TDatagram : Datagram
         where TTransportDatagram : TransportDatagram
     {
+        public event EventHandler<IPAddress> ServerDetcted;
+
         protected abstract bool TryGetDatagramCore(TTransportDatagram transportDatagram, ref TDatagram datagram);
 
         public bool TryGetDatagram(TransportDatagram transportDatagram, ref Datagram datagram)
@@ -21,7 +26,7 @@ namespace NetSnifferLib.Analysis.Application
             return result;
         }
 
-        protected override IAnalysis AnalyzeDatagramCore(TDatagram datagram, TransportContext context)
+        protected override IAnalysis AnalyzeDatagramCore(TDatagram datagram, Transport.TransportContext context)
         {
             var analysis = new ApplicationAnalysis();
             analysis.AddInfo(GetInfo(datagram, context));

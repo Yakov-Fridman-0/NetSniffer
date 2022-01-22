@@ -1,14 +1,41 @@
 ﻿using System;
+
 using PcapDotNet.Packets;
+
 using NetSnifferLib.General;
+using NetSnifferLib.Topology;
 using NetSnifferLib.Statistics;
 
 namespace NetSnifferLib.Analysis
 {
     public class PacketAnalyzer
     {
+        static PacketAnalyzer()
+        {
+            DatagramAnalyzer.EthernetAnalyzer.HostDetected += EthernetAnalyzer_PysicalAddressDetected;
+            DatagramAnalyzer.ArpAnalyzer.PayloadIndicatesHost += ArpAnalyzer_PayloadIndicatesHost;
+        }
+
+        private static void ArpAnalyzer_PayloadIndicatesHost(object sender, IPandPhysicalAddress e)
+        {
+            var iPandPhysicalAddress = e;
+            LanMapBuilder.AddHostWithIP(iPandPhysicalAddress.PhysicalAddress, iPandPhysicalAddress.IPAddress);
+        }
+
+        private static void EthernetAnalyzer_PysicalAddressDetected(object sender, System.Net.NetworkInformation.PhysicalAddress e)
+        {
+            var physicalAddress = e;
+            LanMapBuilder.AddHostWithoutIP(physicalAddress);
+        }
+
+        public static LanMapBuilder LanMapBuilder {get;} = new();
+
+        public static WanMap WanMapBuilder { get; } = new();
+
         public static int TransmittedPackets { get; private set; } = 0;
+
         public static int TransmittedBytes { get; private set; } = 0;
+
         public static bool IsEthernet(Packet packet) => packet.DataLink.Kind == DataLinkKind.Ethernet;
 
         public static PacketDescription AnalyzePacket(Packet packet)

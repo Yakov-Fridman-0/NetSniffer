@@ -1,4 +1,5 @@
-﻿using System.Net.NetworkInformation;
+﻿using System;
+using System.Net.NetworkInformation;
 
 using PcapDotNet.Packets;
 
@@ -12,6 +13,8 @@ namespace NetSnifferLib.Analysis.DataLink
         public int SentPackets { get; protected set; } = 0;
 
         public int SentBytes { get; protected set; } = 0;
+
+        public event EventHandler<PhysicalAddress> HostDetected;
 
         protected abstract PhysicalAddress GetSource(T datagram);
 
@@ -33,6 +36,9 @@ namespace NetSnifferLib.Analysis.DataLink
 
             var source = GetSource(datagram);
             var destination = GetDestination(datagram);
+
+            HostDetected?.Invoke(this, source);
+            HostDetected?.Invoke(this, destination);
 
             var sourceContainer = (PhysicalAddressContainer)AddressConvert.ToIAddress(source);
             var destinationContainer = (PhysicalAddressContainer)AddressConvert.ToIAddress(destination);
