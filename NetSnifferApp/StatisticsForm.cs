@@ -1,63 +1,100 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using NetSnifferLib.Statistics;
 
 namespace NetSnifferApp
 {
-    public partial class StatisticsForm : Form
+    public partial class GeneralStatisticsForm : Form
     {
-        private const string PacketsFormat = "{0:N}";
-        private const string BytesFormat = "{0:N} Bytes";
+        const string NumberFormat = "{0:N}";
+        const string BytesFormat = "{0:N} B";
+        const string SecondsFormat = "{0:N} s";
 
-        public StatisticsForm()
+        public event EventHandler NewStatisticsRequired;
+
+        GeneralStatistics baseStatistics = default;
+        DateTime baseTime = default;
+
+        GeneralStatistics currentStatistics;
+
+        bool frozen = false;
+
+        public GeneralStatisticsForm()
         {
             InitializeComponent();
+
+            SetStatistics(default);
         }
 
-        public void UpdateStatistics(
-            int tNum, int tBytes,
-            int eNum, int eBytes,
-            int ip4Num, int ip4Bytes,
-            int ip6Num, int ip6Bytes,
-            int udpNum, int udpBytes,
-            int tcpNum, int tcpBytes)
+        public void SendNewStatistics(GeneralStatistics newStatistics)
         {
-            tNumLbl.Text = string.Format(PacketsFormat, tNum.ToString());
-
-            eNumLbl.Text = string.Format(PacketsFormat, eNum.ToString());
-
-            ip4NumLbl.Text = string.Format(PacketsFormat, ip4Num.ToString());
-            ip4BytesLbl.Text = string.Format(BytesFormat, ip4Bytes.ToString());
-
-            ip6NumLbl.Text = string.Format(PacketsFormat, ip6Num.ToString());
-            ip6BytesLbl.Text = string.Format(BytesFormat, ip6Bytes.ToString());
-
-            udpNumLbl.Text = string.Format(PacketsFormat, udpNum.ToString());
-            udpBytesLbl.Text = string.Format(BytesFormat, udpBytes.ToString());
-
-            tcpNumLbl.Text = string.Format(PacketsFormat, tcpNum.ToString());
-            tcpBytesLbl.Text = string.Format(BytesFormat, tcpBytes.ToString());
+            currentStatistics = newStatistics;
+            SetStatistics(newStatistics - baseStatistics);
         }
 
-        private void label2_Click(object sender, EventArgs e)
+        private void SetStatistics(GeneralStatistics statistics)
         {
+            tNumLbl.Text = string.Format(NumberFormat, statistics.TransmittedPackets.ToString());
+            tBytesLbl.Text = string.Format(BytesFormat, statistics.TransmittedBytes.ToString());
 
+            eNumLbl.Text = string.Format(NumberFormat, statistics.EthernetPackets.ToString());
+            eBytesLbl.Text = string.Format(BytesFormat, statistics.EthernetPayloadBytes.ToString());
+
+            ip4NumLbl.Text = string.Format(NumberFormat, statistics.IpV4Packets.ToString());
+            ip4BytesLbl.Text = string.Format(BytesFormat, statistics.IpV4PayloadBytes.ToString());
+
+            ip6NumLbl.Text = string.Format(NumberFormat, statistics.IpV6Packets.ToString());
+            ip6BytesLbl.Text = string.Format(BytesFormat, statistics.IpV6PayloadBytes.ToString());
+
+            udpNumLbl.Text = string.Format(NumberFormat, statistics.UdpPackets.ToString());
+            udpBytesLbl.Text = string.Format(BytesFormat, statistics.UdpPayloadBytes.ToString());
+
+            tcpNumLbl.Text = string.Format(NumberFormat, statistics.TcpPackets.ToString());
+            tcpBytesLbl.Text = string.Format(BytesFormat, statistics.TcpPayloadBytes.ToString());
         }
 
-        private void label3_Click(object sender, EventArgs e)
+        private void refreshTimer_Tick(object sender, EventArgs e)
         {
-
+            NewStatisticsRequired.Invoke(this, EventArgs.Empty);
         }
 
-        private void label14_Click(object sender, EventArgs e)
+        private void zeroButton_Click(object sender, EventArgs e)
         {
+            baseStatistics = currentStatistics;
+            baseTime = DateTime.Now;
 
+            SetStatistics(default);
+            elapsedTimeLabel.Text = string.Format(SecondsFormat, 0);
+        }
+
+        private void GeneralStatisticsForm_Load(object sender, EventArgs e)
+        {
+            frozen = false;
+            refreshTimer.Start();
+            elapsedTimeTimer.Start();
+        }
+
+        private void elapsedTimeTimer_Tick(object sender, EventArgs e)
+        {
+            elapsedTimeLabel.Text = string.Format(SecondsFormat, (DateTime.Now - baseTime).TotalSeconds);
+        }
+
+        private void freezeButtom_Click(object sender, EventArgs e)
+        {
+            if (frozen)
+            {
+                freezeButtom.Text = "Freeze";
+                refreshTimer.Start();
+                elapsedTimeTimer.Start();
+            }
+            else
+            {
+                freezeButtom.Text = "Unfreeze";
+                refreshTimer.Stop();
+                elapsedTimeTimer.Stop();
+            }
+
+            frozen = !frozen;
         }
     }
 }

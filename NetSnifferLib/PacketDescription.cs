@@ -1,12 +1,21 @@
-﻿namespace NetSnifferLib
+﻿using System;
+
+using NetSnifferLib.General;
+
+namespace NetSnifferLib
 {
     public record PacketDescription
     {
-        public string TimeStamp { get; set; }
+        public DateTime TimeStamp { get; set; }
+
         public string Protocol { get; set; }
-        public string Source { get; set; }
-        public string Destination { get; set; }
-        public string Length { get; set; }
+
+        public IAddress Source { get; set; }
+
+        public IAddress Destination { get; set; }
+
+        public int Length { get; set; }
+
         public string Info { get; set; }
     }
 }

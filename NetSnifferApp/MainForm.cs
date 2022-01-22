@@ -1,4 +1,7 @@
 ﻿using NetSnifferLib;
+using NetSnifferLib.Analysis;
+using NetSnifferLib.Statistics;
+
 using System;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -8,18 +11,11 @@ namespace NetSnifferApp
     public partial class MainForm : Form
     {
         private SniffingOptions _sniffingOptions;
-        private NetworkSniffer _netSniffer;
-
-        readonly PacketAnalyzer packetAnalyzer;
-
-        bool capturing = false;
+        private NetSniffer _netSniffer;
 
         public MainForm()
         {
             InitializeComponent();
-
-            packetAnalyzer = new PacketAnalyzer();
-            CtrlPacketViewer.SetAnalyzer(packetAnalyzer);
 
             _sniffingOptions = new SniffingOptions();
             _netSniffer = null;
@@ -56,20 +52,21 @@ namespace NetSnifferApp
 
             _sniffingOptions.NetworkInterface = ((NetInterfaceItem)CmbNetInterface.SelectedItem).NetworkInterface;
 
-            SartAsync();
+            StartSniffingAsync();
         }
 
-        private void SartAsync()
+        private Task StartSniffingAsync()
         {
-            _netSniffer = NetworkSniffer.CreateLiveSniffer(_sniffingOptions);
+            return Task.Run(() => StartSniffing());
+        }
+
+        private void StartSniffing()
+        {
+            _netSniffer = NetSniffer.CreateLiveSniffer(_sniffingOptions);
             _sniffingOptions = new SniffingOptions();
 
-            var netSniffer = _netSniffer;
-
-            netSniffer.PacketReceived += NetSniffer_PacketReceived;
-            netSniffer.StartAsync();
-
-            capturing = true;
+            _netSniffer.PacketReceived += NetSniffer_PacketReceived;
+            _netSniffer.Start();
         }
 
         private void NetSniffer_PacketReceived(object sender, PcapDotNet.Packets.Packet e)
@@ -93,8 +90,6 @@ namespace NetSnifferApp
 
             netSniffer.PacketReceived -= NetSniffer_PacketReceived;
             netSniffer.Stop();
-
-            capturing = false;
 
             packetFilter.Enabled = true;
         }
@@ -201,57 +196,21 @@ namespace NetSnifferApp
             }
         }
 
-        private StatisticsForm _statisticsForm;
+        private GeneralStatisticsForm statisticsForm;
 
         private void GeneralToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var packetStatisticsLogger = packetAnalyzer.PackeStatisticsLogger;
+            GeneralStatisticsForm form = new();
 
-            StatisticsForm statisticForm = new();
-            statisticForm.UpdateStatistics(
-                packetStatisticsLogger.TotalPacketNumber,
-                packetStatisticsLogger.TotalBytes,
-                packetStatisticsLogger.EthernetPacketNumber,
-                packetStatisticsLogger.EthernetTotalPayloadBytes,
-                packetStatisticsLogger.IpV4PacketNumber,
-                packetStatisticsLogger.IpV4TotalPayloadBytes,
-                packetStatisticsLogger.IpV6PacketNumber,
-                packetStatisticsLogger.IpV6TotalPayloadBytes,
-                packetStatisticsLogger.UdpPacketNumber,
-                packetStatisticsLogger.UdpTotalPayloadBytes,
-                packetStatisticsLogger.TcpPacketNumber,
-                packetStatisticsLogger.TcpTotalPayloadBytes);
+            statisticsForm = form;
+            statisticsForm.NewStatisticsRequired += statisticsForm_NewStatisticsRequired;
 
-
-            _statisticsForm = statisticForm;
-            statisticsTimer.Start();
-
-            statisticForm.FormClosed += StatisticsForm_Closed;
-            statisticForm.Show();
+            form.Show();
         }
 
-        private void StatisticsForm_Closed(object sender, EventArgs e)
+        private void statisticsForm_NewStatisticsRequired(object sender, EventArgs e)
         {
-            statisticsTimer.Stop();
-        }
-
-        private void StatisticsTimer_Tick(object sender, EventArgs e)
-        {
-            var packetStatisticsLogger = packetAnalyzer.PackeStatisticsLogger;
-
-            _statisticsForm.UpdateStatistics(
-                packetStatisticsLogger.TotalPacketNumber,
-                packetStatisticsLogger.TotalBytes,
-                packetStatisticsLogger.EthernetPacketNumber,
-                packetStatisticsLogger.EthernetTotalPayloadBytes,
-                packetStatisticsLogger.IpV4PacketNumber,
-                packetStatisticsLogger.IpV4TotalPayloadBytes,
-                packetStatisticsLogger.IpV6PacketNumber,
-                packetStatisticsLogger.IpV6TotalPayloadBytes,
-                packetStatisticsLogger.UdpPacketNumber,
-                packetStatisticsLogger.UdpTotalPayloadBytes,
-                packetStatisticsLogger.TcpPacketNumber,
-                packetStatisticsLogger.TcpTotalPayloadBytes);
+            statisticsForm.SendNewStatistics(PacketAnalyzer.GetGeneralStatistics());
         }
 
         private void PacketFilter_FilterChanged(object sender, string e)
@@ -261,7 +220,7 @@ namespace NetSnifferApp
 
             string filter = e;
 
-            if (NetworkSniffer.IsValidFilter(filter))
+            if (NetSniffer.IsValidFilter(filter))
             {
                 packetFilter.ValidFilter = true;
                 _sniffingOptions.Filter = filter;

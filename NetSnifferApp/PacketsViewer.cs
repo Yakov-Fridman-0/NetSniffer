@@ -3,13 +3,13 @@ using PcapDotNet.Packets;
 using System.Collections.Generic;
 using System.Threading.Tasks.Dataflow;
 using System.Windows.Forms;
+using NetSnifferLib.Analysis;
 
 namespace NetSnifferApp
 {
     public partial class PacketViewer : UserControl
     {
         private readonly ActionBlock<Packet> _itemsBuilder;
-        private PacketAnalyzer _packetAnalyzer;
 
         public PacketViewer()
         {
@@ -33,15 +33,10 @@ namespace NetSnifferApp
             lstvPackets.Columns.Add(new ColumnHeader() { Text = "Protocol", Width = -2 });
             lstvPackets.Columns.Add(new ColumnHeader() { Text = "Source", Width = 150 });
             lstvPackets.Columns.Add(new ColumnHeader() { Text = "Destination", Width = 150 });
-            lstvPackets.Columns.Add(new ColumnHeader() { Text = "Payload Length", Width = 150 });
-            lstvPackets.Columns.Add(new ColumnHeader() { Text = "Info" });
+            lstvPackets.Columns.Add(new ColumnHeader() { Text = "Length", Width = 150 });
+            lstvPackets.Columns.Add(new ColumnHeader() { Text = "Info"});
 
             #endregion
-        }
-
-        public void SetAnalyzer(PacketAnalyzer packetAnalyzer)
-        {
-            _packetAnalyzer = packetAnalyzer;
         }
 
         public IEnumerable<Packet> GetSelectedPackets()
@@ -106,13 +101,13 @@ namespace NetSnifferApp
             
             if (PacketAnalyzer.IsEthernet(packet))
             {
-                PacketDescription packetDescription = _packetAnalyzer.AnalyzePacket(packet);
+                PacketDescription packetDescription = PacketAnalyzer.AnalyzePacket(packet);
 
-                subItems[1] = packetDescription.TimeStamp;
+                subItems[1] = packetDescription.TimeStamp.ToString("HH:mm:ss:fff");
                 subItems[2] = packetDescription.Protocol;
-                subItems[3] = packetDescription.Source;
-                subItems[4] = packetDescription.Destination;
-                subItems[5] = packetDescription.Length;
+                subItems[3] = AddressFormat.ToString(packetDescription.Source);
+                subItems[4] = AddressFormat.ToString(packetDescription.Destination);
+                subItems[5] = packetDescription.Length.ToString();
                 subItems[6] = packetDescription.Info;
             }
             else
@@ -126,27 +121,6 @@ namespace NetSnifferApp
             }
 
             return subItems;
-            /*var analyzer = PacketAnalyzer.GetAnalyzer(packet);
-
-            if (analyzer != null)
-            {
-                //Time
-                var timestamp = analyzer.GetTimeStamp(packet);
-                subItems[1] = timestamp.ToString("HH:mm:ss.ffff");
-                //Protocol
-                subItems[2] = analyzer.GetProtocol(packet);
-                //Source
-                subItems[3] = analyzer.GetPacketSource(packet);
-                //"Destination
-                subItems[4] = analyzer.GetPacketDestination(packet);
-                //Payload Length
-                var payloadLength = analyzer.GetLength(packet);
-                subItems[5] = payloadLength == 0 ? string.Empty : payloadLength.ToString();
-                //Info
-                subItems[6] = analyzer.GetPacketInfo(packet);
-            }
-
-            return subItems;*/
         }
     }
 }
