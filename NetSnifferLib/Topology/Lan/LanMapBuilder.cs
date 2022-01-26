@@ -17,47 +17,59 @@ namespace NetSnifferLib.Topology
         private readonly List<DhcpServer> _dhcpServers = new();
 
         private static readonly PhysicalAddress MulticastAddress;
-        
+
+
         static LanMapBuilder()
         {
             MulticastAddress = PhysicalAddress.Parse("FF:FF:FF:FF:FF:FF");
         }
 
-        public void AddHostWithoutIP(PhysicalAddress physicalAddress)
+        private static bool IsBroadcast(PhysicalAddress address)
         {
-            if (physicalAddress.Equals(MulticastAddress))
+            return MulticastAddress.Equals(address);
+        }
+
+        private static bool IsMulticast(PhysicalAddress address)
+        {
+            return IsIPv6Multicast(address);
+            //return IsIPV4Multicast(address) || IsIPv6Multicast(address);
+        }
+
+        private static bool IsIPV4Multicast(PhysicalAddress address)
+        {
+            byte[] bytes = address.GetAddressBytes();
+            return bytes[3] < 0xF7;
+        }
+
+        private static bool IsIPv6Multicast(PhysicalAddress address)
+        {
+            byte[] bytes = address.GetAddressBytes();
+            return bytes[0] == 0x33 && bytes[1] == 0x33; 
+        }
+
+        public void AddHost(PhysicalAddress physicalAddress)
+        {
+            if (IsBroadcast(physicalAddress) || IsMulticast(physicalAddress))
                 return;
 
-            if (!ContainsHostWithoutIP(physicalAddress) && !ContainsHostWithIP(physicalAddress) &&
-                !ContainsRouter(physicalAddress) && !ContainsDhcpServer(physicalAddress))
+            if (!ContainsHostWithoutIP(physicalAddress) && !ContainsHostWithIP(physicalAddress))
             {
                 _hostsWithoutIP.Add(new LanHost(physicalAddress));
             }           
         }
 
-        public void AddHostWithIP(PhysicalAddress physicalAddress, IPAddress iPAddress)
+        public void AddHost(IPAddress iPAddress, PhysicalAddress physicalAddress)
         {
-            if (physicalAddress.Equals(MulticastAddress))
+            if (IsBroadcast(physicalAddress) || IsMulticast(physicalAddress))
                 return;
 
-            if (ContainsDhcpServer(physicalAddress))
-                return;
-
-            if (ContainsHostWithoutIP(physicalAddress))
+            if (!ContainsHostWithIP(physicalAddress))
             {
-                RemoveHostWithoutIP(physicalAddress);
-            }
-
-            if(ContainsHostWithIP(physicalAddress))
-            {
-                if (!GetHostIPAddress(physicalAddress).Equals(iPAddress))
+                if (ContainsHostWithoutIP(physicalAddress))
                 {
-                    RemoveHostWithIP(physicalAddress);
-                    AddRouter(physicalAddress);
+                    RemoveHostWithoutIP(physicalAddress);
                 }
-            }
-            else
-            {
+
                 _hostsWithIP.Add(new LanHost(physicalAddress, iPAddress));
             }
         }
@@ -88,19 +100,22 @@ namespace NetSnifferLib.Topology
             return _hostsWithIP.Any((host) => host.PhysicalAddress.Equals(physicalAddress));
         }
 
-        private IPAddress GetHostIPAddress(PhysicalAddress physicalAddress)
-        {
-            return _hostsWithIP.Find((host) => host.PhysicalAddress.Equals(physicalAddress))?.IpAddress;
-        }
+        //private IPAddress GetHostIPAddress(PhysicalAddress physicalAddress)
+        //{
+        //    return _hostsWithIP.Find((host) => host.PhysicalAddress.Equals(physicalAddress))?.IpAddress;
+        //}
 
         public bool ContainsRouter(PhysicalAddress physicalAddress)
         {
             return _routers.Any((router) => router.PhysicalAddress.Equals(physicalAddress));
         }
 
-        private void AddRouter(PhysicalAddress physicalAddress)
+        public void AddRouter(PhysicalAddress physicalAddress)
         {
-            if(!ContainsRouter(physicalAddress))
+            if (IsBroadcast(physicalAddress) || IsMulticast(physicalAddress))
+                return;
+
+            if (!ContainsRouter(physicalAddress))
                 _routers.Add(new Router(physicalAddress));
         }
 

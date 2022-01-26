@@ -11,6 +11,8 @@ namespace NetSnifferApp
     {
         private readonly ActionBlock<Packet> _itemsBuilder;
 
+        public PacketAnalyzer PakcetAnalyzer { get; set; }
+
         public PacketViewer()
         {
             InitializeComponent();
@@ -101,7 +103,7 @@ namespace NetSnifferApp
             
             if (PacketAnalyzer.IsEthernet(packet))
             {
-                PacketDescription packetDescription = PacketAnalyzer.AnalyzePacket(packet);
+                PacketDescription packetDescription = PakcetAnalyzer.AnalyzePacket(packet);
 
                 subItems[1] = packetDescription.TimeStamp.ToString("HH:mm:ss:fff");
                 subItems[2] = packetDescription.Protocol;

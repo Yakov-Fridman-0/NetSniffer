@@ -12,9 +12,20 @@ namespace NetSnifferLib.Analysis.Network
     {
         public override string Protocol => "IPv4";
 
+        protected override bool IsFromLan(IpV4Datagram datagram)
+        {
+            var ttl = GetTTL(datagram);
+            return (ttl == 64) || (ttl == 128);
+        }
+
         protected override IPAddress GetSource(IpV4Datagram datagram)
         {
             return AddressConvert.ToIpAddress(datagram.Source);
+        }
+
+        protected override int GetTTL(IpV4Datagram datagram)
+        {
+            return datagram.Ttl;
         }
 
         protected override IPAddress GetDestination(IpV4Datagram datagram)

@@ -1,10 +1,12 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 
 using PcapDotNet.Packets;
 using PcapDotNet.Packets.Ip;
 
 using NetSnifferLib.General;
 using NetSnifferLib.Analysis.DataLink;
+using NetSnifferLib.Topology;
 
 namespace NetSnifferLib.Analysis.Network
 {
@@ -14,11 +16,19 @@ namespace NetSnifferLib.Analysis.Network
 
         public int SentBytes { get; protected set; } = 0;
 
+        public EventHandler<PacketFromLanEventArgs> PacketFromLan;
+
+        public EventHandler<PacketFromWanEventArgs> PacketFromWan;
+
+        protected abstract bool IsFromLan(T datagram);
+
         protected abstract int GetPayloadLength(T datgram);
 
         protected abstract IPAddress GetSource(T datagram);
 
         protected abstract IPAddress GetDestination(T datagram);
+
+        protected abstract int GetTTL(T daragram);
 
         protected abstract Datagram GetPayloadAndAnalyzer(T datagram, out IAnalyzer analyzer);
 
@@ -34,6 +44,19 @@ namespace NetSnifferLib.Analysis.Network
 
             var source = GetSource(datagram);
             var destination = GetDestination(datagram);
+
+            var sourcePhysicalAddress = context.Source.PhysicalAddress;
+            var destinationPhysicalAddress = context.Destination.PhysicalAddress;
+
+            if (IsFromLan(datagram))
+            {
+                PacketFromLan?.Invoke(this, new PacketFromLanEventArgs(source, sourcePhysicalAddress, destination, destinationPhysicalAddress));
+            }
+            else
+            {
+                var ttl = GetTTL(datagram);
+                PacketFromWan?.Invoke(this, new PacketFromWanEventArgs(source, sourcePhysicalAddress, destination, destinationPhysicalAddress, ttl));
+            }
 
             var sourceContainer = (IpAddressContainer)AddressConvert.ToIAddress(source);
             var destinationContainer = (IpAddressContainer)AddressConvert.ToIAddress(destination);

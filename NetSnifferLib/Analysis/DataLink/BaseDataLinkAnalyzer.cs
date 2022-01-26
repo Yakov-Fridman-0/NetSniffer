@@ -4,6 +4,7 @@ using System.Net.NetworkInformation;
 using PcapDotNet.Packets;
 
 using NetSnifferLib.General;
+using NetSnifferLib.Topology;
 
 namespace NetSnifferLib.Analysis.DataLink
 {
@@ -14,7 +15,7 @@ namespace NetSnifferLib.Analysis.DataLink
 
         public int SentBytes { get; protected set; } = 0;
 
-        public event EventHandler<PhysicalAddress> HostDetected;
+        public event EventHandler<PacketInLanEventArgs> PacketInLan;
 
         protected abstract PhysicalAddress GetSource(T datagram);
 
@@ -37,8 +38,7 @@ namespace NetSnifferLib.Analysis.DataLink
             var source = GetSource(datagram);
             var destination = GetDestination(datagram);
 
-            HostDetected?.Invoke(this, source);
-            HostDetected?.Invoke(this, destination);
+            PacketInLan?.Invoke(this, new PacketInLanEventArgs(source, destination));
 
             var sourceContainer = (PhysicalAddressContainer)AddressConvert.ToIAddress(source);
             var destinationContainer = (PhysicalAddressContainer)AddressConvert.ToIAddress(destination);

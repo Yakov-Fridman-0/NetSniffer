@@ -12,6 +12,7 @@ namespace NetSnifferApp
     {
         private SniffingOptions _sniffingOptions;
         private NetSniffer _netSniffer;
+        readonly PacketAnalyzer packetAnalyzer;
 
         public MainForm()
         {
@@ -19,6 +20,9 @@ namespace NetSnifferApp
 
             _sniffingOptions = new SniffingOptions();
             _netSniffer = null;
+
+            packetAnalyzer = new();
+            CtrlPacketViewer.PakcetAnalyzer = packetAnalyzer;
         }
 
         protected override void OnLoad(EventArgs e)
@@ -210,7 +214,7 @@ namespace NetSnifferApp
 
         private void statisticsForm_NewStatisticsRequired(object sender, EventArgs e)
         {
-            statisticsForm.SendNewStatistics(PacketAnalyzer.GetGeneralStatistics());
+            statisticsForm.SendNewStatistics(packetAnalyzer.GetGeneralStatistics());
         }
 
         private void PacketFilter_FilterChanged(object sender, string e)

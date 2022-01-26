@@ -13,7 +13,7 @@ namespace NetSnifferLib.Analysis.Application
         where TDatagram : Datagram
         where TTransportDatagram : TransportDatagram
     {
-        public event EventHandler<IPAddress> ServerDetcted;
+        //public event EventHandler<IPAddress> ServerDetcted;
 
         protected abstract bool TryGetDatagramCore(TTransportDatagram transportDatagram, ref TDatagram datagram);
 

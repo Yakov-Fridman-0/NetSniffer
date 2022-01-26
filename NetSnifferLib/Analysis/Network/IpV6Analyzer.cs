@@ -15,6 +15,17 @@ namespace NetSnifferLib.Analysis.Network
             return AddressConvert.ToIpAddress(datagram.Source);
         }
 
+        protected override bool IsFromLan(IpV6Datagram datagram)
+        {
+            var ttl = GetTTL(datagram);
+            return (ttl == 64) || (ttl == 128);
+        }
+
+        protected override int GetTTL(IpV6Datagram daragram)
+        {
+            return daragram.HopLimit;
+        }
+
         protected override IPAddress GetDestination(IpV6Datagram datagram)
         {
             //TODO: Check options

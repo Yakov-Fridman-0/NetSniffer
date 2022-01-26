@@ -10,35 +10,57 @@ namespace NetSnifferLib.Analysis
 {
     public class PacketAnalyzer
     {
-        static PacketAnalyzer()
+        public PacketAnalyzer()
         {
-            DatagramAnalyzer.EthernetAnalyzer.HostDetected += EthernetAnalyzer_PysicalAddressDetected;
+            DatagramAnalyzer.EthernetAnalyzer.PacketInLan += EthernetAnalyzer_PacketInLan;
+
+            DatagramAnalyzer.IpV4Analyzer.PacketFromLan += IpV4Analyzer_PacketFromLan;
+            DatagramAnalyzer.IpV4Analyzer.PacketFromWan += IpV4Analyzer_PacketFromWan;
+
             DatagramAnalyzer.ArpAnalyzer.PayloadIndicatesHost += ArpAnalyzer_PayloadIndicatesHost;
         }
+        private void EthernetAnalyzer_PacketInLan(object sender, PacketInLanEventArgs e)
+        {
+            var source = e.Source;
+            var destination = e.Destination;
 
-        private static void ArpAnalyzer_PayloadIndicatesHost(object sender, IPandPhysicalAddress e)
+            LanMapBuilder.AddHost(source);
+            LanMapBuilder.AddHost(destination);
+        }
+
+        private void IpV4Analyzer_PacketFromLan(object sender, PacketFromLanEventArgs e)
+        {
+            var sourceIPAddress = e.SourceIPAddress;
+            var sourcePhysicalAddress = e.SourcePhysicalAddress;
+
+            LanMapBuilder.AddHost(sourceIPAddress, sourcePhysicalAddress);
+        }
+
+        private void IpV4Analyzer_PacketFromWan(object sender, PacketFromWanEventArgs e)
+        {
+            var sourcePhysicalAddress = e.SourcePhysicalAddress;
+
+            LanMapBuilder.AddRouter(sourcePhysicalAddress);
+        }
+
+        private void ArpAnalyzer_PayloadIndicatesHost(object sender, IPandPhysicalAddress e)
         {
             var iPandPhysicalAddress = e;
-            LanMapBuilder.AddHostWithIP(iPandPhysicalAddress.PhysicalAddress, iPandPhysicalAddress.IPAddress);
+            LanMapBuilder.AddHost(iPandPhysicalAddress.IPAddress, iPandPhysicalAddress.PhysicalAddress);
         }
 
-        private static void EthernetAnalyzer_PysicalAddressDetected(object sender, System.Net.NetworkInformation.PhysicalAddress e)
-        {
-            var physicalAddress = e;
-            LanMapBuilder.AddHostWithoutIP(physicalAddress);
-        }
 
-        public static LanMapBuilder LanMapBuilder {get;} = new();
+        public LanMapBuilder LanMapBuilder {get;} = new();
 
-        public static WanMap WanMapBuilder { get; } = new();
+        public WanMap WanMapBuilder { get; } = new();
 
-        public static int TransmittedPackets { get; private set; } = 0;
+        public int TransmittedPackets { get; private set; } = 0;
 
-        public static int TransmittedBytes { get; private set; } = 0;
+        public int TransmittedBytes { get; private set; } = 0;
 
         public static bool IsEthernet(Packet packet) => packet.DataLink.Kind == DataLinkKind.Ethernet;
 
-        public static PacketDescription AnalyzePacket(Packet packet)
+        public PacketDescription AnalyzePacket(Packet packet)
         {
             TransmittedPackets++;
             TransmittedBytes += packet.Length;
@@ -95,7 +117,7 @@ namespace NetSnifferLib.Analysis
             };
         }
 
-        public static GeneralStatistics GetGeneralStatistics()
+        public GeneralStatistics GetGeneralStatistics()
         {
             return new GeneralStatistics()
             {

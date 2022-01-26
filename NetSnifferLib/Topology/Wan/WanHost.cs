@@ -1,22 +1,23 @@
-﻿using System.Net;
+﻿using System.Collections.Generic;
+using System.Net;
 
 namespace NetSnifferLib.Topology
 {
-    public class WanHost : IIpAddress
+    public class WanHost : IIPAddresses
     {
         public IPAddress IpAddress { get; }
 
         private int _hopsNum = 0;
         private int _hopsSum = 0;
 
-        public WanHost(IPAddress iPAddress)
+        public WanHost(IPAddress ipAddress)
         {
-            IpAddress = iPAddress;
+            IpAddress = ipAddress;
         }
 
-        public WanHost(IPAddress iPAddress, int hops)
+        public WanHost(IPAddress ipAddress, int hops)
         {
-            IpAddress = iPAddress;
+            IpAddress = ipAddress;
             RegisterHops(hops);
         }
 
@@ -27,5 +28,7 @@ namespace NetSnifferLib.Topology
         }
 
         public int MeanHops => _hopsSum / _hopsNum;
+
+        public List<IPAddress> IPAddresses { get; set; }
     }
 }
