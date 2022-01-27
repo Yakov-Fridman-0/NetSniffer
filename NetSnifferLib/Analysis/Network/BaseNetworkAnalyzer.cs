@@ -16,9 +16,9 @@ namespace NetSnifferLib.Analysis.Network
 
         public int SentBytes { get; protected set; } = 0;
 
-        public EventHandler<PacketFromLanEventArgs> PacketFromLan;
+        public EventHandler<NetworkPacketEventArgs> PacketCaptured;
 
-        public EventHandler<PacketFromWanEventArgs> PacketFromWan;
+        //public EventHandler<NetworkPacketEventArgs> PacketFromWan;
 
         protected abstract bool IsFromLan(T datagram);
 
@@ -48,15 +48,18 @@ namespace NetSnifferLib.Analysis.Network
             var sourcePhysicalAddress = context.Source.PhysicalAddress;
             var destinationPhysicalAddress = context.Destination.PhysicalAddress;
 
-            if (IsFromLan(datagram))
-            {
-                PacketFromLan?.Invoke(this, new PacketFromLanEventArgs(source, sourcePhysicalAddress, destination, destinationPhysicalAddress));
-            }
-            else
-            {
-                var ttl = GetTTL(datagram);
-                PacketFromWan?.Invoke(this, new PacketFromWanEventArgs(source, sourcePhysicalAddress, destination, destinationPhysicalAddress, ttl));
-            }
+            var ttl = GetTTL(datagram);
+
+            PacketCaptured?.Invoke(this, new NetworkPacketEventArgs(source, sourcePhysicalAddress, destination, destinationPhysicalAddress, ttl));
+
+            //if (IsFromLan(datagram))
+            //{
+            //    PacketCaptured?.Invoke(this, new NetworkPacketEventArgs(source, sourcePhysicalAddress, destination, destinationPhysicalAddress, ttl));
+            //}
+            //else
+            //{
+            //    PacketFromWan?.Invoke(this, new NetworkPacketEventArgs(source, sourcePhysicalAddress, destination, destinationPhysicalAddress, ttl));
+            //}
 
             var sourceContainer = (IpAddressContainer)AddressConvert.ToIAddress(source);
             var destinationContainer = (IpAddressContainer)AddressConvert.ToIAddress(destination);

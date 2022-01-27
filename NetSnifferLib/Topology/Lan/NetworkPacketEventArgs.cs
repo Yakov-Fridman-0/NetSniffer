@@ -4,16 +4,18 @@ using System.Net.NetworkInformation;
 
 namespace NetSnifferLib.Topology
 {
-    class PacketFromLanEventArgs : EventArgs
+    class NetworkPacketEventArgs : EventArgs
     {
-        public PacketFromLanEventArgs(
+        public NetworkPacketEventArgs(
             IPAddress sourceIPAddress, PhysicalAddress sourcePhysicalAddress, 
-            IPAddress destinationIPAddress, PhysicalAddress destinationPhysicalAddress)
+            IPAddress destinationIPAddress, PhysicalAddress destinationPhysicalAddress,
+            int ttl)
         {
             SourceIPAddress = sourceIPAddress;
             SourcePhysicalAddress = sourcePhysicalAddress;
             DestinationIPAddress = destinationIPAddress;
             DestinationPhysicalAddress = destinationPhysicalAddress;
+            TTL = ttl;
         }
 
         public IPAddress SourceIPAddress { get; set; }
@@ -23,5 +25,7 @@ namespace NetSnifferLib.Topology
         public IPAddress DestinationIPAddress { get; set; }
 
         public PhysicalAddress DestinationPhysicalAddress { get; set; }
+
+        public int TTL { get; set; }
     }
 }

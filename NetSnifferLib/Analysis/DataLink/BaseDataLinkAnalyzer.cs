@@ -15,7 +15,7 @@ namespace NetSnifferLib.Analysis.DataLink
 
         public int SentBytes { get; protected set; } = 0;
 
-        public event EventHandler<PacketInLanEventArgs> PacketInLan;
+        public event EventHandler<DataLinkPacketEventArgs> PacketCaptured;
 
         protected abstract PhysicalAddress GetSource(T datagram);
 
@@ -38,7 +38,7 @@ namespace NetSnifferLib.Analysis.DataLink
             var source = GetSource(datagram);
             var destination = GetDestination(datagram);
 
-            PacketInLan?.Invoke(this, new PacketInLanEventArgs(source, destination));
+            PacketCaptured?.Invoke(this, new DataLinkPacketEventArgs(source, destination));
 
             var sourceContainer = (PhysicalAddressContainer)AddressConvert.ToIAddress(source);
             var destinationContainer = (PhysicalAddressContainer)AddressConvert.ToIAddress(destination);

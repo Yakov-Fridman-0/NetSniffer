@@ -18,7 +18,6 @@ namespace NetSnifferLib.Topology
 
         private static readonly PhysicalAddress MulticastAddress;
 
-
         static LanMapBuilder()
         {
             MulticastAddress = PhysicalAddress.Parse("FF:FF:FF:FF:FF:FF");
@@ -31,20 +30,7 @@ namespace NetSnifferLib.Topology
 
         private static bool IsMulticast(PhysicalAddress address)
         {
-            return IsIPv6Multicast(address);
-            //return IsIPV4Multicast(address) || IsIPv6Multicast(address);
-        }
-
-        private static bool IsIPV4Multicast(PhysicalAddress address)
-        {
-            byte[] bytes = address.GetAddressBytes();
-            return bytes[3] < 0xF7;
-        }
-
-        private static bool IsIPv6Multicast(PhysicalAddress address)
-        {
-            byte[] bytes = address.GetAddressBytes();
-            return bytes[0] == 0x33 && bytes[1] == 0x33; 
+            return PhysicalAddressHelper.GetOUI(address).IsMulticast();
         }
 
         public void AddHost(PhysicalAddress physicalAddress)
@@ -58,23 +44,35 @@ namespace NetSnifferLib.Topology
             }           
         }
 
-        public void AddHost(IPAddress iPAddress, PhysicalAddress physicalAddress)
+        public void AddHost(IPAddress ipAddress, PhysicalAddress physicalAddress)
         {
             if (IsBroadcast(physicalAddress) || IsMulticast(physicalAddress))
                 return;
 
-            if (!ContainsHostWithIP(physicalAddress))
+            if (ContainsHostWithoutIP(physicalAddress))
             {
-                if (ContainsHostWithoutIP(physicalAddress))
-                {
-                    RemoveHostWithoutIP(physicalAddress);
-                }
+                RemoveHostsWithoutIP(physicalAddress);
+            }
 
-                _hostsWithIP.Add(new LanHost(physicalAddress, iPAddress));
+            IPAddress otherIPAdd = null;
+            if (TryGetHostIP(physicalAddress, ref otherIPAdd))
+            {
+                if (otherIPAdd != null)
+                {
+                    if (!ipAddress.Equals(otherIPAdd))
+                    {
+                        RemoveHostsWithIP(otherIPAdd);
+                        AddRouter(physicalAddress);
+                    }
+                }
+            }
+            else
+            {
+                _hostsWithIP.Add(new LanHost(physicalAddress, ipAddress));
             }
         }
 
-        private bool RemoveHostWithoutIP(PhysicalAddress physicalAddress)
+        private bool RemoveHostsWithoutIP(PhysicalAddress physicalAddress)
         {
             return _hostsWithoutIP.Remove(
                 _hostsWithoutIP.Find(
@@ -82,12 +80,20 @@ namespace NetSnifferLib.Topology
                     host.PhysicalAddress.Equals(physicalAddress)));
         }
 
-        private bool RemoveHostWithIP(PhysicalAddress physicalAddress)
+        private bool RemoveHostsWithIP(PhysicalAddress physicalAddress)
         {
             return _hostsWithIP.Remove(
                 _hostsWithIP.Find(
                     (host) => 
                     host.PhysicalAddress.Equals(physicalAddress)));
+        }
+
+        private bool RemoveHostsWithIP(IPAddress ipAddress)
+        {
+            return _hostsWithIP.Remove(
+                _hostsWithIP.Find(
+                    (host) =>
+                    host.IPAddresses.Contains(ipAddress)));
         }
 
         private bool ContainsHostWithoutIP(PhysicalAddress physicalAddress)
@@ -98,6 +104,19 @@ namespace NetSnifferLib.Topology
         private bool ContainsHostWithIP(PhysicalAddress physicalAddress)
         {
             return _hostsWithIP.Any((host) => host.PhysicalAddress.Equals(physicalAddress));
+        }
+
+        private bool TryGetHostIP(PhysicalAddress physicalAddress, ref IPAddress ipAddress)
+        {
+            var tempAdd = _hostsWithIP.Find((host) => host.PhysicalAddress.Equals(physicalAddress))?.IPAddresses?[0];
+
+            if (tempAdd != null)
+            {
+                ipAddress = tempAdd;
+                return true;
+            }
+
+            return false;
         }
 
         //private IPAddress GetHostIPAddress(PhysicalAddress physicalAddress)
@@ -111,6 +130,15 @@ namespace NetSnifferLib.Topology
         }
 
         public void AddRouter(PhysicalAddress physicalAddress)
+        {
+            if (IsBroadcast(physicalAddress) || IsMulticast(physicalAddress))
+                return;
+
+            if (!ContainsRouter(physicalAddress))
+                _routers.Add(new Router(physicalAddress));
+        }
+
+        public void AddRouter(IPAddress ipAddress, PhysicalAddress physicalAddress)
         {
             if (IsBroadcast(physicalAddress) || IsMulticast(physicalAddress))
                 return;

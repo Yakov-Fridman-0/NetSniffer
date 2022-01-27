@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace NetSnifferLib.Topology
 {
-    class PacketInLanEventArgs : EventArgs
+    class DataLinkPacketEventArgs : EventArgs
     {
-        public PacketInLanEventArgs(PhysicalAddress source, PhysicalAddress destination)
+        public DataLinkPacketEventArgs(PhysicalAddress source, PhysicalAddress destination)
         {
             Source = source;
             Destination = destination;
