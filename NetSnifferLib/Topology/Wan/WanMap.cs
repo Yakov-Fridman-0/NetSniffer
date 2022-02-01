@@ -9,9 +9,9 @@ namespace NetSnifferLib.Topology
 
         private readonly List<DnsServer> _dnsServers = new();
 
-        public void AddHost(WanHost _hosts)
+        public void AddHost(WanHost host)
         {
-
+            _hosts.Add(host);
         }
 
         public ReadOnlyCollection<WanHost> Hosts => _hosts.AsReadOnly();

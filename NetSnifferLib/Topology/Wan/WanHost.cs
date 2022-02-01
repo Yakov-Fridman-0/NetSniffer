@@ -3,21 +3,21 @@ using System.Net;
 
 namespace NetSnifferLib.Topology
 {
-    public class WanHost : IIPAddresses
+    public class WanHost : IIPAddress
     {
-        public IPAddress IpAddress { get; }
+        public IPAddress IPAddress { get; }
 
         private int _hopsNum = 0;
         private int _hopsSum = 0;
 
         public WanHost(IPAddress ipAddress)
         {
-            IpAddress = ipAddress;
+            IPAddress = ipAddress;
         }
 
         public WanHost(IPAddress ipAddress, int hops)
         {
-            IpAddress = ipAddress;
+            IPAddress = ipAddress;
             RegisterHops(hops);
         }
 

@@ -10,22 +10,23 @@ namespace NetSnifferLib.Analysis
 {
     public class PacketAnalyzer
     {
+        readonly TopologyBuilder topologyBuilder;
+
         public PacketAnalyzer()
         {
             DatagramAnalyzer.EthernetAnalyzer.PacketCaptured += EthernetAnalyzer_PacketCaptured;
-
             DatagramAnalyzer.IpV4Analyzer.PacketCaptured += IpV4Analyzer_PacketCaptured;
-            //DatagramAnalyzer.IpV4Analyzer.PacketFromWan += IpV4Analyzer_PacketFromWan;
 
             DatagramAnalyzer.ArpAnalyzer.PayloadIndicatesHost += ArpAnalyzer_PayloadIndicatesHost;
         }
+
         private void EthernetAnalyzer_PacketCaptured(object sender, DataLinkPacketEventArgs e)
         {
             var source = e.Source;
             var destination = e.Destination;
 
-            LanMapBuilder.AddHost(source);
-            LanMapBuilder.AddHost(destination);
+            topologyBuilder.AddHost(source);
+            topologyBuilder.AddHost(destination);
         }
 
         private void IpV4Analyzer_PacketCaptured(object sender, NetworkPacketEventArgs e)
@@ -36,34 +37,15 @@ namespace NetSnifferLib.Analysis
             var destinationIPAddress = e.DestinationIPAddress;
             var destinationPhysicalAddress = e.DestinationPhysicalAddress;
 
-            LanMapBuilder.AddHost(sourceIPAddress, sourcePhysicalAddress);
-            LanMapBuilder.AddHost(destinationIPAddress, destinationPhysicalAddress);
+            topologyBuilder.AddHost(sourcePhysicalAddress, sourceIPAddress);
+            topologyBuilder.AddHost(destinationPhysicalAddress, destinationIPAddress);
         }
-
-        //private void IpV4Analyzer_PacketFromLan(object sender, NetworkPacketEventArgs e)
-        //{
-        //    var sourceIPAddress = e.SourceIPAddress;
-        //    var sourcePhysicalAddress = e.SourcePhysicalAddress;
-
-        //    LanMapBuilder.AddHost(sourceIPAddress, sourcePhysicalAddress);
-        //}
-
-        //private void IpV4Analyzer_PacketFromWan(object sender, NetworkPacketEventArgs e)
-        //{
-        //    var sourcePhysicalAddress = e.SourcePhysicalAddress;
-        //    //LanMapBuilder.AddRouter(sourcePhysicalAddress);
-        //}
 
         private void ArpAnalyzer_PayloadIndicatesHost(object sender, IPandPhysicalAddress e)
         {
-            var iPandPhysicalAddress = e;
-            LanMapBuilder.AddHost(iPandPhysicalAddress.IPAddress, iPandPhysicalAddress.PhysicalAddress);
+            var ipAandPhysicalAddress = e;
+            topologyBuilder.AddHost(ipAandPhysicalAddress.IPAddress, ipAandPhysicalAddress.PhysicalAddress);
         }
-
-
-        public LanMapBuilder LanMapBuilder {get;} = new();
-
-        public WanMap WanMapBuilder { get; } = new();
 
         public int TransmittedPackets { get; private set; } = 0;
 

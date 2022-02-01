@@ -4,11 +4,11 @@ using System.Net.NetworkInformation;
 
 namespace NetSnifferLib.Topology
 {
-    public class LanHost : IPhysicalAddress, IIPAddresses
+    public class LanHost : IPhysicalAddress, IIPAddress
     {
         public PhysicalAddress PhysicalAddress { get; protected set; } = null;
 
-        public List<IPAddress> IPAddresses { get; protected set; } = new();
+        public IPAddress IPAddress { get; protected set; } = null;
 
         public LanHost(PhysicalAddress physicalAddress)
         {
@@ -17,18 +17,15 @@ namespace NetSnifferLib.Topology
 
         public LanHost(PhysicalAddress physicalAddress, IPAddress ipAddress)
         {
-            IPAddresses.Add(ipAddress);
+            IPAddress = ipAddress;
             PhysicalAddress = physicalAddress;
         }
 
-        public void AddAddress(IPAddress ipAddress)
-        {
-            IPAddresses.Add(ipAddress);
-        }
+        public bool IPAddressUnknown => IPAddress == null;
 
         public override string ToString()
         {
-            return PhysicalAddress.ToString() + " " + string.Join(", ", IPAddresses)?.ToString();
+            return string.Format("{0} {1}", PhysicalAddress.ToString(), IPAddress != null ? IPAddress.ToString() : "N/A");
         }
     }
 }

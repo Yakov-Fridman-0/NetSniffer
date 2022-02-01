@@ -8,14 +8,12 @@ namespace NetSnifferLib.Topology
     {
         public NetworkPacketEventArgs(
             IPAddress sourceIPAddress, PhysicalAddress sourcePhysicalAddress, 
-            IPAddress destinationIPAddress, PhysicalAddress destinationPhysicalAddress,
-            int ttl)
+            IPAddress destinationIPAddress, PhysicalAddress destinationPhysicalAddress)
         {
             SourceIPAddress = sourceIPAddress;
             SourcePhysicalAddress = sourcePhysicalAddress;
             DestinationIPAddress = destinationIPAddress;
             DestinationPhysicalAddress = destinationPhysicalAddress;
-            TTL = ttl;
         }
 
         public IPAddress SourceIPAddress { get; set; }

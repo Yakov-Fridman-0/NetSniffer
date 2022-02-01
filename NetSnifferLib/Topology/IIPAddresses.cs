@@ -3,8 +3,8 @@ using System.Net;
 
 namespace NetSnifferLib.Topology
 {
-    interface IIPAddresses
+    interface IIPAddress
     {
-        List<IPAddress> IPAddresses { get; }
+        IPAddress IPAddress { get; }
     }
 }
