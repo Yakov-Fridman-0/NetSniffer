@@ -30,5 +30,10 @@ namespace NetSnifferLib.Topology
         public int MeanHops => _hopsSum / _hopsNum;
 
         public List<IPAddress> IPAddresses { get; set; }
+
+        public override string ToString()
+        {
+            return IPAddress.ToString();
+        }
     }
 }

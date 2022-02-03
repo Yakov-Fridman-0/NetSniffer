@@ -4,6 +4,7 @@ using PcapDotNet.Packets.Arp;
 
 using NetSnifferLib.General;
 using NetSnifferLib.Analysis.DataLink;
+using NetSnifferLib.Topology;
 
 namespace NetSnifferLib.Analysis.Miscellaneous
 {
@@ -11,7 +12,7 @@ namespace NetSnifferLib.Analysis.Miscellaneous
     {
         public override string Protocol => "ARP";
 
-        public event EventHandler<IPandPhysicalAddress> PayloadIndicatesHost;
+        public event EventHandler<PayloadIndicatesHostEventArgs> PayloadIndicatesHost;
 
         protected override string GetInfo(ArpDatagram datagram, DataLinkContext context)
         {
@@ -46,25 +47,25 @@ namespace NetSnifferLib.Analysis.Miscellaneous
             {
                 PayloadIndicatesHost?.Invoke(
                     this, 
-                    new IPandPhysicalAddress(
-                        AddressConvert.ToIpAddress(datagram.SenderProtocolIpV4Address),
-                        AddressConvert.ToPhysicalAddress(datagram.SenderHardwareAddress))
+                    new PayloadIndicatesHostEventArgs(
+                        AddressConvert.ToPhysicalAddress(datagram.SenderHardwareAddress),
+                        AddressConvert.ToIpAddress(datagram.SenderProtocolIpV4Address))  
                     );
             }
             if (IsReply(datagram))
             {
                 PayloadIndicatesHost?.Invoke(
                     this, 
-                    new IPandPhysicalAddress(
-                        AddressConvert.ToIpAddress(datagram.SenderProtocolIpV4Address),
-                        AddressConvert.ToPhysicalAddress(datagram.SenderHardwareAddress))
+                    new PayloadIndicatesHostEventArgs(
+                        AddressConvert.ToPhysicalAddress(datagram.SenderHardwareAddress),
+                        AddressConvert.ToIpAddress(datagram.SenderProtocolIpV4Address))                     
                     );
 
                 PayloadIndicatesHost?.Invoke(
                     this, 
-                    new IPandPhysicalAddress(
-                        AddressConvert.ToIpAddress(datagram.TargetProtocolIpV4Address),
-                        AddressConvert.ToPhysicalAddress(datagram.TargetHardwareAddress))
+                    new PayloadIndicatesHostEventArgs(   
+                        AddressConvert.ToPhysicalAddress(datagram.TargetHardwareAddress),
+                        AddressConvert.ToIpAddress(datagram.TargetProtocolIpV4Address))
                     );
             }
 

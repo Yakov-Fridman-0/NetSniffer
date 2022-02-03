@@ -18,9 +18,24 @@ namespace NetSnifferLib.Topology
             hosts.Add(new WanHost(ipAddress));
         }
 
-        public void AddDNSServer(IPAddress ipAddress)
+        public bool ContainsHost(IPAddress ipAddress)
+        {
+            return hosts.Any((host) => ipAddress.Equals(host.IPAddress));
+        }
+
+        public bool RemoveHost(IPAddress ipAddress)
+        {
+            return hosts.Remove(hosts.Find((host) => ipAddress.Equals(host.IPAddress)));
+        }
+
+        public void AddDnsServer(IPAddress ipAddress)
         {
             dnsServers.Add(new DnsServer(ipAddress));
+        }
+
+        public bool ContainseDnsServer(IPAddress ipAddress)
+        {
+            return dnsServers.Any((dnsServer) => ipAddress.Equals(dnsServer.IPAddress));
         }
     }
 }

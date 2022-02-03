@@ -4,12 +4,18 @@ using PcapDotNet.Packets.Transport;
 
 using NetSnifferLib.Packets.Dhcp;
 using NetSnifferLib.Analysis.Transport;
+using NetSnifferLib.Packets.Bootp;
 
 namespace NetSnifferLib.Analysis.Application
 {
-    class DhcpAnalyzer : BaseApplicationAnalyzer<DhcpDatagram, UdpDatagram>
+    class DhcpAnalyzer : BaseClientServerApplicationAnalyzer<DhcpDatagram, UdpDatagram>
     {
         public override string Protocol => "DHCP";
+
+        protected override bool IsResponse(DhcpDatagram datagram)
+        {
+            return datagram.MessageType == BootpMessageType.BootReplay;
+        }
 
         protected override string GetInfo(DhcpDatagram datagram, TransportContext context)
         {

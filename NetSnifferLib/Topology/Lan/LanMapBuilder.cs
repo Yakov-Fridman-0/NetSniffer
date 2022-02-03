@@ -8,150 +8,115 @@ namespace NetSnifferLib.Topology
 { 
     public class LanMapBuilder
     {
-        readonly List<LanHost> hostsWithoutIP = new();
+        readonly List<LanHost> hosts = new();
 
-        readonly List<LanHost> hostsWithIP = new();
+        readonly List<LanHost> routers = new();
 
-        readonly List<Router> routers = new();
-
-        readonly List<DhcpServer> dhcpServers = new();
-
-        static readonly PhysicalAddress MulticastAddress;
-
-        static LanMapBuilder()
-        {
-            MulticastAddress = PhysicalAddress.Parse("FF:FF:FF:FF:FF:FF");
-        }
-
-        private static bool IsBroadcast(PhysicalAddress address)
-        {
-            return MulticastAddress.Equals(address);
-        }
-
-        private static bool IsMulticast(PhysicalAddress address)
-        {
-            return PhysicalAddressHelper.GetOUI(address).IsMulticast();
-        }
+        readonly List<LanHost> dhcpServers = new();
 
         public void AddHost(PhysicalAddress physicalAddress)
         {
-            if (IsBroadcast(physicalAddress) || IsMulticast(physicalAddress))
-                return;
-
-            if (!ContainsHostWithoutIP(physicalAddress) && !ContainsHostWithIP(physicalAddress))
-            {
-                hostsWithoutIP.Add(new LanHost(physicalAddress));
-            }           
+            hosts.Add(new LanHost(physicalAddress));                       
         }
 
-        public void AddHost(PhysicalAddress physicalAddress, IPAddress ipAddress, ref bool? isRemote, ref IPAddress remoteIPAddress)
+        public void AddHost(PhysicalAddress physicalAddress, IPAddress ipAddress)
         {
-            if (IsBroadcast(physicalAddress) || IsMulticast(physicalAddress))
-                return;
-
-            if (ContainsHostWithoutIP(physicalAddress))
-            {
-                RemoveHostsWithoutIP(physicalAddress);
-            }
-
-            IPAddress otherIPAddress = null;
-            if (TryGetHostIP(physicalAddress, ref otherIPAddress))
-            {
-                if (otherIPAddress != null)
-                {
-                    if (!ipAddress.Equals(otherIPAddress))
-                    {
-                        RemoveHostsWithIP(otherIPAddress);
-                        isRemote = true;
-                        remoteIPAddress = otherIPAddress;
-                        AddRouter(physicalAddress);
-                    }
-                }
-            }
-            else
-            {
-                hostsWithIP.Add(new LanHost(physicalAddress, ipAddress));
-            }
+            hosts.Add(new LanHost(physicalAddress, ipAddress));
         }
 
-        private bool RemoveHostsWithoutIP(PhysicalAddress physicalAddress)
+        public void AssignIPToHost(PhysicalAddress physicalAddress, IPAddress ipAddress)
         {
-            return hostsWithoutIP.Remove(
-                hostsWithoutIP.Find(
+            hosts.Find((host) => physicalAddress.Equals(host.PhysicalAddress)).IPAddress = ipAddress;
+        }
+
+        public bool ContainsHost(PhysicalAddress physicalAddress)
+        {
+            return hosts.Any((host) => physicalAddress.Equals(host.PhysicalAddress));
+        }
+
+        public bool ContainsHost(PhysicalAddress physicalAddress, IPAddress ipAddress)
+        {
+            return hosts.Any((host) => 
+            physicalAddress.Equals(host.PhysicalAddress) && 
+            ipAddress.Equals(host.IPAddress));
+        }
+
+        public bool ContainsHost(IPAddress ipAddress)
+        {
+            return hosts.Any((host) => ipAddress.Equals(host.IPAddress));
+        }
+
+        public bool RemoveHost(PhysicalAddress physicalAddress)
+        {
+            return hosts.Remove(
+                hosts.Find(
                     (host) => 
                     host.PhysicalAddress.Equals(physicalAddress)));
         }
 
-        private bool RemoveHostsWithIP(PhysicalAddress physicalAddress)
+        public bool RemoveHost(PhysicalAddress physicalAddress, IPAddress ipAddress)
         {
-            return hostsWithIP.Remove(
-                hostsWithIP.Find(
-                    (host) => 
-                    host.PhysicalAddress.Equals(physicalAddress)));
-        }
-
-        private bool RemoveHostsWithIP(IPAddress ipAddress)
-        {
-            return hostsWithIP.Remove(
-                hostsWithIP.Find(
+            return hosts.Remove(
+                hosts.Find(
                     (host) =>
-                    host.IPAddress.Equals(ipAddress)));
+                    physicalAddress.Equals(host.PhysicalAddress) &&
+                    ipAddress.Equals(host.IPAddress)));
         }
 
-        private bool ContainsHostWithoutIP(PhysicalAddress physicalAddress)
+        public IPAddress GetIPAddress(PhysicalAddress physicalAddress)
         {
-            return hostsWithoutIP.Any((host) => host.PhysicalAddress.Equals(physicalAddress));
+            return hosts.Find((host) => host.PhysicalAddress.Equals(physicalAddress))?.IPAddress;
         }
 
-        private bool ContainsHostWithIP(PhysicalAddress physicalAddress)
+        public PhysicalAddress GetPhysicalAddress(IPAddress ipAddress)
         {
-            return hostsWithIP.Any((host) => host.PhysicalAddress.Equals(physicalAddress));
+            return hosts.Find((host) => ipAddress.Equals(host.IPAddress))?.PhysicalAddress;
         }
-
-        private bool TryGetHostIP(PhysicalAddress physicalAddress, ref IPAddress ipAddress)
-        {
-            var tempAdd = hostsWithIP.Find((host) => host.PhysicalAddress.Equals(physicalAddress))?.IPAddresses?[0];
-
-            if (tempAdd != null)
-            {
-                ipAddress = tempAdd;
-                return true;
-            }
-
-            return false;
-        }
-
-        //private IPAddress GetHostIPAddress(PhysicalAddress physicalAddress)
-        //{
-        //    return _hostsWithIP.Find((host) => host.PhysicalAddress.Equals(physicalAddress))?.IpAddress;
-        //}
 
         public bool ContainsRouter(PhysicalAddress physicalAddress)
         {
             return routers.Any((router) => router.PhysicalAddress.Equals(physicalAddress));
         }
 
+        public bool ContainsRouter(PhysicalAddress physicalAddress, IPAddress ipAddress)
+        {
+            return routers.Any(
+                (router) =>
+                physicalAddress.Equals(router.PhysicalAddress) &&
+                ipAddress.Equals(router.IPAddress));
+        }
+
         public void AddRouter(PhysicalAddress physicalAddress)
         {
-            if (IsBroadcast(physicalAddress) || IsMulticast(physicalAddress))
-                return;
-
-            if (!ContainsRouter(physicalAddress))
-                routers.Add(new Router(physicalAddress));
+            routers.Add(new Router(physicalAddress));
         }
 
-        public void AddRouter(IPAddress ipAddress, PhysicalAddress physicalAddress)
+        public void AddRouter(PhysicalAddress physicalAddress, IPAddress ipAddress)
         {
-            if (IsBroadcast(physicalAddress) || IsMulticast(physicalAddress))
-                return;
-
-            if (!ContainsRouter(physicalAddress))
-                routers.Add(new Router(physicalAddress));
+            routers.Add(new Router(physicalAddress, ipAddress));
         }
 
-        public bool ContainsDhcpServer(PhysicalAddress physicalAddress)
+        public void MakeHostRouter(PhysicalAddress physicalAddress)
         {
-            return dhcpServers.Any((dhcpServer) => dhcpServer.PhysicalAddress.Equals(physicalAddress));
+            var host = hosts.Find((host) => physicalAddress.Equals(host.PhysicalAddress));
+
+            Router newRouter = host.IPAddress != null ? new Router(physicalAddress, host.IPAddress) : new Router(physicalAddress);
+            
+            hosts.Remove(host);
+            hosts.Add(newRouter);
+
+            if (ContainsDhcpServer(physicalAddress, host.IPAddress))
+            {
+                dhcpServers.Remove(host);
+                dhcpServers.Add(newRouter);
+            }
+
+            routers.Add(newRouter);
+        }
+
+        public void AssignIPtoRouter(PhysicalAddress physicalAddress, IPAddress ipAddress)
+        {
+            routers.Find((router) => physicalAddress.Equals(router.PhysicalAddress)).IPAddress = ipAddress;
         }
 
         public void AddDhcpServer(PhysicalAddress physicalAddress, IPAddress iPAddress)
@@ -159,6 +124,38 @@ namespace NetSnifferLib.Topology
             dhcpServers.Add(new DhcpServer(physicalAddress, iPAddress));
         }
 
-        public LanMap LanMap => new(hostsWithIP.Concat(hostsWithoutIP).ToList(), routers, dhcpServers);
+
+        public bool ContainsDhcpServer(PhysicalAddress physicalAddress, IPAddress ipAddress)
+        {
+            return dhcpServers.Any(
+                (dhcpServer) =>
+                physicalAddress.Equals(dhcpServer.PhysicalAddress) &&
+                ipAddress.Equals(dhcpServer.IPAddress));
+        }
+
+        public void MakeHostDhcpServer(PhysicalAddress physicalAddress, IPAddress ipAddress)
+        {
+            var host = hosts.Find((host) => physicalAddress.Equals(host.PhysicalAddress));
+
+            DhcpServer newDhcpServer = new(physicalAddress, ipAddress);
+
+            hosts.Remove(host);
+            hosts.Add(newDhcpServer);
+
+            if (ContainsRouter(physicalAddress))
+            {
+                routers.Remove(host);
+                routers.Add(newDhcpServer);
+            }
+
+            dhcpServers.Add(newDhcpServer);
+        }
+
+        public bool ContainsDhcpServer(IPAddress ipAddress)
+        {
+            return dhcpServers.Any((dhcpServer) => ipAddress.Equals(dhcpServer.IPAddress));
+        }
+
+        //public LanMap LanMap => new(hosts, routers, dhcpServers);
     }
 }

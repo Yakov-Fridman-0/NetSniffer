@@ -8,7 +8,7 @@ namespace NetSnifferLib.Topology
     {
         public PhysicalAddress PhysicalAddress { get; protected set; } = null;
 
-        public IPAddress IPAddress { get; protected set; } = null;
+        public IPAddress IPAddress { get; set; } = null;
 
         public LanHost(PhysicalAddress physicalAddress)
         {
@@ -20,8 +20,7 @@ namespace NetSnifferLib.Topology
             IPAddress = ipAddress;
             PhysicalAddress = physicalAddress;
         }
-
-        public bool IPAddressUnknown => IPAddress == null;
+       
 
         public override string ToString()
         {

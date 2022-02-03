@@ -10,5 +10,10 @@ namespace NetSnifferLib.Topology
         {
 
         }
+
+        public Router(PhysicalAddress physicalAddress, IPAddress ipAddress) : base(physicalAddress,ipAddress)
+        {
+
+        }
     }
 }

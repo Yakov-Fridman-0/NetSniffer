@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 
 using PcapDotNet.Packets;
 
@@ -8,52 +9,73 @@ using NetSnifferLib.Statistics;
 
 namespace NetSnifferLib.Analysis
 {
-    public class PacketAnalyzer
+    public static class PacketAnalyzer
     {
-        readonly TopologyBuilder topologyBuilder;
+        static readonly TopologyBuilder topologyBuilder = new();
 
-        public PacketAnalyzer()
+        static readonly AnalyzerEventHandler analyzerEventHandler = new();
+
+        class AnalyzerEventHandler
         {
-            DatagramAnalyzer.EthernetAnalyzer.PacketCaptured += EthernetAnalyzer_PacketCaptured;
-            DatagramAnalyzer.IpV4Analyzer.PacketCaptured += IpV4Analyzer_PacketCaptured;
+            public void EthernetAnalyzer_PacketCaptured(object sender, DataLinkPacketEventArgs e)
+            {
+                var source = e.Source;
+                var destination = e.Destination;
 
-            DatagramAnalyzer.ArpAnalyzer.PayloadIndicatesHost += ArpAnalyzer_PayloadIndicatesHost;
+                topologyBuilder.AddHost(source);
+                topologyBuilder.AddHost(destination);
+            }
+
+            public void IpV4Analyzer_PacketCaptured(object sender, NetworkPacketEventArgs e)
+            {
+                var sourceIPAddress = e.SourceIPAddress;
+                var sourcePhysicalAddress = e.SourcePhysicalAddress;
+
+                var destinationIPAddress = e.DestinationIPAddress;
+                var destinationPhysicalAddress = e.DestinationPhysicalAddress;
+
+                topologyBuilder.AddHost(sourcePhysicalAddress, sourceIPAddress);
+                topologyBuilder.AddHost(destinationPhysicalAddress, destinationIPAddress);
+            }
+
+            public void ArpAnalyzer_PayloadIndicatesHost(object sender, PayloadIndicatesHostEventArgs e)
+            {
+                var ipAddress = e.IPAddress;
+                var physicalAddress = e.PhysicalAddress;
+                topologyBuilder.AddHostInLan(physicalAddress, ipAddress);
+            }
+
+            public void DhcpAnalyzer_ServerDetected(object sender, IPAddress e)
+            {
+                topologyBuilder.AddDhcpServer(e);
+            }
+
+            public void DnsAnalyzer_ServerDetected(object sender, IPAddress e)
+            {
+                topologyBuilder.AddDnsServer(e);
+            }
         }
 
-        private void EthernetAnalyzer_PacketCaptured(object sender, DataLinkPacketEventArgs e)
+        static PacketAnalyzer()
         {
-            var source = e.Source;
-            var destination = e.Destination;
+            DatagramAnalyzer.EthernetAnalyzer.PacketCaptured += analyzerEventHandler.EthernetAnalyzer_PacketCaptured;
+            DatagramAnalyzer.IpV4Analyzer.PacketCaptured += analyzerEventHandler.IpV4Analyzer_PacketCaptured;
 
-            topologyBuilder.AddHost(source);
-            topologyBuilder.AddHost(destination);
+            DatagramAnalyzer.DhcpAnalyzer.ServerDetected += analyzerEventHandler.DhcpAnalyzer_ServerDetected;
+            DatagramAnalyzer.DnsAnalyzer.ServerDetected += analyzerEventHandler.DnsAnalyzer_ServerDetected;
+
+            DatagramAnalyzer.ArpAnalyzer.PayloadIndicatesHost += analyzerEventHandler.ArpAnalyzer_PayloadIndicatesHost;
         }
 
-        private void IpV4Analyzer_PacketCaptured(object sender, NetworkPacketEventArgs e)
-        {
-            var sourceIPAddress = e.SourceIPAddress;
-            var sourcePhysicalAddress = e.SourcePhysicalAddress;
 
-            var destinationIPAddress = e.DestinationIPAddress;
-            var destinationPhysicalAddress = e.DestinationPhysicalAddress;
 
-            topologyBuilder.AddHost(sourcePhysicalAddress, sourceIPAddress);
-            topologyBuilder.AddHost(destinationPhysicalAddress, destinationIPAddress);
-        }
+        public static int TransmittedPackets { get; private set; } = 0;
 
-        private void ArpAnalyzer_PayloadIndicatesHost(object sender, IPandPhysicalAddress e)
-        {
-            var ipAandPhysicalAddress = e;
-            topologyBuilder.AddHost(ipAandPhysicalAddress.IPAddress, ipAandPhysicalAddress.PhysicalAddress);
-        }
-
-        public int TransmittedPackets { get; private set; } = 0;
-
-        public int TransmittedBytes { get; private set; } = 0;
+        public static int TransmittedBytes { get; private set; } = 0;
 
         public static bool IsEthernet(Packet packet) => packet.DataLink.Kind == DataLinkKind.Ethernet;
 
-        public PacketDescription AnalyzePacket(Packet packet)
+        public static PacketDescription AnalyzePacket(Packet packet)
         {
             TransmittedPackets++;
             TransmittedBytes += packet.Length;
@@ -110,7 +132,7 @@ namespace NetSnifferLib.Analysis
             };
         }
 
-        public GeneralStatistics GetGeneralStatistics()
+        public static GeneralStatistics GetGeneralStatistics()
         {
             return new GeneralStatistics()
             {

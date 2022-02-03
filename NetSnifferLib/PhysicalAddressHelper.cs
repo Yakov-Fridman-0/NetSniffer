@@ -9,6 +9,23 @@ namespace NetSnifferLib
 {
     static class PhysicalAddressHelper
     {
+        private static readonly PhysicalAddress BroadcastPhysicalAddress = PhysicalAddress.Parse("FF:FF:FF:FF:FF:FF");
+
+        public static bool IsBroadcast(PhysicalAddress address)
+        {
+            return BroadcastPhysicalAddress.Equals(address);
+        }
+
+        public static bool IsMulticast(PhysicalAddress address)
+        {
+            return GetOUI(address).IsMulticast();
+        }
+
+        public static bool IsHostAddress(PhysicalAddress address)
+        {
+            return !IsBroadcast(address) && !IsMulticast(address);
+        }
+
         public static OUI GetOUI(PhysicalAddress address)
         {
             var addressBytes = address.GetAddressBytes();

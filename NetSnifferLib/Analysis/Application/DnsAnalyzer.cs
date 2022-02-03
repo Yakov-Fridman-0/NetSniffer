@@ -8,7 +8,7 @@ using NetSnifferLib.Analysis.Transport;
 
 namespace NetSnifferLib.Analysis.Application
 {
-    class DnsAnalyzer : BaseApplicationAnalyzer<DnsDatagram, UdpDatagram>
+    class DnsAnalyzer : BaseClientServerApplicationAnalyzer<DnsDatagram, UdpDatagram>
     {
         public override string Protocol => "DNS";
 
@@ -49,6 +49,11 @@ namespace NetSnifferLib.Analysis.Application
             }
 
             return sb.ToString();
+        }
+
+        protected override bool IsResponse(DnsDatagram datagram)
+        {
+            return datagram.IsResponse;
         }
 
         protected override bool TryGetDatagramCore(UdpDatagram transportDatagram, ref DnsDatagram datagram)
