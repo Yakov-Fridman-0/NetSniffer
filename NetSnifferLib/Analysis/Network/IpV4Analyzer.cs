@@ -52,6 +52,10 @@ namespace NetSnifferLib.Analysis.Network
                     payload = datagram.Tcp;
                     analyzer = DatagramAnalyzer.TcpAnalyzer;
                     break;
+                case IpV4Protocol.InternetControlMessageProtocol:
+                    payload = datagram.Icmp;
+                    analyzer = DatagramAnalyzer.IcmpAnalyzer;
+                    break;
                 default:
                     payload = datagram.Payload;
                     analyzer = null;

@@ -1,14 +1,31 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics.CodeAnalysis;
 
 namespace NetSnifferLib
 {
     static class IPAddressHelper
     {
         public static IPAddress EmptyAddress { get; } = IPAddress.Parse("0.0.0.0");
+
+        public static IPAddressEqulityComparer EqulityComparer { get; } = new();
+
+        public class IPAddressEqulityComparer : IEqualityComparer<IPAddress>
+        {
+            public bool Equals(IPAddress x, IPAddress y)
+            {
+                return x.Equals(y);
+            }
+
+            public int GetHashCode([DisallowNull] IPAddress obj)
+            {
+                return obj.GetHashCode();
+            }
+        }
 
         public static bool IsBroadcast(IPAddress address)
         {
@@ -37,6 +54,11 @@ namespace NetSnifferLib
         public static bool IsHostAddrress(IPAddress address)
         {
             return IsValid(address) && !IsBroadcast(address) && !IsMulticast(address);
+        }
+
+        public static IPAddress CloneAddress(IPAddress address)
+        {
+            return address == null ? null : new IPAddress(address.GetAddressBytes());
         }
     }
 }

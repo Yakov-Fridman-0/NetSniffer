@@ -127,10 +127,13 @@ namespace NetSnifferLib.Topology
 
         public bool ContainsDhcpServer(PhysicalAddress physicalAddress, IPAddress ipAddress)
         {
-            return dhcpServers.Any(
-                (dhcpServer) =>
-                physicalAddress.Equals(dhcpServer.PhysicalAddress) &&
-                ipAddress.Equals(dhcpServer.IPAddress));
+            if (ipAddress != null)
+                return dhcpServers.Any(
+                    (dhcpServer) =>
+                    physicalAddress.Equals(dhcpServer.PhysicalAddress) &&
+                    ipAddress.Equals(dhcpServer.IPAddress));
+            else
+                return false;
         }
 
         public void MakeHostDhcpServer(PhysicalAddress physicalAddress, IPAddress ipAddress)
@@ -156,6 +159,6 @@ namespace NetSnifferLib.Topology
             return dhcpServers.Any((dhcpServer) => ipAddress.Equals(dhcpServer.IPAddress));
         }
 
-        //public LanMap LanMap => new(hosts, routers, dhcpServers);
+        public LanMap LanMap => new(hosts, routers, dhcpServers);
     }
 }

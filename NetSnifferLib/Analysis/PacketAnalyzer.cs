@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Net;
+using System.Linq;
+using System.Net.NetworkInformation;
+using System.Collections.Generic;
 
 using PcapDotNet.Packets;
 
+using NetSnifferLib.Analysis.Miscellaneous;
 using NetSnifferLib.General;
 using NetSnifferLib.Topology;
 using NetSnifferLib.Statistics;
@@ -11,9 +15,24 @@ namespace NetSnifferLib.Analysis
 {
     public static class PacketAnalyzer
     {
+
         static readonly TopologyBuilder topologyBuilder = new();
 
         static readonly AnalyzerEventHandler analyzerEventHandler = new();
+
+        // Ping and Tracert
+        static readonly List<byte> icmpIdentifiersInUse = new(); // sorted
+
+        static readonly object icmpIdentifiersLock = new();
+
+        static readonly Dictionary<TracertResults, bool> tracertResults = new();
+
+
+        public static NetSniffer NetSniffer { get; set; } = null;
+
+        public static IPAddress LocalComputerIPAddress { get; set; } = null;
+
+        public static PhysicalAddress LocalComputerPhysicalAddress { get; set; } = null;
 
         class AnalyzerEventHandler
         {
@@ -54,10 +73,36 @@ namespace NetSnifferLib.Analysis
             {
                 topologyBuilder.AddDnsServer(e);
             }
+
+            public void IcmpAnalyzer_RegisteredPingReply(object sender, PingReplyEventArgs e)
+            {
+                IPAddress src = e.Source;
+                //byte id = (byte)e.Identifier;
+
+                var tracertResult = tracertResults.FirstOrDefault((kvp) => kvp.Key.Destination.Equals(src)).Key;
+                tracertResult.IsComplete = true;
+
+                topologyBuilder.IntegrateTracertResults(tracertResult);
+            }
+
+            public void IcmpAnalyzer_RegisteredPingRequestTimeToLiveExceeded(object sender, PingRequestTimeToLiveExeededEventArgs e)
+            {
+                IPAddress src = e.Source;
+                IPAddress intendedSrc = e.ExpectedSource;
+
+                var tracertResult = tracertResults.FirstOrDefault((kvp) => kvp.Key.Destination.Equals(src)).Key;
+                tracertResults[tracertResult] = true;
+                int hops = e.Hops;
+
+                tracertResult.AddHop(src, hops);
+            }
         }
 
         static PacketAnalyzer()
         {
+            DatagramAnalyzer.IcmpAnalyzer.RegisteredPingReply += analyzerEventHandler.IcmpAnalyzer_RegisteredPingReply;
+            DatagramAnalyzer.IcmpAnalyzer.RegisteredPingRequestTimeToLiveExceeded += analyzerEventHandler.IcmpAnalyzer_RegisteredPingRequestTimeToLiveExceeded;
+
             DatagramAnalyzer.EthernetAnalyzer.PacketCaptured += analyzerEventHandler.EthernetAnalyzer_PacketCaptured;
             DatagramAnalyzer.IpV4Analyzer.PacketCaptured += analyzerEventHandler.IpV4Analyzer_PacketCaptured;
 
@@ -67,10 +112,8 @@ namespace NetSnifferLib.Analysis
             DatagramAnalyzer.ArpAnalyzer.PayloadIndicatesHost += analyzerEventHandler.ArpAnalyzer_PayloadIndicatesHost;
         }
 
-
-
         public static int TransmittedPackets { get; private set; } = 0;
-
+        
         public static int TransmittedBytes { get; private set; } = 0;
 
         public static bool IsEthernet(Packet packet) => packet.DataLink.Kind == DataLinkKind.Ethernet;
@@ -154,6 +197,76 @@ namespace NetSnifferLib.Analysis
                 TcpPackets = DatagramAnalyzer.TcpAnalyzer.SentPackets,
                 TcpPayloadBytes = DatagramAnalyzer.TcpAnalyzer.SentBytes,
             };
+        }
+
+        public static void Ping(IPAddress destination)
+        {
+            //DatagramAnalyzer.IcmpAnalyzer.RegisterPingRequest();
+            NetSniffer.Ping(destination, 128);
+        }
+
+        public static void Tracert(IPAddress destination)
+        {
+            int maxHops = 30;
+            byte id = 1, takenId;
+
+            TracertResults results = new(LocalComputerIPAddress, destination);
+            tracertResults.Add(results, false);
+
+            for (int hops = 1; hops < maxHops; hops++)
+            {
+                //lock (icmpIdentifiersLock)
+                //{
+                //    int i;
+                //    for (i = 0; i < icmpIdentifiersInUse.Count; i++)
+                //    {
+                //        takenId = icmpIdentifiersInUse[i];
+
+                //        if (takenId == id)
+                //            id = (byte)(takenId + 1);
+                //        else
+                //            break;
+                //    }
+
+                //    if (i == icmpIdentifiersInUse.Count)
+                //        icmpIdentifiersInUse.Add(id);
+                //    else
+                //        icmpIdentifiersInUse.Insert(i + 1, id);
+                //}
+
+                //while (tracertResults[results] != true)
+                //{
+
+                //}
+
+                //DatagramAnalyzer.IcmpAnalyzer.RegisterPingRequest(destination, id, 1);
+                PingReply reply = NetSniffer.Ping(destination, (byte)hops);
+
+                switch (reply.Status)
+                {
+                    case IPStatus.TimedOut:
+                        results.AddHop(null, hops);
+                        break;
+                    case IPStatus.TtlExpired:
+                        results.AddHop(reply.Address, hops);
+                        break;
+                    case IPStatus.Success:
+                        results.IsComplete = true;
+                        topologyBuilder.IntegrateTracertResults(results);
+                        return;
+                }
+            }
+           
+        }
+
+        public static LanMap GetLanMap()
+        {
+            return topologyBuilder.LanMap;
+        }
+
+        public static WanMap GetWanMap()
+        {
+            return topologyBuilder.WanMap;
         }
     }
 }

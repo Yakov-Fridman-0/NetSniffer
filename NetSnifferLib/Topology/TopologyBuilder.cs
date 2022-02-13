@@ -181,5 +181,15 @@ namespace NetSnifferLib.Topology
             if(!wanMapBuilder.ContainseDnsServer(ipAddress))
                 wanMapBuilder.AddDnsServer(ipAddress);
         }
+
+
+        public void IntegrateTracertResults(TracertResults tracertResults)
+        {
+            wanMapBuilder.IntegrateTracertResults(tracertResults);
+        }
+
+        public LanMap LanMap => lanMapBuilder.LanMap;
+
+        public WanMap WanMap => wanMapBuilder.WanMap;
     }
 }

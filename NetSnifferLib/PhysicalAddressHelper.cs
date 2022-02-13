@@ -32,6 +32,11 @@ namespace NetSnifferLib
             return new OUI(new byte[] { addressBytes[0], addressBytes[1], addressBytes[2] });
         }
 
+        public static PhysicalAddress CloneAddress(PhysicalAddress address)
+        {
+            return new PhysicalAddress(address.GetAddressBytes());
+        }
+
         public static VendorAssigned GetVedorAssigned(PhysicalAddress address)
         {
             var addressBytes = address.GetAddressBytes();

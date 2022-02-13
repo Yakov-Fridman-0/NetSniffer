@@ -3,6 +3,10 @@ using NetSnifferLib.Analysis;
 using NetSnifferLib.Statistics;
 
 using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.Net;
+using System.Net.NetworkInformation;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -13,15 +17,15 @@ namespace NetSnifferApp
         private SniffingOptions _sniffingOptions;
         private NetSniffer _netSniffer;
 
+        GeneralStatisticsForm statisticsForm;
+        TopologyForm topologyForm;
+
         public MainForm()
         {
             InitializeComponent();
 
             _sniffingOptions = new SniffingOptions();
             _netSniffer = null;
-
-            //PacketAnalyzer = new();
-            //CtrlPacketViewer.PakcetAnalyzer = PacketAnalyzer;
         }
 
         protected override void OnLoad(EventArgs e)
@@ -53,7 +57,20 @@ namespace NetSnifferApp
             packetFilter.Enabled = false;
             CtrlPacketViewer.Clear();
 
-            _sniffingOptions.NetworkInterface = ((NetInterfaceItem)CmbNetInterface.SelectedItem).NetworkInterface;
+            var selectedInterface = ((NetInterfaceItem)CmbNetInterface.SelectedItem).NetworkInterface;
+
+
+            UnicastIPAddressInformation[] localComputerIPAddresses = new UnicastIPAddressInformation[selectedInterface.GetIPProperties().UnicastAddresses.Count];
+            selectedInterface.GetIPProperties().UnicastAddresses.CopyTo(localComputerIPAddresses, 0 );
+            IPAddress localComputerIPv4Address = localComputerIPAddresses.FirstOrDefault((info) => info.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).Address;
+            MessageBox.Show(localComputerIPv4Address.ToString(), localComputerIPv4Address.ToString());
+
+            PhysicalAddress myPhysicalAddress =  selectedInterface.GetPhysicalAddress();
+
+            PacketAnalyzer.LocalComputerIPAddress = localComputerIPv4Address;
+            PacketAnalyzer.LocalComputerPhysicalAddress = myPhysicalAddress;
+
+            _sniffingOptions.NetworkInterface = selectedInterface;
 
             StartSniffingAsync();
         }
@@ -66,6 +83,8 @@ namespace NetSnifferApp
         private void StartSniffing()
         {
             _netSniffer = NetSniffer.CreateLiveSniffer(_sniffingOptions);
+            PacketAnalyzer.NetSniffer = _netSniffer;
+
             _sniffingOptions = new SniffingOptions();
 
             _netSniffer.PacketReceived += NetSniffer_PacketReceived;
@@ -199,8 +218,6 @@ namespace NetSnifferApp
             }
         }
 
-        private GeneralStatisticsForm statisticsForm;
-
         private void GeneralToolStripMenuItem_Click(object sender, EventArgs e)
         {
             GeneralStatisticsForm form = new();
@@ -232,6 +249,25 @@ namespace NetSnifferApp
             {
                 packetFilter.ValidFilter = false;
             }
+        }
+
+        private void generalToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            topologyForm = new();
+            topologyForm.Show();
+            topologyForm.TopologyUpdateRequired += TopologyForm_TopologyUpdateRequired;
+        }
+
+        public void UpdateTop()
+        {
+            topologyForm.UpdateLanMap(PacketAnalyzer.GetLanMap());
+            topologyForm.UpdateWanMap(PacketAnalyzer.GetWanMap());
+        }
+
+        private void TopologyForm_TopologyUpdateRequired(object sender, EventArgs e)
+        {
+            topologyForm?.Invoke(new Action(() => UpdateTop()));
+
         }
     }
 }

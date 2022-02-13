@@ -8,10 +8,5 @@ namespace NetSnifferLib.Topology
         {
 
         }
-
-        public DnsServer(IPAddress iPAddress, int hops) : base(iPAddress, hops)
-        {
-
-        }
     }
 }

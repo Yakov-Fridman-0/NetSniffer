@@ -25,6 +25,8 @@ namespace NetSnifferLib.Analysis
         public static INetworkAnalyzer[] NetworkAnalyzers { get; } =
             new INetworkAnalyzer[] { IpV4Analyzer, IpV6Analyzer };
 
+        public static IcmpAnalyzer IcmpAnalyzer { get; } = new();
+
         public static UdpAnalyzer UdpAnalyzer { get; } = new();
 
         public static TcpAnalyzer TcpAnalyzer { get; } = new();
