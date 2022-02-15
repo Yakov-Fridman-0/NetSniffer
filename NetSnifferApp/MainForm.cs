@@ -258,7 +258,7 @@ namespace NetSnifferApp
             topologyForm.TopologyUpdateRequired += TopologyForm_TopologyUpdateRequired;
         }
 
-        public void UpdateTop()
+        public void UpdateTopology()
         {
             topologyForm.UpdateLanMap(PacketAnalyzer.GetLanMap());
             topologyForm.UpdateWanMap(PacketAnalyzer.GetWanMap());
@@ -266,7 +266,7 @@ namespace NetSnifferApp
 
         private void TopologyForm_TopologyUpdateRequired(object sender, EventArgs e)
         {
-            topologyForm?.Invoke(new Action(() => UpdateTop()));
+            topologyForm?.Invoke(new Action(() => UpdateTopology()));
 
         }
     }

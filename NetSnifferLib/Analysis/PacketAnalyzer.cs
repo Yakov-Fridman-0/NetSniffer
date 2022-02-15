@@ -21,9 +21,9 @@ namespace NetSnifferLib.Analysis
         static readonly AnalyzerEventHandler analyzerEventHandler = new();
 
         // Ping and Tracert
-        static readonly List<byte> icmpIdentifiersInUse = new(); // sorted
+        //static readonly List<byte> icmpIdentifiersInUse = new(); // sorted
 
-        static readonly object icmpIdentifiersLock = new();
+        //static readonly object icmpIdentifiersLock = new();
 
         static readonly Dictionary<TracertResults, bool> tracertResults = new();
 
@@ -208,7 +208,7 @@ namespace NetSnifferLib.Analysis
         public static void Tracert(IPAddress destination)
         {
             int maxHops = 30;
-            byte id = 1, takenId;
+            //byte id = 1, takenId;
 
             TracertResults results = new(LocalComputerIPAddress, destination);
             tracertResults.Add(results, false);
@@ -252,11 +252,15 @@ namespace NetSnifferLib.Analysis
                         break;
                     case IPStatus.Success:
                         results.IsComplete = true;
+                        results.Successfull = true;
                         topologyBuilder.IntegrateTracertResults(results);
                         return;
                 }
             }
-           
+
+            results.IsComplete = true;
+            results.Successfull = false;
+            topologyBuilder.IntegrateTracertResults(results);
         }
 
         public static LanMap GetLanMap()

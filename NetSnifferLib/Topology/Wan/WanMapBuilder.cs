@@ -57,39 +57,48 @@ namespace NetSnifferLib.Topology
                 currAddr = addresses[i];
                 nextAddr = addresses[i + 1];
 
-                if (currAddr == null || nextAddr == null)
-                    continue;
-
-                currHost = hosts.FirstOrDefault((aHost) => aHost.IPAddress.Equals(currAddr));
-                nextHost = hosts.FirstOrDefault((aHost) => aHost.IPAddress.Equals(nextAddr));
-
-                if (currHost == null)
+                if (currAddr != null)
                 {
-                    currHost = new WanHost(currAddr);
-                    hosts.Add(currHost);
-                }
+                    currHost = hosts.FirstOrDefault((aHost) => aHost.IPAddress.Equals(currAddr));
 
-                if (nextHost == null)
-                {
-                    nextHost = new WanHost(nextAddr);
-                    hosts.Add(nextHost);
-                }
+                    if (currHost == null)
+                    {
+                        currHost = new WanHost(currAddr);
+                        hosts.Add(currHost);
+                    }
 
-                switch (i)
-                {
-                    case 0:
-                        LocalComputer = currHost;
-                        break;
-                    case 1:
-                        lanRouters.Add(currHost);
-                        break;
-                    default:
-                        wanRouters.Add(currHost);
-                        break;
-                }
+                    switch (i)
+                    {
+                        case 0:
+                            LocalComputer = currHost;
+                            break;
+                        case 1:
+                            lanRouters.Add(currHost);
+                            break;
+                        default:
+                            wanRouters.Add(currHost);
+                            break;
+                    }
 
-                currHost.ConnectedHosts.Add(nextHost);
-                nextHost.ConnectedHosts.Add(currHost);
+                    if (nextAddr != null)
+                    {
+                        nextHost = hosts.FirstOrDefault((aHost) => aHost.IPAddress.Equals(nextAddr));
+
+                        if (nextHost == null)
+                        {
+                            nextHost = new WanHost(nextAddr);
+                            hosts.Add(nextHost);
+                        }
+
+                        if (!currHost.ConnectedHosts.Contains(nextHost, WanHost.IPAddressComparer))
+                            currHost.ConnectedHosts.Add(nextHost);
+
+                        if (!nextHost.ConnectedHosts.Contains(currHost, WanHost.IPAddressComparer))
+                            nextHost.ConnectedHosts.Add(currHost);
+                    }
+
+                    
+                }
             }
         }
 

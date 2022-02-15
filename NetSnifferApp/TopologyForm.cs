@@ -91,9 +91,12 @@ namespace NetSnifferApp
 
         public void UpdateLanMap(LanMap map)
         {
-            lanTreeView.BeginUpdate();
-
             var mapDiff = map.GetDiff(lanMap);
+
+            if (mapDiff.IsEmpty)
+                return;
+
+            lanTreeView.BeginUpdate();
 
             // new hosts
             foreach (var addedHost in mapDiff.HostsAdded)
@@ -156,7 +159,7 @@ namespace NetSnifferApp
             // new routers
             foreach (var addedRouter in mapDiff.RoutersAdded)
             {
-                var host = lanMap.Hosts.Find((host) => LanHost.PhysicalAddressComparer.Equals(host, addedRouter));
+                var host = lanMap.Hosts.Find((aHost) => LanHost.PhysicalAddressComparer.Equals(aHost, addedRouter));
                 lanMap.Routers.Add(host);
 
                 var newNode = new TreeNode(addedRouter.ToString())
@@ -171,13 +174,14 @@ namespace NetSnifferApp
             // removed routers
             foreach (var removedRouter in mapDiff.RoutersRemoved)
             {
+                lanMap.Routers.Remove(removedRouter);
                 lanTreeView.Nodes[0].Nodes["lanRoutersNode"].Nodes.RemoveByKey(removedRouter.PhysicalAddress.ToString());
             }
 
             // new DHCP server
             foreach (var addedServer in mapDiff.DhcpServersAdded)
             {
-                var host = lanMap.Hosts.Find((host) => LanHost.PhysicalAddressComparer.Equals(host, addedServer));
+                var host = lanMap.Hosts.Find((aHost) => LanHost.PhysicalAddressComparer.Equals(aHost, addedServer));
                 lanMap.DhcpServers.Add(host);
 
                 var newNode = new TreeNode(host.ToString())
@@ -191,7 +195,8 @@ namespace NetSnifferApp
 
             // removed DHCP servers
             foreach (var removedServer in mapDiff.DhcpServersRemoved)
-            {  
+            {
+                lanMap.DhcpServers.Remove(removedServer);
                 lanTreeView.Nodes[0].Nodes["lanDhcpServerNode"].Nodes.RemoveByKey(removedServer.PhysicalAddress.ToString());
             }
 
@@ -200,9 +205,12 @@ namespace NetSnifferApp
 
         public void UpdateWanMap(WanMap map)
         {
-            wanTreeView.BeginUpdate();
-
             var mapDiff = map.GetDiff(wanMap);
+
+            if (mapDiff.IsEmpty)
+                return;
+
+            wanTreeView.BeginUpdate();
 
             //Hosts
             //  added

@@ -50,5 +50,12 @@ namespace NetSnifferLib.Topology
         //    DhcpServersAdded = dhcpServersAdded.Select((host) => (LanHost)host.Clone()).ToList();
         //    DhcpServersRemoved = dhcpServersRemoved.Select((host) => (LanHost)host.Clone()).ToList();
         //}
+
+        public bool IsEmpty =>
+            HostsAdded.Count == 0 && HostsRemoved.Count == 0 &&
+            PhysicalAddressIPAddressMappingModified.Count == 0 &&
+            RoutersAdded.Count == 0 && RoutersRemoved.Count == 0 &&
+            DhcpServersAdded.Count == 0 && DhcpServersRemoved.Count == 0;
+
     }
 }

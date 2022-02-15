@@ -15,6 +15,8 @@ namespace NetSnifferLib.Topology
 
         public bool IsComplete { get; set; }
 
+        public bool Successfull { get; set; }
+
         public TracertResults(IPAddress source, IPAddress destination)
         {
             Source = source;
@@ -35,7 +37,9 @@ namespace NetSnifferLib.Topology
                 var finalList = Hops.Values.ToList();
 
                 finalList.Insert(0, Source);
-                finalList.Add(Destination);
+
+                if (Successfull)
+                    finalList.Add(Destination);
 
                 return finalList;
             }

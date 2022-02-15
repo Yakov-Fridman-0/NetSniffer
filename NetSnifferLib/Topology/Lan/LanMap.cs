@@ -76,15 +76,21 @@ namespace NetSnifferLib.Topology
                 }
                 else
                 {
-                    if (host.IPAddress?.Equals(prevHost.IPAddress) ?? (prevHost.IPAddress == null) )
+                    if (!(host.IPAddress == null && prevHost.IPAddress == null))
                     {
-                        addressMappingsModified.Add(
-                            new PhysicalAddressIPAddressMapping()
-                            {
-                                PhysicalAddress = host.PhysicalAddress,
-                                IPAddress = host.IPAddress
-                            }) ;
+                        if ((host.IPAddress == null && prevHost.IPAddress != null) ||
+                            (host.IPAddress != null) && (prevHost.IPAddress == null) ||
+                            !host.IPAddress.Equals(prevHost.IPAddress))
+                        {
+                            addressMappingsModified.Add(
+                                new PhysicalAddressIPAddressMapping()
+                                {
+                                    PhysicalAddress = host.PhysicalAddress,
+                                    IPAddress = host.IPAddress
+                                });
+                        }
                     }
+  
                 }
             }
 
