@@ -35,6 +35,8 @@ namespace NetSnifferApp
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.lanTreeView = new System.Windows.Forms.TreeView();
             this.wanTreeView = new System.Windows.Forms.TreeView();
+            this.subnetMaskLabel = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
             this.refreshTimer = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -44,9 +46,11 @@ namespace NetSnifferApp
             // 
             // splitContainer1
             // 
+            this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.splitContainer1.Cursor = System.Windows.Forms.Cursors.HSplit;
-            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer1.Location = new System.Drawing.Point(0, 28);
             this.splitContainer1.Name = "splitContainer1";
             this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
@@ -57,8 +61,8 @@ namespace NetSnifferApp
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.wanTreeView);
-            this.splitContainer1.Size = new System.Drawing.Size(335, 450);
-            this.splitContainer1.SplitterDistance = 210;
+            this.splitContainer1.Size = new System.Drawing.Size(335, 422);
+            this.splitContainer1.SplitterDistance = 196;
             this.splitContainer1.TabIndex = 0;
             // 
             // lanTreeView
@@ -70,7 +74,7 @@ namespace NetSnifferApp
             treeNode1.Text = "LAN";
             this.lanTreeView.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
             treeNode1});
-            this.lanTreeView.Size = new System.Drawing.Size(335, 210);
+            this.lanTreeView.Size = new System.Drawing.Size(335, 196);
             this.lanTreeView.TabIndex = 0;
             // 
             // wanTreeView
@@ -82,9 +86,27 @@ namespace NetSnifferApp
             treeNode2.Text = "WAN";
             this.wanTreeView.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
             treeNode2});
-            this.wanTreeView.Size = new System.Drawing.Size(335, 236);
+            this.wanTreeView.Size = new System.Drawing.Size(335, 222);
             this.wanTreeView.TabIndex = 0;
             this.wanTreeView.MouseClick += new System.Windows.Forms.MouseEventHandler(this.wanTreeView_MouseClick);
+            // 
+            // subnetMaskLabel
+            // 
+            this.subnetMaskLabel.AutoSize = true;
+            this.subnetMaskLabel.Location = new System.Drawing.Point(144, 5);
+            this.subnetMaskLabel.Name = "subnetMaskLabel";
+            this.subnetMaskLabel.Size = new System.Drawing.Size(122, 20);
+            this.subnetMaskLabel.TabIndex = 2;
+            this.subnetMaskLabel.Text = "255.255.2555.255";
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(12, 5);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(126, 20);
+            this.label1.TabIndex = 1;
+            this.label1.Text = "LAN subnet mask:";
             // 
             // refreshTimer
             // 
@@ -96,7 +118,9 @@ namespace NetSnifferApp
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(335, 450);
+            this.Controls.Add(this.subnetMaskLabel);
             this.Controls.Add(this.splitContainer1);
+            this.Controls.Add(this.label1);
             this.Name = "TopologyForm";
             this.Text = "TopologyForm";
             this.Load += new System.EventHandler(this.TopologyForm_Load);
@@ -105,6 +129,7 @@ namespace NetSnifferApp
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -114,5 +139,7 @@ namespace NetSnifferApp
         private System.Windows.Forms.Timer refreshTimer;
         private System.Windows.Forms.TreeView lanTreeView;
         private System.Windows.Forms.TreeView wanTreeView;
+        private System.Windows.Forms.Label subnetMaskLabel;
+        private System.Windows.Forms.Label label1;
     }
 }
