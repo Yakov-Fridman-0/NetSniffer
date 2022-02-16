@@ -32,7 +32,7 @@ namespace NetSnifferApp
 
         //IPAddress subnetAddress = IPAddress.Parse("");
 
-        const double THRESHOLD = 0.95;
+        const double THRESHOLD = 0.90;
 
         readonly LanMap lanMap = LanMap.Empty;
         readonly WanMap wanMap = WanMap.Empty;
@@ -57,7 +57,8 @@ namespace NetSnifferApp
 
         readonly List<ConnectionsForm> connectionForms = new();
 
-
+        readonly object subnetmaskLock = new();
+        
         async private Task AddCountryCodeToWanTreeNode(TreeNode node)
         {
             IPAddress addr = ((WanHost)node.Tag).IPAddress;
@@ -154,51 +155,55 @@ namespace NetSnifferApp
 
         void UpdateSubnetMask()
         {
-            var addrs = lanMap.Hosts.Where(host => host.IPAddress != null).Select((host) => host.IPAddress).Where((addr) => addr != null).ToList();
-            int addrsCount = addrs.Count;
-            var specialAddrs = new List<IPAddress>();
-
-            byte[] netmaskBytes = new byte[4];
-
-            int bits;
-            List<IPAddress> otherAddressess = new();
-
-            for (bits = 31; bits >= 1; bits--)
+            lock(subnetmaskLock)
             {
-                var subnets = addrs.Select(addr => new { Subnet = GetSubnet(addr, bits), Address = addr }).GroupBy(sub => sub.Subnet).ToList();
-                subnets.Sort((g1, g2) => g1.Count() - g2.Count());
+                var addrs = lanMap.Hosts.Where(host => host.IPAddress != null).Select((host) => host.IPAddress).Where((addr) => addr != null).ToList();
+                int addrsCount = addrs.Count;
+                var specialAddrs = new List<IPAddress>();
 
-                var mostPrelevant = subnets[0];
+                byte[] netmaskBytes = new byte[4];
 
+                int bits;
+                List<IPAddress> otherAddressess = new();
 
-                if (mostPrelevant.Count() >= THRESHOLD * addrsCount)
+                for (bits = 31; bits >= 1; bits--)
                 {
-                    otherAddressess = subnets.Skip(1).SelectMany(g => g.Select(group => group.Address)).ToList();
-                    break;
+                    var subnets = addrs.Select(addr => new { Subnet = GetSubnet(addr, bits), Address = addr }).GroupBy(sub => sub.Subnet).ToList();
+                    subnets.Sort((g1, g2) => g1.Count() - g2.Count());
+
+                    var mostPrelevant = subnets[0];
+
+
+                    if (mostPrelevant.Count() >= THRESHOLD * addrsCount)
+                    {
+                        otherAddressess = subnets.Skip(1).SelectMany(g => g.Select(group => group.Address)).ToList();
+                        break;
+                    }
                 }
+
+                for (int i = 0; i < bits; i++)
+                {
+                    netmaskBytes[i / 8] += (byte)Math.Pow(2, 8 - i % 8);
+                }
+
+                IPAddress mask = new(netmaskBytes);
+                lanTreeView.Invoke(new Action(() => subnetMaskLabel.Text = mask.ToString()));
+
+
+                TreeNode[] nodes = new TreeNode[lanHostsNode.Nodes.Count];
+                lanHostsNode.Nodes.CopyTo(nodes, 0);
+
+                var nodesToRed = nodes.Where(node => otherAddressess.Contains(((LanHost)(node.Tag)).IPAddress));
+
+                void ColorNode(TreeNode node)
+                {
+                    node.ForeColor = System.Drawing.Color.Red;
+                }
+
+                foreach (var node in nodesToRed)
+                    lanTreeView.Invoke(new Action(() => ColorNode(node)));
             }
 
-            for (int i=0; i< bits; i++)
-            {
-                netmaskBytes[i / 8] += (byte)Math.Pow(2, 8 - i % 8);
-            }
-
-            IPAddress mask = new(netmaskBytes);
-            lanTreeView.Invoke(new Action(() => subnetMaskLabel.Text = mask.ToString()));
-            
-
-            TreeNode[] nodes = new TreeNode[lanHostsNode.Nodes.Count];
-            lanHostsNode.Nodes.CopyTo(nodes, 0);
-
-            var nodesToRed = nodes.Where(node => otherAddressess.Contains(((LanHost)(node.Tag)).IPAddress));
-
-            void ColorNode(TreeNode node)
-            {
-                node.ForeColor = System.Drawing.Color.Red;
-            }
-
-            foreach (var node in nodesToRed)
-                lanTreeView.Invoke(new Action(() => ColorNode(node)));
             //byte[] addrBytes, netmaskBytes, subnetnetBytes;
             //subnetnetBytes = IPAddress.Parse("255.255.255.255").GetAddressBytes();
             //netmaskBytes = IPAddress.Parse("0.0.0.0").GetAddressBytes();
