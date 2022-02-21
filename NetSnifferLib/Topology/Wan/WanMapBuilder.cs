@@ -2,6 +2,7 @@
 using System.Net;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -19,9 +20,27 @@ namespace NetSnifferLib.Topology
 
         readonly List<WanHost> wanRouters = new();
 
+        readonly Dictionary<IPAddress, ManualResetEvent> hostCreatedEvents = new(IPAddressHelper.EqulityComparer);
+
         public void AddHost(IPAddress ipAddress)
         {
+            ManualResetEvent hostCreatedEvent = null;
+            
+            lock (hostCreatedEvents)
+            {
+                if (!hostCreatedEvents.ContainsKey(ipAddress))
+                {
+                    hostCreatedEvent = new ManualResetEvent(false);
+                    hostCreatedEvents.Add(ipAddress, hostCreatedEvent);
+                }
+                else
+                {
+                    hostCreatedEvent = hostCreatedEvents[ipAddress];
+                }
+            }
+
             hosts.Add(new WanHost(ipAddress));
+            hostCreatedEvent.Set();
         }
 
         public bool ContainsHost(IPAddress ipAddress)
@@ -34,9 +53,32 @@ namespace NetSnifferLib.Topology
             return hosts.Remove(hosts.Find((host) => ipAddress.Equals(host.IPAddress)));
         }
 
+        private WanHost GetHost(IPAddress ipAddress)
+        {
+            ManualResetEvent hostCreatedEvent = null;
+
+            lock (hostCreatedEvents)
+            {
+                if (!hostCreatedEvents.ContainsKey(ipAddress))
+                {
+                    hostCreatedEvent = new ManualResetEvent(false);
+                    hostCreatedEvents.Add(ipAddress, hostCreatedEvent);
+                }
+                else
+                {
+                    hostCreatedEvent = hostCreatedEvents[ipAddress];
+                }
+            }
+
+            hostCreatedEvent.WaitOne();
+
+            return hosts.Find((host) => ipAddress.Equals(host.IPAddress));
+        }
+
         public void AddDnsServer(IPAddress ipAddress)
         {
-            dnsServers.Add(new DnsServer(ipAddress));
+            var host = GetHost(ipAddress);
+            dnsServers.Add(hosts.Find((host) => ipAddress.Equals(host.IPAddress)));
         }
 
         public bool ContainseDnsServer(IPAddress ipAddress)
@@ -59,12 +101,16 @@ namespace NetSnifferLib.Topology
 
                 if (currAddr != null)
                 {
-                    currHost = hosts.FirstOrDefault((aHost) => aHost.IPAddress.Equals(currAddr));
+                    //currHost = hosts.FirstOrDefault((aHost) => aHost.IPAddress.Equals(currAddr));
+                    currHost = GetHost(currAddr);
 
                     if (currHost == null)
                     {
-                        currHost = new WanHost(currAddr);
-                        hosts.Add(currHost);
+                        //currHost = new WanHost(currAddr);
+                        //hosts.Add(currHost);
+                        AddHost(currAddr);
+                        currHost = GetHost(currAddr);
+
                     }
 
                     switch (i)
@@ -82,12 +128,15 @@ namespace NetSnifferLib.Topology
 
                     if (nextAddr != null)
                     {
-                        nextHost = hosts.FirstOrDefault((aHost) => aHost.IPAddress.Equals(nextAddr));
+                        //nextHost = hosts.FirstOrDefault((aHost) => aHost.IPAddress.Equals(nextAddr));
+                        nextHost = GetHost(nextAddr);
 
                         if (nextHost == null)
                         {
-                            nextHost = new WanHost(nextAddr);
-                            hosts.Add(nextHost);
+                            //nextHost = new WanHost(nextAddr);
+                            //hosts.Add(nextHost);
+                            AddHost(nextAddr);
+                            nextHost = GetHost(nextAddr);
                         }
 
                         if (!currHost.ConnectedHosts.Contains(nextHost, WanHost.IPAddressComparer))

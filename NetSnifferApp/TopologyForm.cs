@@ -30,8 +30,6 @@ namespace NetSnifferApp
             InitializeContextMenuStrips();
         }
 
-        //IPAddress subnetAddress = IPAddress.Parse("");
-
         const double THRESHOLD = 0.90;
 
         readonly LanMap lanMap = LanMap.Empty;
@@ -64,7 +62,7 @@ namespace NetSnifferApp
             IPAddress addr = ((WanHost)node.Tag).IPAddress;
             var countryCode = await client.Lookup(addr.ToString(), info => info.CountryCode);
             
-            if (!string.IsNullOrEmpty(countryCode))
+            if (!string.IsNullOrEmpty(countryCode) && countryCode != "null")
                 wanTreeView.Invoke(new Action(() => node.Text += $" ({countryCode})"));
         }
 
@@ -107,7 +105,7 @@ namespace NetSnifferApp
             wanHostContextMenuStrip.Items.AddRange(new ToolStripItem[] { pingTSItem, tracertTSItem, connectionsTSItem});
         }
 
-        private int CaculateSubnetBits(IPAddress[] addresses)
+        /*private int CaculateSubnetBits(IPAddress[] addresses)
         {
             byte[] addrBytes;
             byte[] subnetnetBytes = IPAddress.Parse("255.255.255.255").GetAddressBytes();
@@ -138,7 +136,7 @@ namespace NetSnifferApp
             }
 
             return bits;
-        }
+        }*/
 
         IPAddress GetSubnet(IPAddress address, int bits)
         {
@@ -147,7 +145,7 @@ namespace NetSnifferApp
 
             for (int i = 0; i < bits; i++) 
             {
-                subnetBytes[i / 8] += (byte)(addrBytes[i/8] & (byte)Math.Pow(2, 8 - i%8)); 
+                subnetBytes[i / 8] += (byte)(addrBytes[i/8] & (byte)Math.Pow(2, 7 - i%8)); 
             }
 
             return new IPAddress(subnetBytes);
@@ -183,7 +181,7 @@ namespace NetSnifferApp
 
                 for (int i = 0; i < bits; i++)
                 {
-                    netmaskBytes[i / 8] += (byte)Math.Pow(2, 8 - i % 8);
+                    netmaskBytes[i / 8] += (byte)Math.Pow(2, 7 - i % 8);
                 }
 
                 IPAddress mask = new(netmaskBytes);
@@ -428,13 +426,16 @@ namespace NetSnifferApp
             foreach (var addedRouter in mapDiff.LanRouterAdded)
             {
                 wanMap.LanRouters.Add(addedRouter);
-                wanLanRoutersNode.Nodes.Add(new TreeNode(addedRouter.IPAddress.ToString())
+
+                var newNode = new TreeNode(addedRouter.IPAddress.ToString())
                 {
                     Name = addedRouter.IPAddress.ToString(),
                     Tag = addedRouter,
+                };
 
-                    //ContextMenuStrip = wanHostContextMenuStrip
-                });
+                wanLanRoutersNode.Nodes.Add(newNode);
+
+                Task.Run(() => AddCountryCodeToWanTreeNode(newNode));
             }
 
             // LAN  routers  removed
@@ -447,14 +448,17 @@ namespace NetSnifferApp
             // WAN routers added
             foreach (var addedRouter in mapDiff.WanRouterAdded)
             {
-                wanMap.WanRouters.Add(addedRouter);
-                wanWanRoutersNode.Nodes.Add(new TreeNode(addedRouter.IPAddress.ToString())
+                wanMap.WanRouters.Add(addedRouter);               
+                    
+                var newNode = new TreeNode(addedRouter.IPAddress.ToString())
                 {
                     Name = addedRouter.IPAddress.ToString(),
                     Tag = addedRouter,
+                };
 
-                    //ContextMenuStrip = wanHostContextMenuStrip
-                });
+                wanWanRoutersNode.Nodes.Add(newNode);
+
+                Task.Run(() => AddCountryCodeToWanTreeNode(newNode));
             }
             // WAN routers  removed
             foreach (var removedRouter in mapDiff.WanRouterRemoved)
@@ -466,14 +470,17 @@ namespace NetSnifferApp
             // DNS Servers  added
             foreach (var addedServer in mapDiff.DnsServersAdded)
             {
-                wanMap.DnsServers.Add(addedServer);
-                wanDnsServersNode.Nodes.Add(new TreeNode(addedServer.IPAddress.ToString())
+                wanMap.DnsServers.Add(addedServer);           
+                
+                var newNode = new TreeNode(addedServer.IPAddress.ToString())
                 {
                     Name = addedServer.IPAddress.ToString(),
                     Tag = addedServer,
+                };
 
-                    //ContextMenuStrip = wanHostContextMenuStrip
-                });
+                wanDnsServersNode.Nodes.Add(newNode);
+
+                Task.Run(() => AddCountryCodeToWanTreeNode(newNode));
             }
             // DNS Servers  removed
             foreach (var removedServer in mapDiff.DnsServersRemoved)

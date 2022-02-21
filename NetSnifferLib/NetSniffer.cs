@@ -54,7 +54,7 @@ namespace NetSnifferLib
             this.ipAddress = ipAddress;
             this.defaultGateway = defaultGateway;
 
-            _eventRaiser = new ActionBlock<Packet>(packet => PacketReceived.Invoke(this, packet));         
+            _eventRaiser = new ActionBlock<Packet>(packet => PacketReceived.Invoke(this, packet)) ;         
         }
 
         public static NetSniffer CreateLiveSniffer(SniffingOptions sniffingOptions)

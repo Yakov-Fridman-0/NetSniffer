@@ -111,6 +111,7 @@ namespace NetSnifferApp
             // refreshTimer
             // 
             this.refreshTimer.Enabled = true;
+            this.refreshTimer.Interval = 500;
             this.refreshTimer.Tick += new System.EventHandler(this.refreshTimer_Tick);
             // 
             // TopologyForm

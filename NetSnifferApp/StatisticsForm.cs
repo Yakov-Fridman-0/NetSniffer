@@ -13,7 +13,7 @@ namespace NetSnifferApp
         public event EventHandler NewStatisticsRequired;
 
         GeneralStatistics baseStatistics = default;
-        DateTime baseTime = default;
+        DateTime baseTime;
 
         GeneralStatistics currentStatistics;
 
@@ -22,6 +22,8 @@ namespace NetSnifferApp
         public GeneralStatisticsForm()
         {
             InitializeComponent();
+
+            baseTime = DateTime.Now;
 
             SetStatistics(default);
         }
