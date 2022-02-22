@@ -22,12 +22,65 @@ namespace NetSnifferApp
         const string ipdataKey = "914223c5df7081e91e71dbbffb0fe200e8b3e0713817ebb13c0232c5";
         readonly IpDataClient client = new(ipdataKey);
 
+        const int hostImageIndex = 0;
+        static readonly Image hostImage = new Bitmap(@"E:\סייבר 2022\פרויקט\Sniffer\NetSniffer\NetSnifferApp\Resources\Host.png");
+        const int routerImageIndex = 1;
+        static readonly Image routerImage = new Bitmap(@"E:\סייבר 2022\פרויקט\Sniffer\NetSniffer\NetSnifferApp\Resources\Router.png");
+        const int serverImageIndex = 2;
+        static readonly Image serverImage = new Bitmap(@"E:\סייבר 2022\פרויקט\Sniffer\NetSniffer\NetSnifferApp\Resources\Server.png");
+        const int routerAndServerImageIndex = 3;
+        static readonly Image routerAndServerImage = new Bitmap(@"E:\סייבר 2022\פרויקט\Sniffer\NetSniffer\NetSnifferApp\Resources\RouterAndServer.png");
+        const int wanImageIndex = 4;
+        static readonly Image wanImage = new Bitmap(@"E:\סייבר 2022\פרויקט\Sniffer\NetSniffer\NetSnifferApp\Resources\Wan.png");
+        const int lanImageIndex = 5;
+        static readonly Image lanImage = new Bitmap(@"E:\סייבר 2022\פרויקט\Sniffer\NetSniffer\NetSnifferApp\Resources\Lan.png");
+        readonly ImageList imageList = new();
+
+
         public TopologyForm()
         {
             InitializeComponent();
             InitializeNodes();
 
             InitializeContextMenuStrips();
+
+            imageList.Images.Add(hostImage);
+            imageList.Images.Add(routerImage);
+            imageList.Images.Add(serverImage);
+            imageList.Images.Add(routerAndServerImage);
+            imageList.Images.Add(wanImage);
+            imageList.Images.Add(lanImage);
+
+            lanTreeView.ImageList = imageList;
+            wanTreeView.ImageList = imageList;
+
+            lanTreeView.ImageIndex = lanImageIndex;
+            lanTreeView.SelectedImageIndex = lanImageIndex;
+
+            lanHostsNode.ImageIndex = hostImageIndex;
+            lanHostsNode.SelectedImageIndex = hostImageIndex;
+
+            lanRoutersNode.ImageIndex = routerImageIndex;
+            lanRoutersNode.SelectedImageIndex = routerImageIndex;
+
+            lanDhcpServersNode.ImageIndex = serverImageIndex;
+            lanDhcpServersNode.SelectedImageIndex = serverImageIndex;
+
+
+            wanTreeView.ImageIndex = wanImageIndex;
+            wanTreeView.SelectedImageIndex = wanImageIndex;
+
+            wanHostsNode.ImageIndex = hostImageIndex;
+            wanHostsNode.SelectedImageIndex = hostImageIndex;
+
+            wanLanRoutersNode.ImageIndex = routerImageIndex;
+            wanLanRoutersNode.SelectedImageIndex = routerImageIndex;
+
+            wanWanRoutersNode.ImageIndex = routerImageIndex;
+            wanWanRoutersNode.SelectedImageIndex = routerImageIndex;
+
+            wanDnsServersNode.ImageIndex = serverImageIndex;
+            wanDnsServersNode.SelectedImageIndex = serverImageIndex; 
         }
 
         const double THRESHOLD = 0.90;
@@ -264,7 +317,9 @@ namespace NetSnifferApp
                 var newNode = new TreeNode(addedHost.ToString())
                 {
                     Name = addedHost.PhysicalAddress.ToString(),
-                    Tag = addedHost
+                    Tag = addedHost,
+                    ImageIndex = hostImageIndex,
+                    SelectedImageIndex = hostImageIndex
                 };
 
                 lanHostsNode.Nodes.Add(newNode);
@@ -325,11 +380,30 @@ namespace NetSnifferApp
                 var host = lanMap.Hosts.Find((aHost) => LanHost.PhysicalAddressComparer.Equals(aHost, addedRouter));
                 lanMap.Routers.Add(host);
 
+                var hostNode = lanHostsNode.Nodes[addedRouter.PhysicalAddress.ToString()];
+                var dhcpServerNode = lanDhcpServersNode.Nodes[addedRouter.PhysicalAddress.ToString()];
+
+                int imageIndex = routerImageIndex, selectedImagedIndex = routerImageIndex;
+
+                if (dhcpServerNode != null)
+                {
+                    imageIndex = routerAndServerImageIndex;
+                    selectedImagedIndex = routerAndServerImageIndex;
+
+                    dhcpServerNode.ImageIndex = imageIndex;
+                    dhcpServerNode.SelectedImageIndex = selectedImagedIndex;
+                }
+
                 var newNode = new TreeNode(addedRouter.ToString())
                 {
                     Name = addedRouter.PhysicalAddress.ToString(),
-                    Tag = host
+                    Tag = host,
+                    ImageIndex = imageIndex,
+                    SelectedImageIndex = selectedImagedIndex
                 };
+
+                hostNode.ImageIndex = imageIndex;
+                hostNode.SelectedImageIndex = selectedImagedIndex;
 
                lanRoutersNode.Nodes.Add(newNode);
             }
@@ -347,11 +421,30 @@ namespace NetSnifferApp
                 var host = lanMap.Hosts.Find((aHost) => LanHost.PhysicalAddressComparer.Equals(aHost, addedServer));
                 lanMap.DhcpServers.Add(host);
 
+                var hostNode = lanHostsNode.Nodes[addedServer.PhysicalAddress.ToString()];
+                var routerNode = lanRoutersNode.Nodes[addedServer.PhysicalAddress.ToString()];
+
+                int imageIndex = serverImageIndex, selectedImagedIndex = serverImageIndex;
+
+                if (routerNode != null)
+                {
+                    imageIndex = routerAndServerImageIndex;
+                    selectedImagedIndex = routerAndServerImageIndex;
+
+                    routerNode.ImageIndex = imageIndex;
+                    routerNode.SelectedImageIndex = selectedImagedIndex;
+                }
+
                 var newNode = new TreeNode(host.ToString())
                 {
                     Name = addedServer.PhysicalAddress.ToString(),
-                    Tag = host
+                    Tag = host,
+                    ImageIndex = imageIndex,
+                    SelectedImageIndex = selectedImagedIndex
                 };
+
+                hostNode.ImageIndex = imageIndex;
+                hostNode.SelectedImageIndex = selectedImagedIndex;
 
                 lanDhcpServersNode.Nodes.Add(newNode);
             }
@@ -384,6 +477,8 @@ namespace NetSnifferApp
                 {
                     Name = addedHost.IPAddress.ToString(),
                     Tag = addedHost,
+                    ImageIndex = hostImageIndex,
+                    SelectedImageIndex = hostImageIndex
                 };
                 wanHostsNode.Nodes.Add(newNode);
 
@@ -427,13 +522,33 @@ namespace NetSnifferApp
             {
                 wanMap.LanRouters.Add(addedRouter);
 
+                var hostNode = wanHostsNode.Nodes[addedRouter.IPAddress.ToString()];
+                var dnsServerNode = wanDnsServersNode.Nodes[addedRouter.IPAddress.ToString()];
+
+                int imageIndex = routerImageIndex, selectedImageIndex = routerImageIndex;
+
+                if (dnsServerNode != null)
+                {
+                    imageIndex = routerAndServerImageIndex;
+                    selectedImageIndex = routerAndServerImageIndex;
+
+                    dnsServerNode.ImageIndex = imageIndex;
+                    dnsServerNode.SelectedImageIndex = imageIndex;
+                }
+
                 var newNode = new TreeNode(addedRouter.IPAddress.ToString())
                 {
                     Name = addedRouter.IPAddress.ToString(),
                     Tag = addedRouter,
+                    ImageIndex = imageIndex,
+                    SelectedImageIndex = selectedImageIndex
                 };
 
                 wanLanRoutersNode.Nodes.Add(newNode);
+
+                hostNode.ImageIndex = imageIndex;
+                hostNode.SelectedImageIndex = imageIndex;
+
 
                 Task.Run(() => AddCountryCodeToWanTreeNode(newNode));
             }
@@ -448,15 +563,34 @@ namespace NetSnifferApp
             // WAN routers added
             foreach (var addedRouter in mapDiff.WanRouterAdded)
             {
-                wanMap.WanRouters.Add(addedRouter);               
-                    
+                wanMap.WanRouters.Add(addedRouter);
+
+                var hostNode = wanHostsNode.Nodes[addedRouter.IPAddress.ToString()];
+                var dnsServerNode = wanDnsServersNode.Nodes[addedRouter.IPAddress.ToString()];
+
+                int imageIndex = routerImageIndex, selectedImageIndex = routerImageIndex;
+
+                if (dnsServerNode != null)
+                {
+                    imageIndex = routerAndServerImageIndex;
+                    selectedImageIndex = routerAndServerImageIndex;
+
+                    dnsServerNode.ImageIndex = imageIndex;
+                    dnsServerNode.SelectedImageIndex = imageIndex;
+                }
+
                 var newNode = new TreeNode(addedRouter.IPAddress.ToString())
                 {
                     Name = addedRouter.IPAddress.ToString(),
                     Tag = addedRouter,
+                    ImageIndex = imageIndex,
+                    SelectedImageIndex = selectedImageIndex
                 };
 
                 wanWanRoutersNode.Nodes.Add(newNode);
+
+                hostNode.ImageIndex = imageIndex;
+                hostNode.SelectedImageIndex = imageIndex;
 
                 Task.Run(() => AddCountryCodeToWanTreeNode(newNode));
             }
@@ -470,15 +604,44 @@ namespace NetSnifferApp
             // DNS Servers  added
             foreach (var addedServer in mapDiff.DnsServersAdded)
             {
-                wanMap.DnsServers.Add(addedServer);           
-                
+                wanMap.DnsServers.Add(addedServer);
+
+                var hostNode = wanHostsNode.Nodes[addedServer.IPAddress.ToString()];
+                var lanRouterNode = wanLanRoutersNode.Nodes[addedServer.IPAddress.ToString()];
+                var wanRouterNode = wanWanRoutersNode.Nodes[addedServer.IPAddress.ToString()];
+
+                int imageIndex = serverImageIndex, selectedImageIndex = serverImageIndex;
+
+                if (lanRouterNode != null || wanRouterNode != null)
+                {
+                    imageIndex = routerAndServerImageIndex;
+                    selectedImageIndex = routerAndServerImageIndex;
+
+                    if (lanRouterNode != null)
+                    {
+                        lanRouterNode.ImageIndex = imageIndex;
+                        lanRouterNode.SelectedImageIndex = imageIndex;
+                    }
+
+                    if (wanRouterNode != null)
+                    {
+                        wanRouterNode.ImageIndex = imageIndex;
+                        wanRouterNode.SelectedImageIndex = imageIndex;
+                    }
+                }
+
                 var newNode = new TreeNode(addedServer.IPAddress.ToString())
                 {
                     Name = addedServer.IPAddress.ToString(),
                     Tag = addedServer,
+                    ImageIndex = imageIndex,
+                    SelectedImageIndex = selectedImageIndex
                 };
 
                 wanDnsServersNode.Nodes.Add(newNode);
+
+                hostNode.ImageIndex = imageIndex;
+                hostNode.SelectedImageIndex = imageIndex;
 
                 Task.Run(() => AddCountryCodeToWanTreeNode(newNode));
             }

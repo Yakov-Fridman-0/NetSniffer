@@ -95,9 +95,9 @@ namespace NetSnifferApp
             this.subnetMaskLabel.AutoSize = true;
             this.subnetMaskLabel.Location = new System.Drawing.Point(144, 5);
             this.subnetMaskLabel.Name = "subnetMaskLabel";
-            this.subnetMaskLabel.Size = new System.Drawing.Size(122, 20);
+            this.subnetMaskLabel.Size = new System.Drawing.Size(114, 20);
             this.subnetMaskLabel.TabIndex = 2;
-            this.subnetMaskLabel.Text = "255.255.2555.255";
+            this.subnetMaskLabel.Text = "255.255.255.255";
             // 
             // label1
             // 
