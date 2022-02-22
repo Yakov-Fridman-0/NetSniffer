@@ -109,7 +109,8 @@ namespace NetSnifferApp
         readonly List<ConnectionsForm> connectionForms = new();
 
         readonly object subnetmaskLock = new();
-        
+        readonly object lanHostsLock = new();
+
         async private Task AddCountryCodeToWanTreeNode(TreeNode node)
         {
             IPAddress addr = ((WanHost)node.Tag).IPAddress;
@@ -208,7 +209,10 @@ namespace NetSnifferApp
         {
             lock(subnetmaskLock)
             {
-                var addrs = lanMap.Hosts.Where(host => host.IPAddress != null).Select((host) => host.IPAddress).Where((addr) => addr != null).ToList();
+                List<IPAddress> addrs;
+                lock (lanHostsLock)
+                    addrs = lanMap.Hosts.Where(host => host.IPAddress != null).Select((host) => host.IPAddress).Where((addr) => addr != null).ToList();
+                
                 int addrsCount = addrs.Count;
                 var specialAddrs = new List<IPAddress>();
 
@@ -222,6 +226,7 @@ namespace NetSnifferApp
                     var subnets = addrs.Select(addr => new { Subnet = GetSubnet(addr, bits), Address = addr }).GroupBy(sub => sub.Subnet).ToList();
                     subnets.Sort((g1, g2) => g1.Count() - g2.Count());
 
+                    subnets.Reverse();
                     var mostPrelevant = subnets[0];
 
 
@@ -305,12 +310,13 @@ namespace NetSnifferApp
             if (mapDiff.IsEmpty)
                 return;
 
-            lanTreeView.BeginUpdate();
+            //lanTreeView.BeginUpdate();
 
             // new hosts
             foreach (var addedHost in mapDiff.HostsAdded)
             {
-                lanMap.Hosts.Add(addedHost);
+                lock (lanHostsLock)
+                    lanMap.Hosts.Add(addedHost);
 
                 UpdateSubnetMaskAsync();
 
@@ -322,14 +328,20 @@ namespace NetSnifferApp
                     SelectedImageIndex = hostImageIndex
                 };
 
+                lanTreeView.BeginUpdate();
                 lanHostsNode.Nodes.Add(newNode);
+                lanTreeView.EndUpdate();
             }
 
             // removed hosts
             foreach (var removedHost in mapDiff.HostsRemoved)
             {
-                lanMap.Hosts.Remove(removedHost);
+                lock (lanHostsLock)
+                    lanMap.Hosts.Remove(removedHost);
+
+                lanTreeView.BeginUpdate();
                 lanTreeView.Nodes[0].Nodes["lanHostsNode"].Nodes.RemoveByKey(removedHost.PhysicalAddress.ToString());
+                lanTreeView.EndUpdate();
 
                 if (removedHost.IPAddress != null)
                     UpdateSubnetMaskAsync();
@@ -339,10 +351,13 @@ namespace NetSnifferApp
             {
                 var physicalAddress = modifiedAddressMapping.PhysicalAddress;
                 var ipAddress = modifiedAddressMapping.IPAddress;
-                
-                var host = lanMap.Hosts.Find((host) => host.PhysicalAddress.Equals(physicalAddress));
+
+                LanHost host;
+                lock (lanHostsLock)
+                    host = lanMap.Hosts.Find((host) => host.PhysicalAddress.Equals(physicalAddress));
                 host.IPAddress = ipAddress;
 
+                lanTreeView.BeginUpdate();
                 var physicalAddressString = physicalAddress.ToString();
                 lanHostsNode.Nodes[physicalAddressString].Text = host.ToString();
 
@@ -356,6 +371,8 @@ namespace NetSnifferApp
                     dhcpServerNode.Text = host.ToString();
 
                 UpdateSubnetMaskAsync();
+
+                lanTreeView.EndUpdate();
             }
             // modified hosts
             /*foreach (var modifiedHost in mapDiff.HostsModified)
@@ -377,7 +394,9 @@ namespace NetSnifferApp
             // new routers
             foreach (var addedRouter in mapDiff.RoutersAdded)
             {
-                var host = lanMap.Hosts.Find((aHost) => LanHost.PhysicalAddressComparer.Equals(aHost, addedRouter));
+                LanHost host;
+                lock (lanHostsLock)
+                    host = lanMap.Hosts.Find((aHost) => LanHost.PhysicalAddressComparer.Equals(aHost, addedRouter));
                 lanMap.Routers.Add(host);
 
                 var hostNode = lanHostsNode.Nodes[addedRouter.PhysicalAddress.ToString()];
@@ -390,8 +409,10 @@ namespace NetSnifferApp
                     imageIndex = routerAndServerImageIndex;
                     selectedImagedIndex = routerAndServerImageIndex;
 
+                    lanTreeView.BeginUpdate();
                     dhcpServerNode.ImageIndex = imageIndex;
                     dhcpServerNode.SelectedImageIndex = selectedImagedIndex;
+                    lanTreeView.EndUpdate();
                 }
 
                 var newNode = new TreeNode(addedRouter.ToString())
@@ -402,10 +423,12 @@ namespace NetSnifferApp
                     SelectedImageIndex = selectedImagedIndex
                 };
 
+                lanTreeView.BeginUpdate();
                 hostNode.ImageIndex = imageIndex;
                 hostNode.SelectedImageIndex = selectedImagedIndex;
 
-               lanRoutersNode.Nodes.Add(newNode);
+                lanRoutersNode.Nodes.Add(newNode);
+                lanTreeView.EndUpdate();
             }
 
             // removed routers
@@ -418,7 +441,9 @@ namespace NetSnifferApp
             // new DHCP server
             foreach (var addedServer in mapDiff.DhcpServersAdded)
             {
-                var host = lanMap.Hosts.Find((aHost) => LanHost.PhysicalAddressComparer.Equals(aHost, addedServer));
+                LanHost host;
+                lock (lanHostsLock)
+                    host = lanMap.Hosts.Find((aHost) => LanHost.PhysicalAddressComparer.Equals(aHost, addedServer));
                 lanMap.DhcpServers.Add(host);
 
                 var hostNode = lanHostsNode.Nodes[addedServer.PhysicalAddress.ToString()];
@@ -431,8 +456,10 @@ namespace NetSnifferApp
                     imageIndex = routerAndServerImageIndex;
                     selectedImagedIndex = routerAndServerImageIndex;
 
+                    lanTreeView.BeginUpdate();
                     routerNode.ImageIndex = imageIndex;
                     routerNode.SelectedImageIndex = selectedImagedIndex;
+                    lanTreeView.EndUpdate();
                 }
 
                 var newNode = new TreeNode(host.ToString())
@@ -443,20 +470,25 @@ namespace NetSnifferApp
                     SelectedImageIndex = selectedImagedIndex
                 };
 
+                lanTreeView.BeginUpdate();
                 hostNode.ImageIndex = imageIndex;
                 hostNode.SelectedImageIndex = selectedImagedIndex;
 
                 lanDhcpServersNode.Nodes.Add(newNode);
+                lanTreeView.EndUpdate();
             }
 
             // removed DHCP servers
             foreach (var removedServer in mapDiff.DhcpServersRemoved)
             {
                 lanMap.DhcpServers.Remove(removedServer);
+                
+                lanTreeView.BeginUpdate();
                 lanTreeView.Nodes[0].Nodes["lanDhcpServerNode"].Nodes.RemoveByKey(removedServer.PhysicalAddress.ToString());
+                lanTreeView.EndUpdate();
             }
 
-            lanTreeView.EndUpdate();
+            //lanTreeView.EndUpdate();
         }
 
         public void UpdateWanMap(WanMap map)
@@ -466,7 +498,7 @@ namespace NetSnifferApp
             if (mapDiff.IsEmpty)
                 return;
 
-            wanTreeView.BeginUpdate();
+            //wanTreeView.BeginUpdate();
 
             // Hosts added
             foreach (var addedHost in mapDiff.HostsAdded)
@@ -480,7 +512,10 @@ namespace NetSnifferApp
                     ImageIndex = hostImageIndex,
                     SelectedImageIndex = hostImageIndex
                 };
+
+                wanTreeView.BeginUpdate();
                 wanHostsNode.Nodes.Add(newNode);
+                wanTreeView.EndUpdate();
 
                 Task.Run(() => AddCountryCodeToWanTreeNode(newNode));
             }
@@ -488,7 +523,10 @@ namespace NetSnifferApp
             foreach (var removedHost in mapDiff.HostRemoved)
             {
                 wanMap.Hosts.Remove(removedHost);
+
+                wanTreeView.BeginUpdate();
                 wanHostsNode.Nodes.RemoveByKey(removedHost.IPAddress.ToString());
+                wanTreeView.EndUpdate();
             }
 
             // Connections added
@@ -532,8 +570,10 @@ namespace NetSnifferApp
                     imageIndex = routerAndServerImageIndex;
                     selectedImageIndex = routerAndServerImageIndex;
 
+                    wanTreeView.BeginUpdate();
                     dnsServerNode.ImageIndex = imageIndex;
                     dnsServerNode.SelectedImageIndex = imageIndex;
+                    wanTreeView.EndUpdate();
                 }
 
                 var newNode = new TreeNode(addedRouter.IPAddress.ToString())
@@ -544,11 +584,12 @@ namespace NetSnifferApp
                     SelectedImageIndex = selectedImageIndex
                 };
 
+                wanTreeView.BeginUpdate();
                 wanLanRoutersNode.Nodes.Add(newNode);
 
                 hostNode.ImageIndex = imageIndex;
                 hostNode.SelectedImageIndex = imageIndex;
-
+                wanTreeView.EndUpdate();
 
                 Task.Run(() => AddCountryCodeToWanTreeNode(newNode));
             }
@@ -557,7 +598,10 @@ namespace NetSnifferApp
             foreach (var removedRouter in mapDiff.LanRouterRemoved)
             {
                 wanMap.LanRouters.Remove(removedRouter);
+
+                wanTreeView.BeginUpdate();
                 wanWanRoutersNode.Nodes.RemoveByKey(removedRouter.IPAddress.ToString());
+                wanTreeView.EndUpdate();
             }
 
             // WAN routers added
@@ -575,8 +619,10 @@ namespace NetSnifferApp
                     imageIndex = routerAndServerImageIndex;
                     selectedImageIndex = routerAndServerImageIndex;
 
+                    wanTreeView.BeginUpdate();
                     dnsServerNode.ImageIndex = imageIndex;
                     dnsServerNode.SelectedImageIndex = imageIndex;
+                    wanTreeView.EndUpdate();
                 }
 
                 var newNode = new TreeNode(addedRouter.IPAddress.ToString())
@@ -587,10 +633,12 @@ namespace NetSnifferApp
                     SelectedImageIndex = selectedImageIndex
                 };
 
+                wanTreeView.BeginUpdate();
                 wanWanRoutersNode.Nodes.Add(newNode);
 
                 hostNode.ImageIndex = imageIndex;
                 hostNode.SelectedImageIndex = imageIndex;
+                wanTreeView.EndUpdate();
 
                 Task.Run(() => AddCountryCodeToWanTreeNode(newNode));
             }
@@ -598,7 +646,10 @@ namespace NetSnifferApp
             foreach (var removedRouter in mapDiff.WanRouterRemoved)
             {
                 wanMap.WanRouters.Remove(removedRouter);
+
+                wanTreeView.BeginUpdate();
                 wanWanRoutersNode.Nodes.RemoveByKey(removedRouter.IPAddress.ToString());
+                wanTreeView.EndUpdate();
             }
 
             // DNS Servers  added
@@ -617,6 +668,7 @@ namespace NetSnifferApp
                     imageIndex = routerAndServerImageIndex;
                     selectedImageIndex = routerAndServerImageIndex;
 
+                    wanTreeView.BeginUpdate();
                     if (lanRouterNode != null)
                     {
                         lanRouterNode.ImageIndex = imageIndex;
@@ -628,6 +680,7 @@ namespace NetSnifferApp
                         wanRouterNode.ImageIndex = imageIndex;
                         wanRouterNode.SelectedImageIndex = imageIndex;
                     }
+                    wanTreeView.EndUpdate();
                 }
 
                 var newNode = new TreeNode(addedServer.IPAddress.ToString())
@@ -638,21 +691,28 @@ namespace NetSnifferApp
                     SelectedImageIndex = selectedImageIndex
                 };
 
+                wanTreeView.BeginUpdate();
                 wanDnsServersNode.Nodes.Add(newNode);
 
                 hostNode.ImageIndex = imageIndex;
                 hostNode.SelectedImageIndex = imageIndex;
+                wanTreeView.EndUpdate();
 
                 Task.Run(() => AddCountryCodeToWanTreeNode(newNode));
             }
+            
             // DNS Servers  removed
             foreach (var removedServer in mapDiff.DnsServersRemoved)
             {
                 wanMap.DnsServers.Remove(removedServer);
+
+                wanTreeView.BeginUpdate();
                 wanDnsServersNode.Nodes.RemoveByKey(removedServer.IPAddress.ToString());
+                wanTreeView.EndUpdate();
             }
 
-            wanTreeView.EndUpdate();
+            wanTreeView.Invalidate();
+            //wanTreeView.EndUpdate();
         }
 
         private void InitializeNodes()
