@@ -10,18 +10,16 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-using IpData;
-
+using NetSnifferLib;
 using NetSnifferLib.Topology;
 using NetSnifferLib.Analysis;
+
+using NetSnifferLibWebInfo;
 
 namespace NetSnifferApp
 {
     public partial class TopologyForm : Form
     {
-        const string ipdataKey = "914223c5df7081e91e71dbbffb0fe200e8b3e0713817ebb13c0232c5";
-        readonly IpDataClient client = new(ipdataKey);
-
         const int hostImageIndex = 0;
         static readonly Image hostImage = new Bitmap(@"E:\סייבר 2022\פרויקט\Sniffer\NetSniffer\NetSnifferApp\Resources\Host.png");
         const int routerImageIndex = 1;
@@ -111,13 +109,17 @@ namespace NetSnifferApp
         readonly object subnetmaskLock = new();
         readonly object lanHostsLock = new();
 
-        async private Task AddCountryCodeToWanTreeNode(TreeNode node)
+        private void AddCountryCodeToWanTreeNode(TreeNode node)
         {
-            IPAddress addr = ((WanHost)node.Tag).IPAddress;
-            var countryCode = await client.Lookup(addr.ToString(), info => info.CountryCode);
-            
-            if (!string.IsNullOrEmpty(countryCode) && countryCode != "null")
-                wanTreeView.Invoke(new Action(() => node.Text += $" ({countryCode})"));
+            var address = ((WanHost)node.Tag).IPAddress;
+
+            if (IPAddressHelper.IsHostAddrress(address))
+            {
+                string code = IPAddressWebInfo.GetCountryCodeAsync(address);
+
+                if (!string.IsNullOrEmpty(code))
+                    wanTreeView.Invoke(new Action(() => node.Text += $" ({code})"));                
+            }
         }
 
         private void pingTSItem_Clicked(object sender, EventArgs e)
@@ -158,39 +160,6 @@ namespace NetSnifferApp
             connectionsTSItem.Click += ConnectionsTSItem_Click;
             wanHostContextMenuStrip.Items.AddRange(new ToolStripItem[] { pingTSItem, tracertTSItem, connectionsTSItem});
         }
-
-        /*private int CaculateSubnetBits(IPAddress[] addresses)
-        {
-            byte[] addrBytes;
-            byte[] subnetnetBytes = IPAddress.Parse("255.255.255.255").GetAddressBytes();
-            byte[] netmaskBytes = IPAddress.Parse("0.0.0.0").GetAddressBytes();
-
-            int bits = 32;
-
-            foreach (var addr in addresses)
-            {
-                addrBytes = addr.GetAddressBytes();
-                for (int i = 0; i < 4; i++)
-                {
-                    subnetnetBytes[i] = (byte)(subnetnetBytes[i] & addrBytes[i]);
-                }
-
-                int j;
-                for (j = 0; j < 32; j++)
-                {
-                    byte subnetInPlaceJ = (byte)(subnetnetBytes[j / 8] & (byte)Math.Pow(2, 7 - j % 8));
-                    byte addrInPlaceJ = (byte)(addrBytes[j / 8] & (byte)Math.Pow(2, 7 - j % 8));
-
-                    if (subnetInPlaceJ != addrInPlaceJ)
-                    {
-                        bits = j - 1;
-                        break;
-                    }
-                }
-            }
-
-            return bits;
-        }*/
 
         IPAddress GetSubnet(IPAddress address, int bits)
         {
@@ -259,43 +228,6 @@ namespace NetSnifferApp
                 foreach (var node in nodesToRed)
                     lanTreeView.Invoke(new Action(() => ColorNode(node)));
             }
-
-            //byte[] addrBytes, netmaskBytes, subnetnetBytes;
-            //subnetnetBytes = IPAddress.Parse("255.255.255.255").GetAddressBytes();
-            //netmaskBytes = IPAddress.Parse("0.0.0.0").GetAddressBytes();
-            //int bits = 32;
-
-            //var addrs = lanMap.Hosts.Select((host) => host.IPAddress).Where((addr) => addr != null);
-
-            //foreach (var addr in addrs)
-            //{
-            //    addrBytes = addr.GetAddressBytes();
-            //    for (int i = 0; i < 4; i++)
-            //    {
-            //        subnetnetBytes[i] = (byte)(subnetnetBytes[i] & addrBytes[i]);
-            //    }
-
-            //    int j;
-            //    for (j = 0; j < 32; j++)
-            //    {
-            //        byte subnetInPlaceJ = (byte)(subnetnetBytes[j / 8] & (byte)Math.Pow(2, 7 - j % 8));
-            //        byte addrInPlaceJ = (byte)(addrBytes[j / 8] & (byte)Math.Pow(2, 7 - j % 8));
-
-            //        if (subnetInPlaceJ != addrInPlaceJ)
-            //        {
-            //            bits = j - 1;
-            //            break;
-            //        }
-            //    }
-
-            //}
-
-            //for (int j = 0; j < bits; j++)
-            //{
-            //    netmaskBytes[j / 8] += (byte)Math.Pow(2, 7 - j % 8);
-            //}
-
-            //subnetMaskLabel.Text = new IPAddress(netmaskBytes).ToString();
         }
 
         Task UpdateSubnetMaskAsync()
@@ -374,22 +306,6 @@ namespace NetSnifferApp
 
                 lanTreeView.EndUpdate();
             }
-            // modified hosts
-            /*foreach (var modifiedHost in mapDiff.HostsModified)
-            {
-                var physicalAddr = modifiedHost.PhysicalAddress;
-                var host = lanMap.Hosts.Find((host) => host.PhysicalAddress.Equals(physicalAddr));
-
-                var changedNode = lanHostsNode.Nodes[modifiedHost.PhysicalAddress.ToString()];
-                if (changedNode == null)
-                {
-                    MessageBox.Show($"Can't find host {modifiedHost.PhysicalAddress}", "Error");
-                }
-                else
-                {
-                    changedNode.Text = modifiedHost.ToString();
-                }
-            }*/
 
             // new routers
             foreach (var addedRouter in mapDiff.RoutersAdded)

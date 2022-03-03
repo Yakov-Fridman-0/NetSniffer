@@ -8,7 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace NetSnifferLib
 {
-    static class IPAddressHelper
+    public static class IPAddressHelper
     {
         public static IPAddress EmptyAddress { get; } = IPAddress.Parse("0.0.0.0");
 

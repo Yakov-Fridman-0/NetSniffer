@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace NetSnifferLib
 {
-    class OUI : PhysicalAddressComponent
+    class Oui : PhysicalAddressComponent
     {
-        public OUI(byte[] address) : base(address)
+        public Oui(byte[] address) : base(address)
         {
             if (address.Length != 3)
                 throw new ArgumentException("The OUI must be 3 bytes long");
@@ -25,7 +25,7 @@ namespace NetSnifferLib
             return (bytes[0] & 1) == 1;
         }
 
-        public bool IsInRange(OUI lower, OUI higher)
+        public bool IsInRange(Oui lower, Oui higher)
         {
             var lowerBytes = lower.GetIdentifiersBytes();
             var higherBytes = higher.GetIdentifiersBytes();

@@ -26,10 +26,10 @@ namespace NetSnifferLib
             return !IsBroadcast(address) && !IsMulticast(address);
         }
 
-        public static OUI GetOUI(PhysicalAddress address)
+        public static Oui GetOUI(PhysicalAddress address)
         {
             var addressBytes = address.GetAddressBytes();
-            return new OUI(new byte[] { addressBytes[0], addressBytes[1], addressBytes[2] });
+            return new Oui(new byte[] { addressBytes[0], addressBytes[1], addressBytes[2] });
         }
 
         public static PhysicalAddress CloneAddress(PhysicalAddress address)
