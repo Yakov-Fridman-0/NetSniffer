@@ -4,12 +4,28 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Net.NetworkInformation;
+using System.Diagnostics.CodeAnalysis;
 
 namespace NetSnifferLib
 {
     static class PhysicalAddressHelper
     {
         private static readonly PhysicalAddress BroadcastPhysicalAddress = PhysicalAddress.Parse("FF:FF:FF:FF:FF:FF");
+
+        public static PhysicakAddressEqulityComparer EqulityComparer { get; } = new();
+
+        public class PhysicakAddressEqulityComparer : IEqualityComparer<PhysicalAddress>
+        {
+            public bool Equals(PhysicalAddress x, PhysicalAddress y)
+            {
+                return x.Equals(y);
+            }
+
+            public int GetHashCode([DisallowNull] PhysicalAddress obj)
+            {
+                return obj.GetHashCode();
+            }
+        }
 
         public static bool IsBroadcast(PhysicalAddress address)
         {
