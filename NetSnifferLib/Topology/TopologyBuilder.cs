@@ -80,6 +80,11 @@ namespace NetSnifferLib.Topology
                 !IPAddressHelper.IsHostAddrress(ipAddress))
                 return;
 
+            if (!wanMapBuilder.ContainsHost(ipAddress))
+            {
+                wanMapBuilder.AddHost(ipAddress);
+            }
+            
             if(lanMapBuilder.ContainsHost(physicalAddress))
             {
                 IPAddress otherIPAddress = lanMapBuilder.GetIPAddress(physicalAddress);
@@ -88,7 +93,9 @@ namespace NetSnifferLib.Topology
                 {
                     // I won't claim that it is the router's IP address unless I can proove it (with ARP or DHCP)
                     if (otherIPAddress != null && !ipAddress.Equals(otherIPAddress))
-                        AddHostInWan(ipAddress);
+                    {
+                        //AddHostInWan(ipAddress);
+                    }
                 }
                 else if (otherIPAddress == null)
                 {
@@ -100,8 +107,8 @@ namespace NetSnifferLib.Topology
 
                     MakeHostRouter(physicalAddress);
 
-                    AddHostInWan(ipAddress);
-                    AddHostInWan(otherIPAddress);
+                    //AddHostInWan(ipAddress);
+                    //AddHostInWan(otherIPAddress);
 
                     routerDiscoveredByWanHosts.Add(new List<IPAddress>() { ipAddress, otherIPAddress }, physicalAddress);
                 }

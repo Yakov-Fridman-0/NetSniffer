@@ -63,7 +63,6 @@ namespace NetSnifferApp
             UnicastIPAddressInformation[] localComputerIPAddresses = new UnicastIPAddressInformation[selectedInterface.GetIPProperties().UnicastAddresses.Count];
             selectedInterface.GetIPProperties().UnicastAddresses.CopyTo(localComputerIPAddresses, 0 );
             IPAddress localComputerIPv4Address = localComputerIPAddresses.FirstOrDefault((info) => info.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).Address;
-            MessageBox.Show(localComputerIPv4Address.ToString(), localComputerIPv4Address.ToString());
 
             PhysicalAddress myPhysicalAddress =  selectedInterface.GetPhysicalAddress();
 
