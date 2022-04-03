@@ -20,7 +20,7 @@ namespace NetSnifferLib.Analysis.Network
 
         protected override IPAddress GetSource(IpV4Datagram datagram)
         {
-            return AddressConvert.ToIpAddress(datagram.Source);
+            return AddressConvert.ToIPAddress(datagram.Source);
         }
 
         protected override int GetTTL(IpV4Datagram datagram)
@@ -30,7 +30,7 @@ namespace NetSnifferLib.Analysis.Network
 
         protected override IPAddress GetDestination(IpV4Datagram datagram)
         {
-            return AddressConvert.ToIpAddress(datagram.Destination);
+            return AddressConvert.ToIPAddress(datagram.Destination);
         }
 
         protected override int GetPayloadLength(IpV4Datagram datgram)

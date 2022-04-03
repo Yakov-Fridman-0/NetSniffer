@@ -34,7 +34,7 @@ namespace NetSnifferLib.General
         //    return address.PhysicalAddress;
         //}
 
-        public static IPAddress ToIpAddress(IpV4Address address)
+        public static IPAddress ToIPAddress(IpV4Address address)
         {
             return IPAddress.Parse(address.ToString());
         }

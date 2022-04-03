@@ -24,7 +24,7 @@ namespace NetSnifferLib.Analysis.Application
             return result;
         }
 
-        protected override IAnalysis AnalyzeDatagramCore(TDatagram datagram, Transport.TransportContext context)
+        protected override IAnalysis AnalyzeDatagramCore(TDatagram datagram, Transport.TransportContext context, int packetId)
         {
             var analysis = new ApplicationAnalysis();
             analysis.AddInfo(GetInfo(datagram, context));

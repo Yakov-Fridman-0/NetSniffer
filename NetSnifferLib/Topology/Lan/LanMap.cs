@@ -58,7 +58,7 @@ namespace NetSnifferLib.Topology
         public LanMapDiff GetDiff(LanMap previousMap)
         {
             List<LanHost> hostsAdded = new(), hostsRemoved;
-            List<PhysicalAddressIPAddressMapping> addressMappingsModified = new();
+            List<AddressMapping> addressMappingsModified = new();
             List<LanHost> routersAdded, routersRemoved;
             List<LanHost> dhcpServersAdded, dhcpServersRemoved;
 
@@ -83,7 +83,7 @@ namespace NetSnifferLib.Topology
                             !host.IPAddress.Equals(prevHost.IPAddress))
                         {
                             addressMappingsModified.Add(
-                                new PhysicalAddressIPAddressMapping()
+                                new AddressMapping()
                                 {
                                     PhysicalAddress = host.PhysicalAddress,
                                     IPAddress = host.IPAddress
@@ -220,6 +220,11 @@ namespace NetSnifferLib.Topology
             //        hostsRemoved.Add(prevServer);
             //    }
             //}
+        }
+
+        public LanHost GetHostByPhysicalAddress(PhysicalAddress address)
+        {
+            return Hosts.FirstOrDefault(host => host.PhysicalAddress.Equals(address));
         }
     }
 }

@@ -9,6 +9,9 @@ namespace NetSnifferLib
     {
         public static string ToString(IAddress address)
         {
+            if (address is null)
+                return "N/A";
+
             if (address.IsPhysicalAddress)
                 return ToString(address.PhysicalAddress);
             else if (address.IsIpAddress)
@@ -26,7 +29,7 @@ namespace NetSnifferLib
 
         public static string ToString(IPAddress address)
         {
-            return address.ToString();
+            return address?.ToString() ?? ""; //TODO: sfsfsdsfsda
         }
 
         public static string ToString(IPEndPoint address)

@@ -15,16 +15,7 @@ namespace NetSnifferLib.Topology
 
         private readonly Dictionary<List<IPAddress>, PhysicalAddress> routerDiscoveredByWanHosts = new();
 
-        [AttributeUsage(AttributeTargets.Method)]
-        public class ChecksInputAddress : Attribute
-        {
-            public ChecksInputAddress()
-            {
-                
-            }
-        }
-
-        [ChecksInputAddress]
+        //Checks input
         public void AddHost(PhysicalAddress physicalAddress)
         {
             if (!PhysicalAddressHelper.IsHostAddress(physicalAddress))
@@ -40,7 +31,7 @@ namespace NetSnifferLib.Topology
                 wanMapBuilder.AddHost(ipAddress);
         }
 
-        [ChecksInputAddress]
+        //Checks input
         public void AddHostInLan(PhysicalAddress physicalAddress, IPAddress ipAddress)
         {
             if (!PhysicalAddressHelper.IsHostAddress(physicalAddress) ||
@@ -73,7 +64,7 @@ namespace NetSnifferLib.Topology
 
         }
 
-        [ChecksInputAddress]
+        //Checks input
         public void AddHost(PhysicalAddress physicalAddress, IPAddress ipAddress)
         {
             if (!PhysicalAddressHelper.IsHostAddress(physicalAddress) ||
@@ -107,9 +98,6 @@ namespace NetSnifferLib.Topology
 
                     MakeHostRouter(physicalAddress);
 
-                    //AddHostInWan(ipAddress);
-                    //AddHostInWan(otherIPAddress);
-
                     routerDiscoveredByWanHosts.Add(new List<IPAddress>() { ipAddress, otherIPAddress }, physicalAddress);
                 }
             }
@@ -137,20 +125,7 @@ namespace NetSnifferLib.Topology
                 lanMapBuilder.MakeHostDhcpServer(physicalAddress, ipAddress);
         }
 
-        //private void AddRouter(PhysicalAddress physicalAddress, IPAddress ipAddress)
-        //{
-        //    if (lanMapBuilder.ContainsRouter(physicalAddress))
-        //    {
-        //        if (!lanMapBuilder.ContainsRouter(physicalAddress, ipAddress))
-        //            lanMapBuilder.AssignIPtoRouter(physicalAddress, ipAddress);
-        //    }           
-        //    else
-        //    {
-        //        lanMapBuilder.AddRouter(physicalAddress);
-        //    }    
-        //}
-
-        [ChecksInputAddress]
+        //Checks input
         public void AddDhcpServer(IPAddress ipAddress)
         {
             if (!IPAddressHelper.IsHostAddrress(ipAddress))
@@ -179,7 +154,7 @@ namespace NetSnifferLib.Topology
             lanMapBuilder.MakeHostDhcpServer(physicalAddress, ipAddress);
         }
 
-        [ChecksInputAddress]
+        //Checks input
         public void AddDnsServer(IPAddress ipAddress)
         {
             if (!IPAddressHelper.IsHostAddrress(ipAddress))
@@ -198,5 +173,15 @@ namespace NetSnifferLib.Topology
         public LanMap LanMap => lanMapBuilder.LanMap;
 
         public WanMap WanMap => wanMapBuilder.WanMap;
+
+        internal List<LanHost> GetOriginalLanHosts()
+        {
+            return lanMapBuilder.GetOriginalLanHosts();
+        }
+
+        internal object GetHostsLock()
+        {
+            return lanMapBuilder.GetHostsLock();
+        }
     }
 }

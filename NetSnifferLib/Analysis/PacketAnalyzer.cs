@@ -15,18 +15,11 @@ namespace NetSnifferLib.Analysis
 {
     public static class PacketAnalyzer
     {
-
         static readonly TopologyBuilder topologyBuilder = new();
 
         static readonly AnalyzerEventHandler analyzerEventHandler = new();
 
-        // Ping and Tracert
-        //static readonly List<byte> icmpIdentifiersInUse = new(); // sorted
-
-        //static readonly object icmpIdentifiersLock = new();
-
         static readonly Dictionary<TracertResults, bool> tracertResults = new();
-
 
         public static NetSniffer NetSniffer { get; set; } = null;
 
@@ -113,19 +106,18 @@ namespace NetSnifferLib.Analysis
         }
 
         public static int TransmittedPackets { get; private set; } = 0;
-        
+
         public static int TransmittedBytes { get; private set; } = 0;
 
         public static bool IsEthernet(Packet packet) => packet.DataLink.Kind == DataLinkKind.Ethernet;
 
-        public static PacketDescription AnalyzePacket(Packet packet)
+        public static PacketDescription AnalyzePacket(Packet packet, int packetId)
         {
             TransmittedPackets++;
             TransmittedBytes += packet.Length;
 
             if (!IsEthernet(packet))
                 throw new InvalidOperationException("Packet datalink must be Ethernet.");
-
 
             var timeStamp = packet.Timestamp;
             var length = packet.Length;
@@ -140,10 +132,9 @@ namespace NetSnifferLib.Analysis
             IContext context = null;
             IAnalyzer analyzer = DatagramAnalyzer.EthernetAnalyzer;
 
-
             do
             {
-                analysis = analyzer.AnalyzeDatagram(datagram, context);
+                analysis = analyzer.AnalyzeDatagram(datagram, context, packetId);
 
                 info = analysis.Info;
                 protocol = analyzer.Protocol;
@@ -164,8 +155,8 @@ namespace NetSnifferLib.Analysis
             } while (analysis.HasPayload && analyzer != null);
 
 
-            return new PacketDescription() 
-            { 
+            return new PacketDescription()
+            {
                 TimeStamp = timeStamp,
                 Protocol = protocol,
                 Source = source,
@@ -201,45 +192,18 @@ namespace NetSnifferLib.Analysis
 
         public static void Ping(IPAddress destination)
         {
-            //DatagramAnalyzer.IcmpAnalyzer.RegisterPingRequest();
             NetSniffer.Ping(destination, 128);
         }
 
         public static void Tracert(IPAddress destination)
         {
             int maxHops = 30;
-            //byte id = 1, takenId;
 
             TracertResults results = new(LocalComputerIPAddress, destination);
             tracertResults.Add(results, false);
 
             for (int hops = 1; hops < maxHops; hops++)
             {
-                //lock (icmpIdentifiersLock)
-                //{
-                //    int i;
-                //    for (i = 0; i < icmpIdentifiersInUse.Count; i++)
-                //    {
-                //        takenId = icmpIdentifiersInUse[i];
-
-                //        if (takenId == id)
-                //            id = (byte)(takenId + 1);
-                //        else
-                //            break;
-                //    }
-
-                //    if (i == icmpIdentifiersInUse.Count)
-                //        icmpIdentifiersInUse.Add(id);
-                //    else
-                //        icmpIdentifiersInUse.Insert(i + 1, id);
-                //}
-
-                //while (tracertResults[results] != true)
-                //{
-
-                //}
-
-                //DatagramAnalyzer.IcmpAnalyzer.RegisterPingRequest(destination, id, 1);
                 PingReply reply = NetSniffer.Ping(destination, (byte)hops);
 
                 switch (reply.Status)
@@ -266,6 +230,16 @@ namespace NetSnifferLib.Analysis
         public static LanMap GetLanMap()
         {
             return topologyBuilder.LanMap;
+        }
+
+        internal static List<LanHost> GetOriginalLanHosts()
+        {
+            return topologyBuilder.GetOriginalLanHosts();
+        }
+
+        internal static object GetHostsLock()
+        {
+            return topologyBuilder.GetHostsLock();
         }
 
         public static WanMap GetWanMap()

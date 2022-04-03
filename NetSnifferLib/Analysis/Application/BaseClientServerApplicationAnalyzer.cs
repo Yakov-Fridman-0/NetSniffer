@@ -17,7 +17,7 @@ namespace NetSnifferLib.Analysis.Application
 
         protected abstract bool IsResponse(TDatagram datagram);
 
-        protected override IAnalysis AnalyzeDatagramCore(TDatagram datagram, Transport.TransportContext context)
+        protected override IAnalysis AnalyzeDatagramCore(TDatagram datagram, Transport.TransportContext context, int packetId)
         {
             if (IsResponse(datagram))
             {
@@ -25,7 +25,7 @@ namespace NetSnifferLib.Analysis.Application
                 ServerDetected?.Invoke(this, sourceIP);
             }
 
-            return base.AnalyzeDatagramCore(datagram, context);
+            return base.AnalyzeDatagramCore(datagram, context, packetId);
         }
     }
 }

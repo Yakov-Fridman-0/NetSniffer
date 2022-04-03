@@ -30,7 +30,7 @@ namespace NetSnifferLib.Analysis.Network
 
         protected abstract Datagram GetPayloadAndAnalyzer(T datagram, out IAnalyzer analyzer);
 
-        protected override NetworkAnalysis AnalyzeDatagramCore(T datagram, DataLinkContext context)
+        protected override NetworkAnalysis AnalyzeDatagramCore(T datagram, DataLinkContext context, int packetId)
         {
             SentPackets++;
             SentBytes += GetPayloadLength(datagram);

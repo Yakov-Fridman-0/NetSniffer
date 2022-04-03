@@ -25,7 +25,7 @@ namespace NetSnifferLib.Analysis.DataLink
 
         protected abstract int GetPayloadLength(T datagram);
 
-        protected override DataLinkAnalysis AnalyzeDatagramCore(T datagram, EmptyContext context)
+        protected override DataLinkAnalysis AnalyzeDatagramCore(T datagram, EmptyContext context, int packetId)
         {
             SentPackets++;
             SentBytes += GetPayloadLength(datagram);

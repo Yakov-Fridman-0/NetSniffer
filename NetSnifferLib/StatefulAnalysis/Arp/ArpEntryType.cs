@@ -4,9 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NetSnifferLib.Topology
+namespace NetSnifferLib.StatefulAnalysis.Arp
 {
-    class PingResults
+    public enum ArpEntryType
     {
+        Dynamic,
+        Static,
+        Unknown
     }
 }

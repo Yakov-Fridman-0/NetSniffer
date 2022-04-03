@@ -16,9 +16,6 @@ namespace NetSnifferLib.Topology
 
         public List<WanHost> ConnectedHosts { get; } = new();
 
-        //private int _hopsNum = 0;
-        //private int _hopsSum = 0;
-
         public WanHost(IPAddress ipAddress)
         {
             IPAddress = ipAddress;
@@ -29,20 +26,6 @@ namespace NetSnifferLib.Topology
             IPAddress = ipAddress;
             ConnectedHosts = connectedHosts;
         }
-
-        //public WanHost(IPAddress ipAddress, int hops)
-        //{
-        //    IPAddress = ipAddress;
-        //    RegisterHops(hops);
-        //}
-
-        //public void RegisterHops(int hops)
-        //{
-        //    _hopsNum++;
-        //    _hopsSum += hops;
-        //}
-
-        //public int MeanHops => _hopsSum / _hopsNum;
 
         public override string ToString()
         {
@@ -64,7 +47,6 @@ namespace NetSnifferLib.Topology
                 return obj.IPAddress.GetHashCode();
             }
         }
-
 
         public object Clone()
         {

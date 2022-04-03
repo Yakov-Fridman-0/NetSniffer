@@ -521,7 +521,7 @@ namespace NetSnifferApp
             }
 
             // WAN routers added
-            foreach (var addedRouter in mapDiff.WanRouterAdded)
+            foreach (var addedRouter in mapDiff.WanRoutersAdded)
             {
                 wanMap.WanRouters.Add(addedRouter);
 

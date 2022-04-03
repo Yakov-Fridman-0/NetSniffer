@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -10,15 +11,15 @@ namespace NetSnifferLib.Topology
 {
     class WanMapBuilder
     {
+        ConcurrentBag<WanHost> hosts = new();
+
+        readonly ConcurrentBag<WanHost> dnsServers = new();
+
+        readonly ConcurrentBag<WanHost> lanRouters = new();
+
+        readonly ConcurrentBag<WanHost> wanRouters = new();
+
         WanHost LocalComputer;
-
-        readonly List<WanHost> hosts = new();
-
-        readonly List<WanHost> dnsServers = new();
-
-        readonly List<WanHost> lanRouters = new();
-
-        readonly List<WanHost> wanRouters = new();
 
         readonly Dictionary<IPAddress, ManualResetEvent> hostCreatedEvents = new(IPAddressHelper.EqulityComparer);
 
@@ -50,7 +51,13 @@ namespace NetSnifferLib.Topology
 
         public bool RemoveHost(IPAddress ipAddress)
         {
-            return hosts.Remove(hosts.Find((host) => ipAddress.Equals(host.IPAddress)));
+            WanHost host = hosts.FirstOrDefault((host) => ipAddress.Equals(host.IPAddress));
+            var list = hosts.ToList();
+            bool val = list.Remove(host);
+
+            hosts = new(list);
+
+            return val;
         }
 
         private WanHost GetHost(IPAddress ipAddress)
@@ -72,13 +79,13 @@ namespace NetSnifferLib.Topology
 
             hostCreatedEvent.WaitOne();
 
-            return hosts.Find((host) => ipAddress.Equals(host.IPAddress));
+            return hosts.FirstOrDefault((host) => ipAddress.Equals(host.IPAddress));
         }
 
         public void AddDnsServer(IPAddress ipAddress)
         {
             var host = GetHost(ipAddress);
-            dnsServers.Add(hosts.Find((host) => ipAddress.Equals(host.IPAddress)));
+            dnsServers.Add(hosts.FirstOrDefault((host) => ipAddress.Equals(host.IPAddress)));
         }
 
         public bool ContainseDnsServer(IPAddress ipAddress)
@@ -151,6 +158,6 @@ namespace NetSnifferLib.Topology
             }
         }
 
-        public WanMap WanMap => new(hosts, lanRouters, wanRouters, dnsServers);
+        public WanMap WanMap => new(hosts.ToList(), lanRouters.ToList(), wanRouters.ToList(), dnsServers.ToList());
     }
 }

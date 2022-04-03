@@ -8,14 +8,24 @@ using System.Threading.Tasks;
 
 namespace NetSnifferLib.Topology
 {
-    public class PhysicalAddressIPAddressMapping : IEquatable<PhysicalAddressIPAddressMapping>
+    public class AddressMapping : IEquatable<AddressMapping>
     {
         public IPAddress IPAddress { get; set; }
         public PhysicalAddress PhysicalAddress { get; set; }
 
-        public bool Equals(PhysicalAddressIPAddressMapping other)
+        public bool Equals(AddressMapping other)
         {
             return IPAddress.Equals(other.IPAddress) && PhysicalAddress.Equals(other.PhysicalAddress);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as AddressMapping);
+        }
+
+        public override int GetHashCode()
+        {
+            return IPAddress.GetHashCode() ^ PhysicalAddress.GetHashCode();
         }
     }
 
@@ -25,7 +35,7 @@ namespace NetSnifferLib.Topology
 
         public List<LanHost> HostsRemoved { get; set; }
 
-        public List<PhysicalAddressIPAddressMapping> PhysicalAddressIPAddressMappingModified { get; set; }
+        public List<AddressMapping> PhysicalAddressIPAddressMappingModified { get; set; }
 
         public List<LanHost> RoutersAdded { get; set; }
 

@@ -4,18 +4,28 @@ using NetSnifferLib.General;
 
 namespace NetSnifferLib
 {
-    public record PacketDescription
+    public readonly struct PacketDescription
     {
-        public DateTime TimeStamp { get; set; }
+        public DateTime TimeStamp { get; init; }
 
-        public string Protocol { get; set; }
+        public string Protocol { get; init; }
 
-        public IAddress Source { get; set; }
+        public IAddress Source { get; init; }
 
-        public IAddress Destination { get; set; }
+        public IAddress Destination { get; init; }
 
-        public int Length { get; set; }
+        public int Length { get; init; }
 
-        public string Info { get; set; }
+        public string Info { get; init; }
+
+        public PacketDescription(DateTime timestamp, string protocol, IAddress source, IAddress destination, int length, string info)
+        {
+            TimeStamp = timestamp;
+            Protocol = protocol;
+            Source = source;
+            Destination = destination;
+            Length = length;
+            Info = info;
+        }
     }
 }

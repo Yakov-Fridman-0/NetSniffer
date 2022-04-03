@@ -56,7 +56,7 @@ namespace NetSnifferLib.Analysis.Miscellaneous
             return "";
         }
 
-        protected override IcmpAnalysis AnalyzeDatagramCore(IcmpDatagram datagram, NetworkContext context)
+        protected override IcmpAnalysis AnalyzeDatagramCore(IcmpDatagram datagram, NetworkContext context, int packetId)
         {
             var analysis = new IcmpAnalysis();
             analysis.AddInfo(GetInfo(datagram, context));
@@ -95,7 +95,7 @@ namespace NetSnifferLib.Analysis.Miscellaneous
                                     {
                                         if(registeredIds.ContainsKey(id))
                                         {
-                                            var expretedSource = AddressConvert.ToIpAddress(ipV4Datagram.Source);
+                                            var expretedSource = AddressConvert.ToIPAddress(ipV4Datagram.Source);
                                             int hops = ipV4Datagram.Ttl;
 
 

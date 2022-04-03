@@ -4,10 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NetSnifferLib.Threats
+namespace NetSnifferLib
 {
-    public abstract class Threat
-    {
-        
-    }
+    public delegate void PacketDesciptionHandler(int packetId, PacketDescription description);
 }

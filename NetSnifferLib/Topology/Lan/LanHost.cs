@@ -4,6 +4,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.NetworkInformation;
 
+using NetSnifferLib.StatefulAnalysis.Arp;
+
 namespace NetSnifferLib.Topology
 {
     public class LanHost : IPhysicalAddress, IIPAddress, ICloneable, IEquatable<LanHost>
@@ -69,5 +71,7 @@ namespace NetSnifferLib.Topology
         {
             return Equals(obj as LanHost);
         }
+
+        public ArpTable ArpTable { get; } = new();
     }
 }

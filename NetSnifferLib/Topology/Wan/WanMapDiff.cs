@@ -21,7 +21,7 @@ namespace NetSnifferLib.Topology
 
         public List<WanHost> LanRouterRemoved { get; set; }
 
-        public List<WanHost> WanRouterAdded { get; set; }
+        public List<WanHost> WanRoutersAdded { get; set; }
 
         public List<WanHost> WanRouterRemoved { get; set; }
 
@@ -33,7 +33,7 @@ namespace NetSnifferLib.Topology
             HostsAdded.Count == 0 && HostRemoved.Count == 0 && 
             ConnectionsAdded.Count == 0 && ConnectionsRemoved.Count == 0 &&
             LanRouterAdded.Count == 0 && LanRouterRemoved.Count == 0 &&
-            WanRouterAdded.Count == 0 && WanRouterRemoved.Count == 0 &&
+            WanRoutersAdded.Count == 0 && WanRouterRemoved.Count == 0 &&
             DnsServersAdded.Count == 0 && DnsServersRemoved.Count == 0;
 
     }

@@ -40,8 +40,6 @@ namespace NetSnifferLib.Topology
     {
         public static WanMap Empty => new(new List<WanHost>(), new List<WanHost>(), new List<WanHost>(), new List<WanHost>());
 
-        //public WanHost LocalComputer { get; }
-
         public List<WanHost> Hosts { get; } = new();
 
         public List<WanHost> LanRouters { get; } = new();
@@ -50,20 +48,19 @@ namespace NetSnifferLib.Topology
 
         public List<WanHost> DnsServers { get; } = new();
 
+        public WanHost GetHostByIPAddress(IPAddress address)
+        {
+            return Hosts.FirstOrDefault(host => host.IPAddress.Equals(address));
+        }
+
         public WanMap(List<WanHost> hosts, List<WanHost> lanRouters, List<WanHost> wanRouters, List<WanHost> dnsServers)
         {
-            //LocalComputer = localComputer;
-
-            //Hosts = hosts;
             Hosts = hosts.Select((host) => (WanHost)host.Clone()).ToList();
 
-            //LanRouters = lanRouters;
             LanRouters = lanRouters.Select((router) => hosts.Find((host) => host.IPAddress.Equals(router.IPAddress))).ToList();
 
-            //WanRouters = wanRouters;
             WanRouters = wanRouters.Select((router) => hosts.Find((host) => host.IPAddress.Equals(router.IPAddress))).ToList();
 
-            //DnsServers = dnsServers;
             DnsServers = dnsServers.Select((server) => hosts.Find((host) => host.IPAddress.Equals(server.IPAddress))).ToList();
         }
 
@@ -127,7 +124,7 @@ namespace NetSnifferLib.Topology
                 LanRouterAdded = lanRoutersAdded.Select((router) => Hosts.Find((host) => host.IPAddress.Equals(router.IPAddress))).ToList(),
                 LanRouterRemoved = lanRoutersRemoved.Select((router) => previousMap.Hosts.Find((host) => host.IPAddress.Equals(router.IPAddress))).ToList(),
 
-                WanRouterAdded = wanRoutersAdded.Select((router) => Hosts.Find((host) => host.IPAddress.Equals(router.IPAddress))).ToList(),
+                WanRoutersAdded = wanRoutersAdded.Select((router) => Hosts.Find((host) => host.IPAddress.Equals(router.IPAddress))).ToList(),
                 WanRouterRemoved = wanRoutersRemoved.Select((router) => previousMap.Hosts.Find((host) => host.IPAddress.Equals(router.IPAddress))).ToList(),
 
                 DnsServersAdded = dnsServersAdded.Where(

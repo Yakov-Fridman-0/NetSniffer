@@ -10,11 +10,11 @@ namespace NetSnifferLib.General
 
         protected abstract string GetInfo(TDatagram datagram, TContext context);
 
-        protected abstract IAnalysis AnalyzeDatagramCore(TDatagram datagram, TContext context);
+        protected abstract IAnalysis AnalyzeDatagramCore(TDatagram datagram, TContext context, int packetId);
 
-        public IAnalysis AnalyzeDatagram(Datagram datagram, IContext context)
+        public IAnalysis AnalyzeDatagram(Datagram datagram, IContext context, int packetId)
         {
-            return AnalyzeDatagramCore((TDatagram)datagram, (TContext)context);
+            return AnalyzeDatagramCore((TDatagram)datagram, (TContext)context, packetId);
         }
     }
 }

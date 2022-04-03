@@ -20,9 +20,9 @@ namespace NetSnifferLibWebInfo
 
         public static string GetCountryCodeAsync(IPAddress address)
         {
-            
+
             if (cache.TryGetValue(address, out Task<IpData.Models.IpInfo> info))
-                return info.Result.CountryCode;
+                return ""; //return info.Result.CountryCode;
 
             try
             {

@@ -4,7 +4,7 @@ namespace NetSnifferLib.General
 {
     interface IAnalyzer
     {
-        IAnalysis AnalyzeDatagram(Datagram datagram, IContext context);
+        IAnalysis AnalyzeDatagram(Datagram datagram, IContext context, int packetId);
 
         string Protocol { get; }
     }

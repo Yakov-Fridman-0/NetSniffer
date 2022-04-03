@@ -18,7 +18,7 @@ namespace NetSnifferApp
         private NetSniffer _netSniffer;
 
         GeneralStatisticsForm statisticsForm;
-        TopologyForm topologyForm;
+        GraphicalTopologyForm topologyForm;
 
         public MainForm()
         {
@@ -254,7 +254,7 @@ namespace NetSnifferApp
         {
             topologyForm = new();
             topologyForm.Show();
-            topologyForm.TopologyUpdateRequired += TopologyForm_TopologyUpdateRequired;
+            topologyForm.UpdateRequested += TopologyForm_TopologyUpdateRequired;
         }
 
         public void UpdateTopology()

@@ -10,7 +10,9 @@ namespace NetSnifferLib
 {
     static class PhysicalAddressHelper
     {
-        private static readonly PhysicalAddress BroadcastPhysicalAddress = PhysicalAddress.Parse("FF:FF:FF:FF:FF:FF");
+        private static readonly PhysicalAddress EmptyAddress = PhysicalAddress.Parse("00:00:00:00:00:00");
+        
+        private static readonly PhysicalAddress BroadcastAddress = PhysicalAddress.Parse("FF:FF:FF:FF:FF:FF");
 
         public static PhysicakAddressEqulityComparer EqulityComparer { get; } = new();
 
@@ -27,9 +29,14 @@ namespace NetSnifferLib
             }
         }
 
+        public static bool IsEmpty(PhysicalAddress address)
+        {
+            return EmptyAddress.Equals(address);
+        }
+
         public static bool IsBroadcast(PhysicalAddress address)
         {
-            return BroadcastPhysicalAddress.Equals(address);
+            return BroadcastAddress.Equals(address);
         }
 
         public static bool IsMulticast(PhysicalAddress address)

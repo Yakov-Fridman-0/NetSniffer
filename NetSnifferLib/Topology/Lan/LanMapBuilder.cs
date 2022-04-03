@@ -14,44 +14,57 @@ namespace NetSnifferLib.Topology
 
         readonly List<LanHost> dhcpServers = new();
 
-        public void AddHost(PhysicalAddress physicalAddress)
+        public void AddHost(PhysicalAddress address)
         {
-            hosts.Add(new LanHost(physicalAddress));                       
+            lock (hosts)
+            {
+                if (!hosts.Exists(host => host.PhysicalAddress.Equals(address)))
+                    hosts.Add(new LanHost(address));                       
+            }
         }
 
         public void AddHost(PhysicalAddress physicalAddress, IPAddress ipAddress)
         {
-            hosts.Add(new LanHost(physicalAddress, ipAddress));
+            lock (hosts)
+            {
+                if (hosts.Exists(host => host.PhysicalAddress.Equals(physicalAddress)))
+                    AssignIPToHost(physicalAddress, ipAddress);
+                else
+                    hosts.Add(new LanHost(physicalAddress, ipAddress));
+            }
         }
 
         public void AssignIPToHost(PhysicalAddress physicalAddress, IPAddress ipAddress)
         {
-            hosts.Find((host) => physicalAddress.Equals(host.PhysicalAddress)).IPAddress = ipAddress;
+            lock (hosts)
+                hosts.Find((host) => physicalAddress.Equals(host.PhysicalAddress)).IPAddress = ipAddress;
         }
 
         public bool ContainsHost(PhysicalAddress physicalAddress)
         {
-            return hosts.Any((host) => physicalAddress.Equals(host.PhysicalAddress));
+            lock (hosts)
+                return hosts.Any((host) => physicalAddress.Equals(host.PhysicalAddress));
         }
 
         public bool ContainsHost(PhysicalAddress physicalAddress, IPAddress ipAddress)
         {
-            return hosts.Any((host) => 
-            physicalAddress.Equals(host.PhysicalAddress) && 
-            ipAddress.Equals(host.IPAddress));
+            lock (hosts)
+                return hosts.Any((host) => physicalAddress.Equals(host.PhysicalAddress) && ipAddress.Equals(host.IPAddress));
         }
 
         public bool ContainsHost(IPAddress ipAddress)
         {
-            return hosts.Any((host) => ipAddress.Equals(host.IPAddress));
+            lock (hosts)
+                return hosts.Any((host) => ipAddress.Equals(host.IPAddress));
         }
 
         public bool RemoveHost(PhysicalAddress physicalAddress)
         {
-            return hosts.Remove(
-                hosts.Find(
-                    (host) => 
-                    host.PhysicalAddress.Equals(physicalAddress)));
+            lock (hosts)
+                return hosts.Remove(
+                    hosts.Find(
+                        (host) => 
+                        host.PhysicalAddress.Equals(physicalAddress)));
         }
 
         public bool RemoveHost(PhysicalAddress physicalAddress, IPAddress ipAddress)
@@ -65,12 +78,14 @@ namespace NetSnifferLib.Topology
 
         public IPAddress GetIPAddress(PhysicalAddress physicalAddress)
         {
-            return hosts.Find((host) => host.PhysicalAddress.Equals(physicalAddress))?.IPAddress;
+            lock (hosts)
+                return hosts.Find((host) => host.PhysicalAddress.Equals(physicalAddress))?.IPAddress;
         }
 
         public PhysicalAddress GetPhysicalAddress(IPAddress ipAddress)
         {
-            return hosts.Find((host) => ipAddress.Equals(host.IPAddress))?.PhysicalAddress;
+            lock (hosts)
+                return hosts.Find((host) => ipAddress.Equals(host.IPAddress))?.PhysicalAddress;
         }
 
         public bool ContainsRouter(PhysicalAddress physicalAddress)
@@ -98,17 +113,23 @@ namespace NetSnifferLib.Topology
 
         public void MakeHostRouter(PhysicalAddress physicalAddress)
         {
-            var host = hosts.Find((host) => physicalAddress.Equals(host.PhysicalAddress));
+            LanHost host = null;
+
+            lock (hosts)
+                host = hosts.Find((host) => physicalAddress.Equals(host.PhysicalAddress));
 
             Router newRouter = host.IPAddress != null ? new Router(physicalAddress, host.IPAddress) : new Router(physicalAddress);
             
-            hosts.Remove(host);
-            hosts.Add(newRouter);
-
-            if (ContainsDhcpServer(physicalAddress, host.IPAddress))
+            lock (hosts)
             {
-                dhcpServers.Remove(host);
-                dhcpServers.Add(newRouter);
+                hosts.Remove(host);
+                hosts.Add(newRouter);
+
+                if (ContainsDhcpServer(physicalAddress, host.IPAddress))
+                {
+                    dhcpServers.Remove(host);
+                    dhcpServers.Add(newRouter);
+                }
             }
 
             routers.Add(newRouter);
@@ -138,17 +159,23 @@ namespace NetSnifferLib.Topology
 
         public void MakeHostDhcpServer(PhysicalAddress physicalAddress, IPAddress ipAddress)
         {
-            var host = hosts.Find((host) => physicalAddress.Equals(host.PhysicalAddress));
+            LanHost host = null;
+            
+            lock (hosts)
+                 host = hosts.Find((h) => physicalAddress.Equals(h.PhysicalAddress));
 
             DhcpServer newDhcpServer = new(physicalAddress, ipAddress);
 
-            hosts.Remove(host);
-            hosts.Add(newDhcpServer);
-
-            if (ContainsRouter(physicalAddress))
+            lock (hosts)
             {
-                routers.Remove(host);
-                routers.Add(newDhcpServer);
+                hosts.Remove(host);
+                hosts.Add(newDhcpServer);
+
+                if (ContainsRouter(physicalAddress))
+                {
+                    routers.Remove(host);
+                    routers.Add(newDhcpServer);
+                }
             }
 
             dhcpServers.Add(newDhcpServer);
@@ -160,5 +187,15 @@ namespace NetSnifferLib.Topology
         }
 
         public LanMap LanMap => new(hosts, routers, dhcpServers);
+
+        internal List<LanHost> GetOriginalLanHosts()
+        {
+            return hosts;
+        }
+
+        internal object GetHostsLock()
+        {
+            return null;
+        }
     }
 }

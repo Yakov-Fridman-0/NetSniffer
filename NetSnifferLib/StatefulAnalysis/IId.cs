@@ -4,7 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NetSnifferLib.Threats
+namespace NetSnifferLib.StatefulAnalysis
 {
-    public delegate void ThreatHandler(Threat threat);
+    interface IId
+    {
+        int Id { get; }
+    }
 }
