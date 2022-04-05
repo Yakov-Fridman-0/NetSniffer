@@ -15,7 +15,7 @@ namespace NetSnifferLib
             if (address.IsPhysicalAddress)
                 return ToString(address.PhysicalAddress);
             else if (address.IsIpAddress)
-                return ToString(address.IpAddress);
+                return ToString(address.IPAddress);
             else if (address.IsIpEndPoint)
                 return ToString(address.IpEndPoint);
             else

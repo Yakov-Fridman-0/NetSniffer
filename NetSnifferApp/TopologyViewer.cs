@@ -519,7 +519,7 @@ namespace NetSnifferApp
 
         void MakeWanHostServer(WanHost host)
         {
-            var control = (WanHostControl)lanTableLayoutPanel.Controls[host.IPAddress.ToString()];
+            var control = (WanHostControl)Controls[host.IPAddress.ToString()];
             MakeHostControlServer(control);
         }
 

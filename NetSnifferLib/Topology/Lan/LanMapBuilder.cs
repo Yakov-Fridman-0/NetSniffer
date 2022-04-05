@@ -192,10 +192,5 @@ namespace NetSnifferLib.Topology
         {
             return hosts;
         }
-
-        internal object GetHostsLock()
-        {
-            return null;
-        }
     }
 }

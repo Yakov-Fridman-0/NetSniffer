@@ -11,7 +11,7 @@ namespace NetSnifferLib.Topology
 {
     class WanMapBuilder
     {
-        ConcurrentBag<WanHost> hosts = new();
+        List<WanHost> hosts = new();
 
         readonly ConcurrentBag<WanHost> dnsServers = new();
 
@@ -21,65 +21,35 @@ namespace NetSnifferLib.Topology
 
         WanHost LocalComputer;
 
-        readonly Dictionary<IPAddress, ManualResetEvent> hostCreatedEvents = new(IPAddressHelper.EqulityComparer);
-
         public void AddHost(IPAddress ipAddress)
         {
-            ManualResetEvent hostCreatedEvent = null;
-            
-            lock (hostCreatedEvents)
+            lock (hosts)
             {
-                if (!hostCreatedEvents.ContainsKey(ipAddress))
-                {
-                    hostCreatedEvent = new ManualResetEvent(false);
-                    hostCreatedEvents.Add(ipAddress, hostCreatedEvent);
-                }
-                else
-                {
-                    hostCreatedEvent = hostCreatedEvents[ipAddress];
-                }
+                if (!hosts.Any(host => host.IPAddress.Equals(ipAddress)))
+                    hosts.Add(new WanHost(ipAddress));
             }
-
-            hosts.Add(new WanHost(ipAddress));
-            hostCreatedEvent.Set();
         }
 
         public bool ContainsHost(IPAddress ipAddress)
         {
-            return hosts.Any((host) => ipAddress.Equals(host.IPAddress));
+            lock (hosts)
+                return hosts.Any((host) => ipAddress.Equals(host.IPAddress));
         }
 
         public bool RemoveHost(IPAddress ipAddress)
         {
-            WanHost host = hosts.FirstOrDefault((host) => ipAddress.Equals(host.IPAddress));
-            var list = hosts.ToList();
-            bool val = list.Remove(host);
+            lock (hosts)
+            {
+                var count = hosts.RemoveAll(host => host.IPAddress.Equals(ipAddress));
 
-            hosts = new(list);
-
-            return val;
+                return count != 0;
+            }
         }
 
         private WanHost GetHost(IPAddress ipAddress)
         {
-            ManualResetEvent hostCreatedEvent = null;
-
-            lock (hostCreatedEvents)
-            {
-                if (!hostCreatedEvents.ContainsKey(ipAddress))
-                {
-                    hostCreatedEvent = new ManualResetEvent(false);
-                    hostCreatedEvents.Add(ipAddress, hostCreatedEvent);
-                }
-                else
-                {
-                    hostCreatedEvent = hostCreatedEvents[ipAddress];
-                }
-            }
-
-            hostCreatedEvent.WaitOne();
-
-            return hosts.FirstOrDefault((host) => ipAddress.Equals(host.IPAddress));
+            lock (hosts)
+                return hosts.FirstOrDefault((host) => ipAddress.Equals(host.IPAddress));
         }
 
         public void AddDnsServer(IPAddress ipAddress)
@@ -156,6 +126,11 @@ namespace NetSnifferLib.Topology
                     
                 }
             }
+        }
+
+        internal List<WanHost> GetOriginalWanHosts()
+        {
+            return hosts.ToList();
         }
 
         public WanMap WanMap => new(hosts.ToList(), lanRouters.ToList(), wanRouters.ToList(), dnsServers.ToList());

@@ -7,6 +7,7 @@ using NetSnifferLib.General;
 
 using NetSnifferLib.Analysis.Network;
 using NetSnifferLib.Analysis.Application;
+using NetSnifferLib.StatefulAnalysis.Tcp;
 
 namespace NetSnifferLib.Analysis.Transport
 {
@@ -44,6 +45,8 @@ namespace NetSnifferLib.Analysis.Transport
             }
 
             var optionsInfo = string.Join(" ", from kvp in options select $"{ kvp.Key}: {kvp.Value}");
+
+            TcpStatefulAnalyzer.ReportDatagram(datagram, context);
 
             return string.Join(" ", new[] { portsInfo, flagsInfo, optionsInfo });
         }

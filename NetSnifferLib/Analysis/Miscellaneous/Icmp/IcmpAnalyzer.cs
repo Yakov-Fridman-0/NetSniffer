@@ -61,8 +61,8 @@ namespace NetSnifferLib.Analysis.Miscellaneous
             var analysis = new IcmpAnalysis();
             analysis.AddInfo(GetInfo(datagram, context));
 
-            var source = context.Source.IpAddress;
-            var destination = context.Destination.IpAddress;
+            var source = context.Source.IPAddress;
+            var destination = context.Destination.IPAddress;
 
             uint id;
             Dictionary<uint, int> registeredIds;

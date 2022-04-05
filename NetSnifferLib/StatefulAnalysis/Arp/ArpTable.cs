@@ -140,7 +140,7 @@ namespace NetSnifferLib.StatefulAnalysis.Arp
             }
         }
 
-        public void AddEntry(IPAddress ipAddress, PhysicalAddress physicalAddress, DateTime receivedTime, int packetId)
+        void AddEntry(IPAddress ipAddress, PhysicalAddress physicalAddress, DateTime receivedTime, int packetId)
         {
             if (!arpTable.ContainsKey(ipAddress))
             {
@@ -176,7 +176,7 @@ namespace NetSnifferLib.StatefulAnalysis.Arp
             }
         }
 
-        public void ModifiyEntry(IPAddress ipAddress, PhysicalAddress physicalAddress, DateTime receivedTime, int packetId)
+        void ModifiyEntry(IPAddress ipAddress, PhysicalAddress physicalAddress, DateTime receivedTime, int packetId)
         {
             if (arpTable.ContainsKey(ipAddress))
             {

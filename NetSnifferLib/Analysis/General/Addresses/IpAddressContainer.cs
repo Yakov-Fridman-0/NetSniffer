@@ -11,6 +11,6 @@ namespace NetSnifferLib.General
             _ipAddress = ipAddress;
         }
 
-        public override IPAddress IpAddress => _ipAddress;
+        public override IPAddress IPAddress => _ipAddress;
     }
 }

@@ -47,7 +47,7 @@ namespace NetSnifferLib.Analysis.Miscellaneous
         {
             if (IsRequest(datagram))
             {
-                ArpStatefulAnalyzer.RegisterRequest(datagram, packetId);
+                ArpStatefulAnalyzer.ReportRequest(datagram, packetId);
 
                 PayloadIndicatesHost?.Invoke(
                     this, 
@@ -58,7 +58,7 @@ namespace NetSnifferLib.Analysis.Miscellaneous
             }
             if (IsReply(datagram))
             {
-                ArpStatefulAnalyzer.RegisterReply(datagram, packetId);
+                ArpStatefulAnalyzer.ReportReply(datagram, packetId);
 
                 PayloadIndicatesHost?.Invoke(
                     this, 

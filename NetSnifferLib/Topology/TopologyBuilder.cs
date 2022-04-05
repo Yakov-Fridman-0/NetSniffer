@@ -179,9 +179,9 @@ namespace NetSnifferLib.Topology
             return lanMapBuilder.GetOriginalLanHosts();
         }
 
-        internal object GetHostsLock()
+        internal List<WanHost> GetOriginalWanHosts()
         {
-            return lanMapBuilder.GetHostsLock();
+            return wanMapBuilder.GetOriginalWanHosts();
         }
     }
 }

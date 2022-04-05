@@ -41,18 +41,19 @@ namespace NetSnifferApp
             // pictureBox
             // 
             this.pictureBox.Image = global::NetSnifferApp.Properties.Resources.Host;
-            this.pictureBox.Location = new System.Drawing.Point(17, 3);
+            this.pictureBox.Location = new System.Drawing.Point(15, 2);
+            this.pictureBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.pictureBox.Name = "pictureBox";
-            this.pictureBox.Size = new System.Drawing.Size(94, 82);
+            this.pictureBox.Size = new System.Drawing.Size(82, 62);
             this.pictureBox.TabIndex = 0;
             this.pictureBox.TabStop = false;
             // 
             // physicalAddressLabel
             // 
             this.physicalAddressLabel.AutoSize = true;
-            this.physicalAddressLabel.Location = new System.Drawing.Point(4, 89);
+            this.physicalAddressLabel.Location = new System.Drawing.Point(4, 67);
             this.physicalAddressLabel.Name = "physicalAddressLabel";
-            this.physicalAddressLabel.Size = new System.Drawing.Size(120, 20);
+            this.physicalAddressLabel.Size = new System.Drawing.Size(94, 15);
             this.physicalAddressLabel.TabIndex = 1;
             this.physicalAddressLabel.Text = "00:00:00:00:00:00";
             this.physicalAddressLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -60,9 +61,9 @@ namespace NetSnifferApp
             // ipAddressLabel
             // 
             this.ipAddressLabel.AutoSize = true;
-            this.ipAddressLabel.Location = new System.Drawing.Point(4, 109);
+            this.ipAddressLabel.Location = new System.Drawing.Point(4, 82);
             this.ipAddressLabel.Name = "ipAddressLabel";
-            this.ipAddressLabel.Size = new System.Drawing.Size(114, 20);
+            this.ipAddressLabel.Size = new System.Drawing.Size(88, 15);
             this.ipAddressLabel.TabIndex = 2;
             this.ipAddressLabel.Text = "000.000.000.000";
             this.ipAddressLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -79,14 +80,15 @@ namespace NetSnifferApp
             // 
             // LanHostControl
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.ipAddressLabel);
             this.Controls.Add(this.physicalAddressLabel);
             this.Controls.Add(this.pictureBox);
-            this.MinimumSize = new System.Drawing.Size(128, 143);
+            this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.MinimumSize = new System.Drawing.Size(112, 107);
             this.Name = "LanHostControl";
-            this.Size = new System.Drawing.Size(128, 143);
+            this.Size = new System.Drawing.Size(112, 107);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();

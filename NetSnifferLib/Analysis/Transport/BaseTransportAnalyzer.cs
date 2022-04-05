@@ -54,10 +54,10 @@ namespace NetSnifferLib.Analysis.Transport
 
 
             var sourcePort = GetSourcePortCore(datagram);
-            var sourceIpEndPoint = new IPEndPoint(context.Source.IpAddress, sourcePort);
+            var sourceIpEndPoint = new IPEndPoint(context.Source.IPAddress, sourcePort);
 
             var destinationPort = GetDestinationPortCore(datagram);
-            var destinationIpEndPoint = new IPEndPoint(context.Destination.IpAddress, destinationPort);
+            var destinationIpEndPoint = new IPEndPoint(context.Destination.IPAddress, destinationPort);
 
             var sourceIpEndPointContainer = (IpEndPointContainer)AddressConvert.ToIAddress(sourceIpEndPoint);
             var destinationIpEndPointContainer = (IpEndPointContainer)AddressConvert.ToIAddress(destinationIpEndPoint);

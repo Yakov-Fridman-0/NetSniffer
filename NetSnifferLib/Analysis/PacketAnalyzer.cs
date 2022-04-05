@@ -232,14 +232,14 @@ namespace NetSnifferLib.Analysis
             return topologyBuilder.LanMap;
         }
 
-        internal static List<LanHost> GetOriginalLanHosts()
+        public static List<LanHost> GetOriginalLanHosts()
         {
             return topologyBuilder.GetOriginalLanHosts();
         }
 
-        internal static object GetHostsLock()
+        public static List<WanHost> GetOriginalWanHosts()
         {
-            return topologyBuilder.GetHostsLock();
+            return topologyBuilder.GetOriginalWanHosts();
         }
 
         public static WanMap GetWanMap()

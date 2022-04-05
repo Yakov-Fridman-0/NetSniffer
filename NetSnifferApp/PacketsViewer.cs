@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Text;
 using NetSnifferLib;
@@ -51,7 +52,7 @@ namespace NetSnifferApp
             packetsListView.ListViewItemSorter = new ListViewItemComparer();
             packetsListView.Sorting = SortOrder.Ascending;
 
-            smallImageList.Images.Add(Image.FromFile(@"E:\סייבר 2022\פרויקט\Sniffer\NetSniffer\NetSnifferApp\Resources\Danger.png"));
+            smallImageList.Images.Add(Image.FromFile(@"D:\סייבר 2022\פרויקט\Sniffer\NetSniffer\NetSnifferApp\Resources\Danger.png"));
         }
 
         class ListViewItemComparer : IComparer

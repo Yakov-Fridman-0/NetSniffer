@@ -19,6 +19,7 @@ namespace NetSnifferApp
 
         GeneralStatisticsForm statisticsForm;
         GraphicalTopologyForm topologyForm;
+        TcpStreamsForm tcpStreamsForm;
 
         public MainForm()
         {
@@ -55,7 +56,7 @@ namespace NetSnifferApp
             }
 
             packetFilter.Enabled = false;
-            CtrlPacketViewer.Clear();
+            packetViewerControl.Clear();
 
             var selectedInterface = ((NetInterfaceItem)CmbNetInterface.SelectedItem).NetworkInterface;
 
@@ -98,7 +99,7 @@ namespace NetSnifferApp
 
         private void OnPacketReceived(PcapDotNet.Packets.Packet packet)
         {
-            CtrlPacketViewer.Add(packet);
+            packetViewerControl.Add(packet);
         }
 
         private void BtnStop_Click(object sender, EventArgs e)
@@ -267,6 +268,13 @@ namespace NetSnifferApp
         {
             topologyForm?.Invoke(new Action(() => UpdateTopology()));
 
+        }
+
+        private void streamsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            tcpStreamsForm = new();
+            tcpStreamsForm.Closed += new EventHandler((sender, e) => tcpStreamsForm = null);
+            tcpStreamsForm.Show();
         }
     }
 }

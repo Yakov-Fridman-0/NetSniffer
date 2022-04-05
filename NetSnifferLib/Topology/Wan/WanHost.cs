@@ -3,7 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Net;
 
-using NetSnifferLib;
+using NetSnifferLib.StatefulAnalysis.Tcp;
 using System.Diagnostics.CodeAnalysis;
 
 namespace NetSnifferLib.Topology
@@ -12,6 +12,8 @@ namespace NetSnifferLib.Topology
     {
         public IPAddress IPAddress { get; }
 
+        public TcpConnectionManager ConnectionManager { get; }
+
         public static SameIPAddress IPAddressComparer { get; } = new();
 
         public List<WanHost> ConnectedHosts { get; } = new();
@@ -19,11 +21,14 @@ namespace NetSnifferLib.Topology
         public WanHost(IPAddress ipAddress)
         {
             IPAddress = ipAddress;
+            ConnectionManager = new(ipAddress);
         }
 
         public WanHost(IPAddress ipAddress, List<WanHost> connectedHosts)
         {
             IPAddress = ipAddress;
+            ConnectionManager = new(ipAddress);
+
             ConnectedHosts = connectedHosts;
         }
 

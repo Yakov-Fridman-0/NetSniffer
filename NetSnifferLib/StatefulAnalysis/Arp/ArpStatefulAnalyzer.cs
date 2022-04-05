@@ -17,7 +17,7 @@ using PcapDotNet.Packets.Arp;
 
 namespace NetSnifferLib.StatefulAnalysis.Arp
 {
-    public static class ArpStatefulAnalyzer
+    static class ArpStatefulAnalyzer
     {
         static int requestTimeout = 1000; // ms
 
@@ -45,7 +45,7 @@ namespace NetSnifferLib.StatefulAnalysis.Arp
             UnansweredRequestsTokenSources.TryAdd(request, source);
         }
 
-        static public void RegisterRequest(ArpDatagram request, int packetId)
+        static public void ReportRequest(ArpDatagram request, int packetId)
         {
             AllDatagrams.Add(request);
 
@@ -57,7 +57,7 @@ namespace NetSnifferLib.StatefulAnalysis.Arp
             //    StartTimeoutTask(request);
         }
 
-        static public void RegisterReply(ArpDatagram reply, int packetId)
+        static public void ReportReply(ArpDatagram reply, int packetId)
         {
             AllDatagrams.Add(reply);
 

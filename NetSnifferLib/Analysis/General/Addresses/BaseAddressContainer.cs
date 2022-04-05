@@ -9,9 +9,9 @@ namespace NetSnifferLib.General
 
         public bool IsPhysicalAddress => PhysicalAddress != null;
 
-        public virtual IPAddress IpAddress => null;
+        public virtual IPAddress IPAddress => null;
 
-        public bool IsIpAddress => IpAddress != null;
+        public bool IsIpAddress => IPAddress != null;
 
         public virtual IPEndPoint IpEndPoint => null;
 

@@ -9,7 +9,7 @@ namespace NetSnifferLib.General
 
         bool IsPhysicalAddress { get; }
 
-        IPAddress IpAddress { get; } 
+        IPAddress IPAddress { get; } 
 
         bool IsIpAddress { get; }
 

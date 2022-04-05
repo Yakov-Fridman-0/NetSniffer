@@ -16,7 +16,7 @@ namespace NetSnifferLib.General
 
         public bool IsPhysicalAddress => false;
 
-        public IPAddress IpAddress => null;
+        public IPAddress IPAddress => null;
 
         public bool IsIpAddress => false;
 
