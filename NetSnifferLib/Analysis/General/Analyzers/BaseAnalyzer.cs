@@ -14,6 +14,8 @@ namespace NetSnifferLib.General
 
         public IAnalysis AnalyzeDatagram(Datagram datagram, IContext context, int packetId)
         {
+            PacketData.GetPacketDataByPacketId(packetId).AddProtocol(Protocol, datagram);
+
             return AnalyzeDatagramCore((TDatagram)datagram, (TContext)context, packetId);
         }
     }

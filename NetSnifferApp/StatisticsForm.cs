@@ -10,7 +10,7 @@ namespace NetSnifferApp
         const string BytesFormat = "{0:N} B";
         const string SecondsFormat = "{0:N} s";
 
-        public event EventHandler NewStatisticsRequired;
+        public event EventHandler StatisticsUpdateRequested;
 
         GeneralStatistics baseStatistics = default;
         DateTime baseTime;
@@ -19,22 +19,110 @@ namespace NetSnifferApp
 
         bool frozen = false;
 
+
+        bool _isLive = true;
+
+        public bool IsLive 
+        {
+            get => _isLive;
+            set
+            {
+                _isLive = value;
+                
+                if (_isLive)
+                {
+                    titleLabel.Visible = false;
+
+                    freezeButtom.Visible = true;
+                    freezeButtom.Enabled = true;
+
+                    zeroButton.Visible = true;
+                    zeroButton.Enabled = true;
+                }
+                else
+                {
+
+                    titleLabel.Visible = true;
+                    titleLabel.Text = "Statistics of dump file";
+
+                    freezeButtom.Visible = false;
+
+                    zeroButton.Visible = false;
+
+                    updateTimer.Interval = 2000;
+
+                    elapsedTimeTitleLabel.Text = "Total Time";
+                }
+            }
+        }
+
         public GeneralStatisticsForm()
         {
             InitializeComponent();
 
             baseTime = DateTime.Now;
 
-            SetStatistics(default);
+            ShowStatistics(default);
         }
 
-        public void SendNewStatistics(GeneralStatistics newStatistics)
+        public void UpdateStatistics(GeneralStatistics newStatistics)
         {
             currentStatistics = newStatistics;
-            SetStatistics(newStatistics - baseStatistics);
+
+            if (_isLive)
+            {
+                ShowStatistics(newStatistics - baseStatistics);
+            }
         }
 
-        private void SetStatistics(GeneralStatistics statistics)
+        public void StartRequestingUpdates()
+        {
+            if (_isLive)
+            {
+                frozen = false;
+
+                elapsedTimeTimer.Start();
+                updateTimer.Start();
+            }
+            else
+            {
+                updateTimer.Start();
+            }
+        }
+
+        public void StopRequestingUpdates()
+        {
+            if (_isLive)
+            {
+                titleLabel.Text = "Capture stopped";
+                titleLabel.Visible = true;
+
+                freezeButtom.Enabled = false;
+                zeroButton.Enabled = false;
+
+                elapsedTimeTimer.Stop();
+                updateTimer.Stop();
+            }
+            else
+            {
+                //timeLabel.Text = string.Format(SecondsFormat, (DateTime.Now - startingTime).TotalSeconds);
+                ShowStatistics(currentStatistics);
+            }    
+        }
+
+        public void Clear()
+        {
+            timeLabel.Text = string.Format(SecondsFormat, 0);
+            baseStatistics = default;
+            ShowStatistics(default);
+        }
+
+        public void SetBaseTime(DateTime time)
+        {
+            baseTime = time;
+        }
+
+        private void ShowStatistics(GeneralStatistics statistics)
         {
             tNumLbl.Text = string.Format(NumberFormat, statistics.TransmittedPackets.ToString());
             tBytesLbl.Text = string.Format(BytesFormat, statistics.TransmittedBytes.ToString());
@@ -57,7 +145,7 @@ namespace NetSnifferApp
 
         private void refreshTimer_Tick(object sender, EventArgs e)
         {
-            NewStatisticsRequired.Invoke(this, EventArgs.Empty);
+            StatisticsUpdateRequested?.Invoke(this, EventArgs.Empty);
         }
 
         private void zeroButton_Click(object sender, EventArgs e)
@@ -65,20 +153,35 @@ namespace NetSnifferApp
             baseStatistics = currentStatistics;
             baseTime = DateTime.Now;
 
-            SetStatistics(default);
-            elapsedTimeLabel.Text = string.Format(SecondsFormat, 0);
+            ShowStatistics(default);
+            timeLabel.Text = string.Format(SecondsFormat, 0);
         }
 
         private void GeneralStatisticsForm_Load(object sender, EventArgs e)
         {
-            frozen = false;
-            refreshTimer.Start();
-            elapsedTimeTimer.Start();
+            if (IsLive)
+            {
+                frozen = false;
+
+                elapsedTimeTitleLabel.Visible = true;
+                timeLabel.Visible = true;
+
+                freezeButtom.Visible = true;
+                zeroButton.Visible = true;
+            }
+            else
+            {
+                elapsedTimeTitleLabel.Visible = false;
+                timeLabel.Visible = false;
+
+                freezeButtom.Visible = false;
+                zeroButton.Visible = false;
+            }
         }
 
         private void elapsedTimeTimer_Tick(object sender, EventArgs e)
         {
-            elapsedTimeLabel.Text = string.Format(SecondsFormat, (DateTime.Now - baseTime).TotalSeconds);
+            timeLabel.Text = string.Format(SecondsFormat, (DateTime.Now - baseTime).TotalSeconds);
         }
 
         private void freezeButtom_Click(object sender, EventArgs e)
@@ -86,13 +189,13 @@ namespace NetSnifferApp
             if (frozen)
             {
                 freezeButtom.Text = "Freeze";
-                refreshTimer.Start();
+                updateTimer.Start();
                 elapsedTimeTimer.Start();
             }
             else
             {
                 freezeButtom.Text = "Unfreeze";
-                refreshTimer.Stop();
+                updateTimer.Stop();
                 elapsedTimeTimer.Stop();
             }
 

@@ -55,12 +55,13 @@ namespace NetSnifferApp
             this.eBytesLbl = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.refreshTimer = new System.Windows.Forms.Timer(this.components);
+            this.updateTimer = new System.Windows.Forms.Timer(this.components);
             this.zeroButton = new System.Windows.Forms.Button();
-            this.label13 = new System.Windows.Forms.Label();
+            this.elapsedTimeTitleLabel = new System.Windows.Forms.Label();
             this.elapsedTimeTimer = new System.Windows.Forms.Timer(this.components);
-            this.elapsedTimeLabel = new System.Windows.Forms.Label();
+            this.timeLabel = new System.Windows.Forms.Label();
             this.freezeButtom = new System.Windows.Forms.Button();
+            this.titleLabel = new System.Windows.Forms.Label();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -375,9 +376,9 @@ namespace NetSnifferApp
             this.tableLayoutPanel1.Size = new System.Drawing.Size(257, 356);
             this.tableLayoutPanel1.TabIndex = 25;
             // 
-            // refreshTimer
+            // updateTimer
             // 
-            this.refreshTimer.Tick += new System.EventHandler(this.refreshTimer_Tick);
+            this.updateTimer.Tick += new System.EventHandler(this.refreshTimer_Tick);
             // 
             // zeroButton
             // 
@@ -389,28 +390,27 @@ namespace NetSnifferApp
             this.zeroButton.UseVisualStyleBackColor = true;
             this.zeroButton.Click += new System.EventHandler(this.zeroButton_Click);
             // 
-            // label13
+            // elapsedTimeTitleLabel
             // 
-            this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(53, 27);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(77, 15);
-            this.label13.TabIndex = 27;
-            this.label13.Text = "Elapsed time:";
+            this.elapsedTimeTitleLabel.AutoSize = true;
+            this.elapsedTimeTitleLabel.Location = new System.Drawing.Point(53, 27);
+            this.elapsedTimeTitleLabel.Name = "elapsedTimeTitleLabel";
+            this.elapsedTimeTitleLabel.Size = new System.Drawing.Size(77, 15);
+            this.elapsedTimeTitleLabel.TabIndex = 27;
+            this.elapsedTimeTitleLabel.Text = "Elapsed time:";
             // 
             // elapsedTimeTimer
             // 
-            this.elapsedTimeTimer.Interval = 1;
             this.elapsedTimeTimer.Tick += new System.EventHandler(this.elapsedTimeTimer_Tick);
             // 
-            // elpasedTimeLabel
+            // elapsedTimeLabel
             // 
-            this.elapsedTimeLabel.AutoSize = true;
-            this.elapsedTimeLabel.Location = new System.Drawing.Point(141, 27);
-            this.elapsedTimeLabel.Name = "elpasedTimeLabel";
-            this.elapsedTimeLabel.Size = new System.Drawing.Size(21, 15);
-            this.elapsedTimeLabel.TabIndex = 28;
-            this.elapsedTimeLabel.Text = "0 s";
+            this.timeLabel.AutoSize = true;
+            this.timeLabel.Location = new System.Drawing.Point(141, 27);
+            this.timeLabel.Name = "elapsedTimeLabel";
+            this.timeLabel.Size = new System.Drawing.Size(21, 15);
+            this.timeLabel.TabIndex = 28;
+            this.timeLabel.Text = "0 s";
             // 
             // freezeButtom
             // 
@@ -422,14 +422,24 @@ namespace NetSnifferApp
             this.freezeButtom.UseVisualStyleBackColor = true;
             this.freezeButtom.Click += new System.EventHandler(this.freezeButtom_Click);
             // 
+            // titleLabel
+            // 
+            this.titleLabel.AutoSize = true;
+            this.titleLabel.Location = new System.Drawing.Point(159, 9);
+            this.titleLabel.Name = "titleLabel";
+            this.titleLabel.Size = new System.Drawing.Size(44, 15);
+            this.titleLabel.TabIndex = 30;
+            this.titleLabel.Text = "label13";
+            // 
             // GeneralStatisticsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(405, 499);
+            this.Controls.Add(this.titleLabel);
             this.Controls.Add(this.freezeButtom);
-            this.Controls.Add(this.elapsedTimeLabel);
-            this.Controls.Add(this.label13);
+            this.Controls.Add(this.timeLabel);
+            this.Controls.Add(this.elapsedTimeTitleLabel);
             this.Controls.Add(this.zeroButton);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
@@ -470,11 +480,12 @@ namespace NetSnifferApp
         private System.Windows.Forms.Label eBytesLbl;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
-        private System.Windows.Forms.Timer refreshTimer;
+        private System.Windows.Forms.Timer updateTimer;
         private System.Windows.Forms.Button zeroButton;
-        private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.Label elapsedTimeTitleLabel;
         private System.Windows.Forms.Timer elapsedTimeTimer;
-        private System.Windows.Forms.Label elapsedTimeLabel;
+        private System.Windows.Forms.Label timeLabel;
         private System.Windows.Forms.Button freezeButtom;
+        private System.Windows.Forms.Label titleLabel;
     }
 }

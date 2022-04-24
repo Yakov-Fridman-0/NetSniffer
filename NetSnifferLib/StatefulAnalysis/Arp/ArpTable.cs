@@ -85,7 +85,6 @@ namespace NetSnifferLib.StatefulAnalysis.Arp
         }
 
 
-
         static int _entryCreationDoSCount = 5;
         static readonly object entryCreationDoSCountLock = new();
         

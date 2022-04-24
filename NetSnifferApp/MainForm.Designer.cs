@@ -45,7 +45,7 @@ namespace NetSnifferApp
             this.generalToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.tcpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.streamsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.packetFilter = new NetSnifferApp.PacketFilter();
+            this.packetFilter = new NetSnifferApp.CaptureFilter();
             this.label1 = new System.Windows.Forms.Label();
             this.packetViewerControl = new NetSnifferApp.PacketViewer();
             this.menuStrip1.SuspendLayout();
@@ -181,7 +181,7 @@ namespace NetSnifferApp
             this.packetFilter.Name = "packetFilter";
             this.packetFilter.Size = new System.Drawing.Size(774, 37);
             this.packetFilter.TabIndex = 8;
-            this.packetFilter.ValidFilter = true;
+            this.packetFilter.IsValidFilter = true;
             this.packetFilter.FilterChanged += new System.EventHandler<string>(this.PacketFilter_FilterChanged);
             // 
             // label1
@@ -240,7 +240,7 @@ namespace NetSnifferApp
         private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem statisticsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem generalToolStripMenuItem;
-        private PacketFilter packetFilter;
+        private CaptureFilter packetFilter;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ToolStripMenuItem topologyToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem generalToolStripMenuItem1;

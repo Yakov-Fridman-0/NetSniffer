@@ -7,7 +7,7 @@ namespace NetSnifferLib.Analysis.DataLink
 {
     class EthernetAnalyzer : BaseDataLinkAnalyzer<EthernetDatagram>
     {
-        public override string Protocol => "Etherent";
+        public override string Protocol => "Ethernet";
 
         protected override string GetInfo(EthernetDatagram datagram, EmptyContext context)
         {

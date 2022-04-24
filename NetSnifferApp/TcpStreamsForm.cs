@@ -52,8 +52,8 @@ namespace NetSnifferApp
                         connectionsListView.Items.Add(new ListViewItem(new[]
 {
                         port.ToString(),
-                        connection.SenderEndPoint.Address.ToString(),
-                        connection.SenderEndPoint.Port.ToString(),
+                        //connection.SenderEndPoint.Address.ToString(),
+                        //connection.SenderEndPoint.Port.ToString(),
                         connection.DataSent.ToString(),
                         connection.DataReceived.ToString()
                         })
@@ -68,12 +68,12 @@ namespace NetSnifferApp
 
         private void TcpStreamsForm_Load(object sender, EventArgs e)
         {
-            hostsComboBox.Items.AddRange(PacketAnalyzer.GetOriginalWanHosts().ToArray());
+            hostsComboBox.Items.AddRange(PacketAnalyzer.Analyzer.GetOriginalWanHosts().ToArray());
         }
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            var newHosts = PacketAnalyzer.GetOriginalWanHosts();
+            var newHosts = PacketAnalyzer.Analyzer.GetOriginalWanHosts();
             var hosts = hostsComboBox.Items.Cast<WanHost>();
 
             foreach (var newHost in newHosts)
@@ -106,8 +106,8 @@ namespace NetSnifferApp
                                 connectionsListView.Items.Add(new ListViewItem(new[]
         {
                         port.ToString(),
-                        connection.SenderEndPoint.Address.ToString(),
-                        connection.SenderEndPoint.Port.ToString(),
+                        //connection.SenderEndPoint.Address.ToString(),
+                        //connection.SenderEndPoint.Port.ToString(),
                         connection.DataSent.ToString(),
                         connection.DataReceived.ToString()
                         })

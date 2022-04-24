@@ -42,6 +42,17 @@ namespace NetSnifferLib
             return packetsById[id];
         }
 
+        public static int GetId(Packet packet)
+        {
+            foreach (var (id, aPacket) in packetsById)
+            {
+                if (packet == aPacket)
+                    return id;
+            }
+
+            return -1;
+        }
+
         public static void Reset()
         {
             Interlocked.Exchange(ref nextPacketId, -1);

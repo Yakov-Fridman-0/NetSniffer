@@ -24,10 +24,10 @@ namespace NetSnifferLib.StatefulAnalysis.Tcp
             var destinationPort = datagram.DestinationPort;
 
             var flags = datagram.ControlBits;
-
+            
             var payloadLength = (uint)datagram.PayloadLength;
 
-            var hosts = PacketAnalyzer.GetOriginalWanHosts();
+            var hosts = PacketAnalyzer.Analyzer.GetOriginalWanHosts();
 
             WanHost sender, receiver;
 

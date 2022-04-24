@@ -67,7 +67,7 @@ namespace NetSnifferLib.Analysis.Miscellaneous
             uint id;
             Dictionary<uint, int> registeredIds;
 
-            if (destination.Equals(PacketAnalyzer.LocalComputerIPAddress))
+            if (destination.Equals(PacketAnalyzer.Analyzer.LocalComputerIPAddress))
             {
                 switch (datagram.MessageType)
                 {

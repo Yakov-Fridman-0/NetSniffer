@@ -22,7 +22,7 @@ namespace NetSnifferLib.StatefulAnalysis.Tcp
         public TcpConnectionStatus Status => _status;
 
 
-        public IPEndPoint SenderEndPoint { get; init; }
+        public IPEndPoint EndPoint1 { get; init; }
         
         uint senderInitialRawSequenceNumber;
 
@@ -55,14 +55,22 @@ namespace NetSnifferLib.StatefulAnalysis.Tcp
         public TcpConnection(IPEndPoint receiverEndPoint, IPEndPoint senderEndPoint)
         {
             ReceiverEndPoint = receiverEndPoint;
-            SenderEndPoint = senderEndPoint;
+            //SenderEndPoint = senderEndPoint;
 
             _status = TcpConnectionStatus.None;
         }
 
-        public void ReportSentPacket(TcpControlBits flags, uint rawSequenceNumber, uint rawAcknowledgementNumber, uint payloadLength)
+        public void ReportPacket(TcpControlBits flags, uint rawSequenceNumber, uint rawAcknowledgementNumber, uint payloadLength)
         {
-            switch (_status)
+            if ((flags & TcpControlBits.Synchronize) != 0)
+            {
+/*                if ()
+                {
+
+                }*/
+            }
+
+/*            switch (_status)
             {
                 case TcpConnectionStatus.None:
                     if ((flags & TcpControlBits.Synchronize) != 0)
@@ -118,12 +126,12 @@ namespace NetSnifferLib.StatefulAnalysis.Tcp
                             _status = TcpConnectionStatus.Closed;
                     }
                     break;
-            }
+            }*/
         }
 
         public void ReportReceivedPacket(TcpControlBits flags, uint rawSequenceNumber, uint rawAcknowledgemtnNumber, uint payloadLength)
         {
-            switch (Status)
+/*            switch (Status)
             {
                 case TcpConnectionStatus.None:
                     _status = TcpConnectionStatus.Established;
@@ -168,7 +176,7 @@ namespace NetSnifferLib.StatefulAnalysis.Tcp
                             _status = TcpConnectionStatus.Closed;
                     }
                     break;
-            }
+            }*/
         }
 
 

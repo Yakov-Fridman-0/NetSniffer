@@ -32,7 +32,7 @@ namespace NetSnifferLib.StatefulAnalysis.Tcp
         {
             if (connections.TryGetValue(sourcePort, out TcpConnection connection))
             {
-                connection.ReportSentPacket(flags, sequenceNumber, acknowledgementNumber, payloadLength);
+                //connection.ReportSentPacket(flags, sequenceNumber, acknowledgementNumber, payloadLength);
 
                 if (connection.Status == TcpConnectionStatus.Closed)
                     connections.Remove(sourcePort, out _);
@@ -40,7 +40,7 @@ namespace NetSnifferLib.StatefulAnalysis.Tcp
             else
             {
                 var newConnection = new TcpConnection(new IPEndPoint(IPAddress, sourcePort), new IPEndPoint(destinationAddress, destinationPort));
-                newConnection.ReportSentPacket(flags, sequenceNumber, acknowledgementNumber, payloadLength);
+                //newConnection.ReportSentPacket(flags, sequenceNumber, acknowledgementNumber, payloadLength);
 
                 connections.TryAdd(sourcePort, newConnection);
             }
@@ -69,7 +69,7 @@ namespace NetSnifferLib.StatefulAnalysis.Tcp
                 lock (connections)
                 {
                     var newConnection = new TcpConnection(new IPEndPoint(sourceAddress, sourcePort), new IPEndPoint(IPAddress, destinationPort));
-                    newConnection.ReportSentPacket(flags, sequenceNumber, acknowledgementNumber, payloadLength);
+                    //newConnection.ReportSentPacket(flags, sequenceNumber, acknowledgementNumber, payloadLength);
 
                     connections.TryAdd(destinationPort, newConnection);
                 }

@@ -1,0 +1,464 @@
+﻿using System;
+using System.Net.NetworkInformation;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Threading.Tasks.Dataflow;
+
+using NetSnifferLib;
+using NetSnifferLib.Analysis;
+
+namespace NetSnifferApp
+{
+    public partial class ImprovedMainForm : Form
+    {
+        GeneralStatisticsForm statisticsForm;
+
+        bool isLiveCapture = true;
+        bool isCapturing = false;
+        bool isCaptureUnsaved = false;
+
+        
+        NetworkInterface selectedInterface;
+        bool isPromiscuous = true;
+        string captureFilterString = string.Empty;
+        int numberOfPackets;
+        string fileName;
+
+
+        NetSniffer sniffer;
+
+
+        bool isValidFilter = true;
+        bool isOperationalInterface = false;
+
+        public ImprovedMainForm()
+        {
+            InitializeComponent();
+        }
+
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+
+            SwitchToStartPanel();
+            var items = NetInterfaceItem.CreateItems(NetworkInterface.GetAllNetworkInterfaces());
+            interfaceComboBox.Items.AddRange(items);
+        }
+
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            if (isCaptureUnsaved)
+            {
+                var dialogResult = MessageBox.Show("Do you want to save the capture before quiting?", "Save Capture", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Error);
+
+                switch (dialogResult)
+                {
+                    case DialogResult.Yes:
+                        StopLiveCapture();
+                        bool saved = SaveCapture();
+                        
+                        if (saved)
+                            base.OnFormClosing(e);
+                        else
+                            e.Cancel = true;
+                        break;
+
+                    case DialogResult.No:
+                        base.OnFormClosing(e);
+                        break;
+
+                    case DialogResult.Cancel:
+                        e.Cancel = true;
+                        break;
+                }
+            }
+        }
+
+        private void openToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            var openCaptureDialog = new OpenCaptureDialog();
+
+            var result = openCaptureDialog.ShowDialog();
+
+            if (result == DialogResult.OK)
+            {
+                
+                if (isCapturing)
+                {
+                    if (isLiveCapture)
+                        StopLiveCapture();
+                    else
+                        StopOfflineCapture();
+                        
+                }
+                
+                isLiveCapture = false;
+                fileName = openCaptureDialog.FileName;
+                captureFilterString = openCaptureDialog.CaptureFilterString;
+                numberOfPackets = openCaptureDialog.NumberOfPackets;
+
+                if (statisticsForm != null)
+                {
+                    statisticsForm.Clear(); 
+                }
+
+                SwitchToCapturePanel();
+                AdjustCapturePanel();
+
+                StartOfflineCapture();
+            }
+        }
+
+        void StartOfflineCapture()
+        {
+            isCapturing = true;
+            isCaptureUnsaved = false;
+
+            var args = new OfflineSnifferArgs()
+            {
+                FileName = fileName,
+                CaptureFilter = captureFilterString,
+                NumberOfPackets = numberOfPackets
+            };
+
+            sniffer = new OfflineSniffer(args);
+
+            sniffer.PacketReceived += Sniffer_PacketReceived;
+            sniffer.PacketLimitReached += Sniffer_PacketLimitReached;
+            sniffer.StartAsync();
+        }
+
+        void StartLiveCapture()
+        {
+            isCapturing = true;
+            isLiveCapture = true;
+            isCaptureUnsaved = true;
+
+            var args = new LiveSnifferArgs()
+            {
+                CaptureFilter = captureFilterString,
+                NetworkInterface = selectedInterface,
+                IsPromiscuous = isPromiscuous,
+                NumberOfPackets = Convert.ToInt32(numberOfPackets)
+            };
+
+            sniffer = new LiveSniffer(args);
+            
+            isCaptureUnsaved = true;
+            isCapturing = true;
+
+            sniffer.PacketReceived += Sniffer_PacketReceived;
+            sniffer.PacketLimitReached += Sniffer_PacketLimitReached;
+            sniffer.StartAsync();
+        }
+
+        private void Sniffer_PacketLimitReached(object sender, EventArgs e)
+        {
+            isCapturing = false;
+
+            Invoke(new MethodInvoker(() =>
+            {
+                moreInfoLabel.Text = "Packet limit reached";
+                moreInfoLabel.Visible = true;
+
+                stopButton.Text = "Stopped";
+                stopButton.Enabled = false;
+            }
+            ));
+        }
+
+        private void Sniffer_PacketReceived(object sender, PcapDotNet.Packets.Packet e)
+        {
+            packetViewer.Add(e);
+        }
+
+        void StopLiveCapture()
+        {
+            isCapturing = false;
+
+            if (statisticsForm != null)
+            {
+                statisticsForm.StopRequestingUpdates();
+            }
+
+            sniffer.PacketReceived -= Sniffer_PacketReceived;
+            sniffer.Stop();
+        }
+
+        void StopOfflineCapture()
+        {
+            isCapturing = false;
+
+            if (statisticsForm != null)
+            {
+                statisticsForm.StopRequestingUpdates();
+            }
+
+            sniffer.PacketReceived -= Sniffer_PacketReceived;
+            sniffer.Stop();
+        }
+
+        void SwitchToCapturePanel()
+        {
+            SuspendLayout();          
+            startPanel.Visible = false;
+            capturePanel.Visible = true;
+            ResumeLayout();
+
+            saveAsToolStripMenuItem.Enabled = true;
+            newCaptureToolStripMenuItem.Enabled = true;
+
+            statisticsToolStripMenuItem.Enabled = true;
+            topologyToolStripMenuItem.Enabled = true;
+
+            packetViewer.Clear();
+        }
+
+        void AdjustCapturePanel()
+        {
+            if (isLiveCapture)
+            {
+                stopButton.Text = "Stop";
+                stopButton.Enabled = true;
+                restartButton.Enabled = true;
+
+                interfaceTitleLabel.Visible = true;
+                interfaceNameTextBox.Text = selectedInterface.Name;
+
+                interfaceNameTextBox.Visible = true;
+                captureFilterTextBox.Text = captureFilterString;
+
+                captureFilterTitleLabel.Visible = true;
+                captureFilterTextBox.Visible = true;
+
+                controlFlowLayoutPanel.Visible = true;
+
+                moreInfoLabel.Visible = false;
+            }
+            else
+            {
+                interfaceTitleLabel.Visible = false;
+                interfaceNameTextBox.Visible = false;
+
+                captureFilterTitleLabel.Visible = false;
+                captureFilterTextBox.Visible = false;
+
+                controlFlowLayoutPanel.Visible = false;
+
+                moreInfoLabel.Visible = true;
+            }
+        }
+
+        void SwitchToStartPanel()
+        {
+            SuspendLayout();
+            capturePanel.Visible = false;
+            startPanel.Visible = true;
+            ResumeLayout();
+
+            saveAsToolStripMenuItem.Enabled = false;
+            newCaptureToolStripMenuItem.Enabled = false;
+
+            statisticsToolStripMenuItem.Enabled = false;
+            topologyToolStripMenuItem.Enabled = false;
+        }
+
+        private void generalStatisticsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (statisticsForm != null)
+                return;
+
+            statisticsForm = new GeneralStatisticsForm
+            {
+                IsLive = isLiveCapture
+            };
+            statisticsForm.SetBaseTime(sniffer.StartingTime);
+
+            if (isLiveCapture)
+            {
+                statisticsForm.StatisticsUpdateRequested += StatisticsForm_NewStatisticsRequested;
+                statisticsForm.FormClosed += StatisticsForm_FormClosed;
+            }
+
+            statisticsForm.Show();
+            statisticsForm.StartRequestingUpdates();
+        }
+
+        private void StatisticsForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            statisticsForm = null;
+        }
+
+        private void StatisticsForm_NewStatisticsRequested(object sender, EventArgs e)
+        {
+            if (isCapturing)
+                statisticsForm.UpdateStatistics(PacketAnalyzer.Analyzer.GetGeneralStatistics());
+        }
+
+        private void interfaceComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var item = (NetInterfaceItem)(interfaceComboBox.SelectedItem);
+
+            if (item != null)
+            {
+                selectedInterface = item.NetworkInterface;
+                interfaceInfo.Interface = selectedInterface;
+
+                isOperationalInterface = IsInterfcaeOperational(selectedInterface);
+                if (isOperationalInterface)
+                {
+                    startButton.Enabled = isValidFilter;
+                }
+                else
+                {
+                    startButton.Enabled = false;
+                }
+            }
+            else
+            {
+                isOperationalInterface = false;
+                interfaceInfo.Interface = null;
+                startButton.Enabled = false;
+            }
+        }
+
+        static bool IsInterfcaeOperational(NetworkInterface @interface)
+        {
+            return @interface.OperationalStatus is OperationalStatus.Up or OperationalStatus.Unknown or OperationalStatus.Testing;
+        }
+
+        private void startButton_Click(object sender, EventArgs e)
+        {
+            SwitchToCapturePanel();
+            AdjustCapturePanel();
+
+            StartLiveCapture();
+        }
+
+        private void promiscuousCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            isPromiscuous = promiscuousCheckBox.Checked;
+        }
+
+        private void captureFilter_FilterChanged(object sender, string e)
+        {
+            isValidFilter = NetSniffer.IsValidCaptureFilter(captureFilterString);
+
+            if (isValidFilter)
+            {
+                captureFilterString = e;
+                captureFilter.IsValidFilter = true;
+                startButton.Enabled = isOperationalInterface;
+            }
+            else
+            {
+                captureFilter.IsValidFilter = false;
+                startButton.Enabled = false;
+            }
+        }
+
+        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (isCapturing)
+            {
+                MessageBox.Show("Stop cature before saving", "Capture Running", MessageBoxButtons.OKCancel, MessageBoxIcon.Error);
+            }
+            else
+            {
+                SaveCapture();
+            }
+        }
+
+        bool SaveCapture()
+        {
+            var saveCaptureDialog = new SaveCaptureDialog();
+            var result = saveCaptureDialog.ShowDialog();
+
+            if (result == DialogResult.OK)
+            {
+                sniffer.SaveCapture(saveCaptureDialog.FileName, saveCaptureDialog.DispalyFilterString);
+
+                if (isCaptureUnsaved)
+                {
+                    isCaptureUnsaved = false;
+                }
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        private void newCaptureToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (isCapturing)
+                StopLiveCapture();
+
+            if (isCaptureUnsaved)
+            {
+                var dialogResult = MessageBox.Show("Do you want to save the capture before starting a new one?", "Save Capture", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
+                
+                switch (dialogResult)
+                {
+                    case DialogResult.Yes:
+                        var saved = SaveCapture();
+
+                        if (saved)
+                        {
+                            SwitchToStartPanel();
+                        }
+                        break;
+
+                    case DialogResult.No:
+                        isCaptureUnsaved = false;
+                        SwitchToStartPanel();
+                        break;
+
+                    case DialogResult.Cancel:
+                        break;
+                }
+            }
+        }
+
+        private void restartButton_Click(object sender, EventArgs e)
+        {
+            isLiveCapture = true;
+            isCapturing = true;
+            isCaptureUnsaved = true;
+
+            if (statisticsForm != null)
+            {
+                statisticsForm.Clear();
+                statisticsForm.IsLive = true;
+                statisticsForm.StartRequestingUpdates();
+            }
+
+            AdjustCapturePanel();
+
+            packetViewer.Clear();
+            StartLiveCapture();
+        }
+
+        private void stopButton_Click(object sender, EventArgs e)
+        {
+            StopLiveCapture();
+
+            stopButton.Text = "Stopped";
+            stopButton.Enabled = false;
+        }
+
+        private void packetNumberUpDown_ValueChanged(object sender, EventArgs e)
+        {
+            numberOfPackets = (int)packetNumberUpDown.Value;
+        }
+    }
+}

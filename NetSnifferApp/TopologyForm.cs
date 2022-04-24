@@ -127,7 +127,7 @@ namespace NetSnifferApp
             var treeNode = wanTreeView.SelectedNode;
             var addr = ((WanHost)treeNode.Tag).IPAddress;
 
-            PacketAnalyzer.Ping(addr);
+            PacketAnalyzer.Analyzer.Ping(addr);
         }
 
         private void tracertTSItem_Click(object sender, EventArgs e)
@@ -135,7 +135,7 @@ namespace NetSnifferApp
             var treeNode = wanTreeView.SelectedNode;
             var addr = ((WanHost)treeNode.Tag).IPAddress;
 
-            Task.Run(() => PacketAnalyzer.Tracert(addr));
+            Task.Run(() => PacketAnalyzer.Analyzer.Tracert(addr));
         }
 
         private void ConnectionsTSItem_Click(object sender, EventArgs e)

@@ -1,26 +1,31 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
 using System.Text;
-using NetSnifferLib;
-using PcapDotNet.Packets;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks.Dataflow;
 using System.Windows.Forms;
 using System.Drawing;
+using System.Threading.Tasks;
 
-using NetSnifferLib.General;
-using NetSnifferLib.Analysis;
+using NetSnifferLib;
 using NetSnifferLib.StatefulAnalysis;
+
+using PcapDotNet.Packets;
+using PcapDotNet.Packets.Arp;
+using PcapDotNet.Packets.Ethernet;
+using PcapDotNet.Packets.IpV4;
 
 namespace NetSnifferApp
 {
     public partial class PacketViewer : UserControl
     {
-        readonly ActionBlock<Packet> itemBuilder;
+        readonly SortedDictionary<PacketData, ListViewItem> allPacketsData = new(PacketData.IdComparer);
         
-        ImageList smallImageList = new();
+        readonly ActionBlock<Packet> itemBuilder;
+
+        string displayFilterString = string.Empty;
+        DisplayFilter displayFilter = DisplayFilter.EmptyFilter;
 
         public PacketViewer()
         {
@@ -34,7 +39,7 @@ namespace NetSnifferApp
                 .SetValue(this.packetsListView, doubleBuffered, null);
             #endregion
 
-            itemBuilder = new ActionBlock<Packet>(packet => AddItemCore(packet));
+            itemBuilder = new ActionBlock<Packet>(packet => AddItemCoreAsync(packet));
 
             #region Columns
             packetsListView.Columns.Clear();
@@ -51,13 +56,11 @@ namespace NetSnifferApp
 
             packetsListView.ListViewItemSorter = new ListViewItemComparer();
             packetsListView.Sorting = SortOrder.Ascending;
-
-            smallImageList.Images.Add(Image.FromFile(@"D:\סייבר 2022\פרויקט\Sniffer\NetSniffer\NetSnifferApp\Resources\Danger.png"));
         }
 
-        class ListViewItemComparer : IComparer
+        class ListViewItemComparer : IComparer, IComparer<ListViewItem>
         {
-            readonly IComparer<PacketData> packetDataCompater = PacketData.Comparer;
+            readonly IComparer<PacketData> packetDataCompater = PacketData.IdComparer;
 
             public int Compare(object x, object y)
             {
@@ -67,6 +70,11 @@ namespace NetSnifferApp
                 }
 
                 throw new ArgumentException("Input must be of type PacketData");
+            }
+
+            public int Compare(ListViewItem x, ListViewItem y)
+            {
+                return packetDataCompater.Compare((PacketData)x.Tag, (PacketData)y.Tag);
             }
         }
 
@@ -81,30 +89,40 @@ namespace NetSnifferApp
 
         private void AddItemCore(Packet packet)
         {
-            /*            var item = CreateViewItem(packet);
-                        if (item == null)
-                            return;
+            var packetData = CreatePacketData(packet);
+            var item = CreateNewItem(packetData);
+            
+            lock (allPacketsData)
+                allPacketsData.Add(packetData, item);
 
-                        packetsListView.Invoke(new MethodInvoker(() => 
-                        {
-                            //Set item index
-                            item.SubItems[0].Text = (packetsListView.Items.Count + 1).ToString();
-                            packetsListView.Items.Add(item);
-                        }));*/
+            //packetsListView.Invoke(
+            //    new MethodInvoker(() =>
+            //    {
+            //        packetsListView.Items.Add(item);
+            //        packetsListView.Update();
+            //    }));
 
-            var item = CreateNewItem(packet);
-            packetsListView.Invoke(
-                new MethodInvoker(() =>
-                {
-                    packetsListView.Items.Add(item);
-                    ((PacketData)item.Tag).StartAnalysis();
-                }));
+            packetData.Analyze();
+        }
+
+        private Task AddItemCoreAsync(Packet packet)
+        {
+            return Task.Run(() => AddItemCore(packet));
         }
 
         public void Clear()
         {
             packetsListView.Items.Clear();
             packetsListView.Invalidate();
+
+            lock (allPacketsData)
+                allPacketsData.Clear();
+
+            displayFilterString = string.Empty;
+            displayFilter = DisplayFilter.EmptyFilter;
+
+            displayFilterControl.Filter = string.Empty;
+            displayFilterControl.IsValidFilter = true;
         }
 
         public void Add(Packet packet)
@@ -118,30 +136,21 @@ namespace NetSnifferApp
                 itemBuilder.Post(packet);
         }
 
-        private ListViewItem CreateViewItem(Packet packet)
-        {
-            var items = GetSubitems(packet);
-            if (items == null)
-                return null;
-
-            var listViewItem = new ListViewItem(items)
-            {
-                Tag = packet
-            };
-
-            return listViewItem;
-        }
-
-        ListViewItem CreateNewItem(Packet packet)
+        PacketData CreatePacketData(Packet packet)
         {
             int id = IdManager.GetNewPacketId(packet);
 
             var packetData = new PacketData(id, packet);
-            
+
             packetData.DescriptionReady += FillPacketDescription;
             packetData.AttackDetected += MarkAttack;
 
-            var subItems = new string[7] { id.ToString(), "", "", "", "", "", "" };
+            return packetData;
+        }
+
+        static ListViewItem CreateNewItem(PacketData packetData)
+        {
+            var subItems = new string[7] { packetData.PacketId.ToString(), "", "", "", "", "", "" };
 
             var item = new ListViewItem(subItems)
             {
@@ -151,63 +160,94 @@ namespace NetSnifferApp
             return item;
         }
 
-        private string[] GetSubitems(Packet packet)
-        {
-            string[] subItems = new string[7];
-            subItems[0] = "";
-
-            
-            if (PacketAnalyzer.IsEthernet(packet))
-            {
-                PacketDescription packetDescription = PacketAnalyzer.AnalyzePacket(packet, 0);
-
-                subItems[1] = packetDescription.TimeStamp.ToString("HH:mm:ss:fff");
-                subItems[2] = packetDescription.Protocol;
-                subItems[3] = AddressFormat.ToString(packetDescription.Source);
-                subItems[4] = AddressFormat.ToString(packetDescription.Destination);
-                subItems[5] = packetDescription.Length.ToString();
-                subItems[6] = packetDescription.Info;
-            }
-            else
-            {
-                subItems[1] = "";
-                subItems[2] = "";
-                subItems[3] = "";
-                subItems[4] = "";
-                subItems[5] = "";
-                subItems[6] = "Only Ethernet packets are supported";
-            }
-
-            return subItems;
-        }
-
         void FillPacketDescription(int pakcetId, PacketDescription description)
         {
-            var item = (ListViewItem)packetsListView.Invoke(new Func<ListViewItem>(() => packetsListView.Items[pakcetId]));
+            var packetData = PacketData.GetPacketDataByPacketId(pakcetId);
+
+            ListViewItem item;
+            lock (allPacketsData)
+                item = allPacketsData[packetData];
+
             var subItems = item.SubItems;
+
+            var matches = displayFilter.PacketMatches(packetData);
 
             packetsListView.Invoke(new MethodInvoker(() =>
             {
+                item.BackColor = GetPacketColors(IdManager.GetPacket(pakcetId), out Color foreColor);
+                item.ForeColor = foreColor;
                 subItems[1].Text = description.TimeStamp.ToString();
                 subItems[2].Text = description.Protocol;
                 subItems[3].Text = AddressFormat.ToString(description.Source);
                 subItems[4].Text = AddressFormat.ToString(description.Destination);
                 subItems[5].Text = description.Length.ToString();
                 subItems[6].Text = description.Info;
+
+                if (matches && item.ListView == null)
+                    packetsListView.Items.Add(item);
             }));
+        }
+
+        static Color GetPacketColors(Packet packet, out Color foreColor)
+        {
+            foreColor = Color.Black;
+
+            if (packet.DataLink.Kind != DataLinkKind.Ethernet)
+                return Color.Gray;
+
+            Color color = Color.White;
+
+            if (packet.Ethernet.EtherType == EthernetType.Arp)
+            {
+                if (packet.Ethernet.Arp.Operation == ArpOperation.Request)
+                    color = Color.Gold;
+                else
+                    color = Color.Goldenrod;
+            }
+            else if (packet.Ethernet.EtherType == EthernetType.IpV4)
+            {
+                color = Color.Olive;
+                if (packet.Ethernet.IpV4.Protocol == IpV4Protocol.Udp)
+                {
+                    color = Color.DarkViolet;
+                    foreColor = Color.White;
+                }
+                else if (packet.Ethernet.IpV4.Protocol == IpV4Protocol.Tcp)
+                {
+                    color = Color.ForestGreen;
+                }
+            }
+            else if (packet.Ethernet.EtherType == EthernetType.IpV6)
+            {
+                color = Color.OliveDrab;
+
+                if (packet.Ethernet.IpV4.Protocol == IpV4Protocol.Udp)
+                {
+                    color = Color.DarkViolet;
+                    foreColor = Color.White;
+                }
+                else if (packet.Ethernet.IpV4.Protocol == IpV4Protocol.Tcp)
+                {
+                    color = Color.ForestGreen;
+                }
+            }
+            
+            return color;
         }
 
         void MarkAttack(int packetId, Attack attack)
         {
             packetsListView.Invoke(new MethodInvoker(() =>
-            { 
-                var item =  packetsListView.Items[packetId]; 
+            {
+                ListViewItem item;
+                lock (allPacketsData)
+                    item = allPacketsData[PacketData.GetPacketDataByPacketId(packetId)];
+
                 item.ImageIndex = 0;
                 item.BackColor = Color.Red;
                 item.ForeColor = Color.White;
                 Update();
             }));
-
         }
 
         private void packetsListView_SelectedIndexChanged(object sender, System.EventArgs e)
@@ -220,8 +260,7 @@ namespace NetSnifferApp
                 
                 byte[] buffer = packetData.Packet.Buffer;
 
-                binaryDataTextBox.Text = Convert.ToHexString(buffer);
-
+                FillBinaryDataTextBox(Convert.ToHexString(buffer));
                 Attack[] attacks = packetData.Attacks;
 
                 attacksComboBox.Items.AddRange(attacks);
@@ -232,6 +271,36 @@ namespace NetSnifferApp
 
                 attacksComboBox.Items.Clear();
                 attackTextBox.Text = string.Empty;
+            }
+        }
+
+        void FillBinaryDataTextBox(string binaryStirng)
+        {
+            var width = binaryDataTextBox.Width;
+
+            var font = binaryDataTextBox.Font;
+
+            var charsInGroup = 4;
+            var widthsOfGroup = TextRenderer.MeasureText(new string('F', charsInGroup + 1), font).Width;
+
+            int numberOfGroupsPerLine = width / widthsOfGroup;
+
+            int i = 0;
+
+            foreach (var group in Enumerable.Range(0, binaryStirng.Length / charsInGroup).Select(i => binaryStirng.Substring(i * charsInGroup, charsInGroup)))
+            {
+                if (i == numberOfGroupsPerLine)
+                {
+                    binaryDataTextBox.Text += group;
+                    binaryDataTextBox.Text += "\r\n";
+                    i = 0;
+                }
+                else
+                {
+                    binaryDataTextBox.Text += group;
+                    binaryDataTextBox.Text += " ";
+                    i++;
+                }
             }
         }
 
@@ -251,6 +320,50 @@ namespace NetSnifferApp
             {
                 attackTextBox.Text = string.Empty;
             }
+        }
+
+        void UpdateVisiblePackets()
+        {
+            lock (allPacketsData)
+            {
+                packetsListView.BeginUpdate();
+                foreach (var (packetData, listViewItem) in allPacketsData)
+                {
+                    if (displayFilter.PacketMatches(packetData))
+                    {
+                        if (listViewItem.ListView == null)
+                        {
+                            packetsListView.Items.Add(listViewItem);
+                        }
+                    }
+                    else
+                    {
+                        if (listViewItem.ListView != null)
+                            packetsListView.Items.Remove(listViewItem);
+                    }
+                }
+                packetsListView.EndUpdate();
+            }
+        }
+
+        private void displayFilter1_FilterChanged(object sender, string e)
+        {
+             displayFilterString = e;
+
+            if (DisplayFilter.TryParse(displayFilterString, ref displayFilter))
+            {
+                displayFilterControl.IsValidFilter = true;
+                UpdateVisiblePackets();
+            }
+            else
+            {
+                displayFilterControl.IsValidFilter = false;
+            }
+        }
+
+        private void binaryDataTextBox_Resize(object sender, EventArgs e)
+        {
+            FillBinaryDataTextBox(binaryDataTextBox.Text);
         }
     }
 }

@@ -48,26 +48,11 @@ namespace NetSnifferLib.StatefulAnalysis.Arp
         static public void ReportRequest(ArpDatagram request, int packetId)
         {
             AllDatagrams.Add(request);
-
-            //ArpDatagram originalRequest = UnansweredRequestsTokenSources.Keys.LastOrDefault(request => request.ContentEquals(request));
-
-            //if (originalRequest != null)
-            //    ArpMessage.RegisterDuplicate(originalRequest, request);
-            //else
-            //    StartTimeoutTask(request);
         }
 
         static public void ReportReply(ArpDatagram reply, int packetId)
         {
             AllDatagrams.Add(reply);
-
-            //ArpRequest request = UnansweredRequestsTokenSources.Keys.FirstOrDefault(request => reply.MatchesRequest(request));
-
-            //if (request != null)
-            //{
-            //    UnansweredRequestsTokenSources.Remove(request, out CancellationTokenSource source);
-            //    source.Cancel();
-            //}
 
             var senderPhysicalAddress = AddressConvert.ToPhysicalAddress(reply.SenderHardwareAddress);
             var senderIPAddress = AddressConvert.ToIPAddress(reply.SenderProtocolIpV4Address);
@@ -77,10 +62,10 @@ namespace NetSnifferLib.StatefulAnalysis.Arp
 
             LanHost targetHost = null, otherHost = null;
 
-            var allHosts = PacketAnalyzer.GetOriginalLanHosts();
+            var allHosts = PacketAnalyzer.Analyzer.GetOriginalLanHosts();
 
             lock (allHosts)
-                targetHost = PacketAnalyzer.GetOriginalLanHosts().First(host => host.PhysicalAddress.Equals(targetPhysicalAddress));
+                targetHost = PacketAnalyzer.Analyzer.GetOriginalLanHosts().First(host => host.PhysicalAddress.Equals(targetPhysicalAddress));
 
             targetHost.ArpTable.UpdateEntry(senderIPAddress, senderPhysicalAddress, IdManager.GetPacket(packetId).Timestamp, packetId);
 

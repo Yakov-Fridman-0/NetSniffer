@@ -13,105 +13,108 @@ using NetSnifferLib.Statistics;
 
 namespace NetSnifferLib.Analysis
 {
-    public static class PacketAnalyzer
+    public class PacketAnalyzer
     {
-        static readonly TopologyBuilder topologyBuilder = new();
+        public static PacketAnalyzer Analyzer { get; private set; } = new();
 
-        static readonly AnalyzerEventHandler analyzerEventHandler = new();
-
-        static readonly Dictionary<TracertResults, bool> tracertResults = new();
-
-        public static NetSniffer NetSniffer { get; set; } = null;
-
-        public static IPAddress LocalComputerIPAddress { get; set; } = null;
-
-        public static PhysicalAddress LocalComputerPhysicalAddress { get; set; } = null;
-
-        class AnalyzerEventHandler
+        public static void CreateNewAnalyzer()
         {
-            public void EthernetAnalyzer_PacketCaptured(object sender, DataLinkPacketEventArgs e)
-            {
-                var source = e.Source;
-                var destination = e.Destination;
-
-                topologyBuilder.AddHost(source);
-                topologyBuilder.AddHost(destination);
-            }
-
-            public void IpV4Analyzer_PacketCaptured(object sender, NetworkPacketEventArgs e)
-            {
-                var sourceIPAddress = e.SourceIPAddress;
-                var sourcePhysicalAddress = e.SourcePhysicalAddress;
-
-                var destinationIPAddress = e.DestinationIPAddress;
-                var destinationPhysicalAddress = e.DestinationPhysicalAddress;
-
-                topologyBuilder.AddHost(sourcePhysicalAddress, sourceIPAddress);
-                topologyBuilder.AddHost(destinationPhysicalAddress, destinationIPAddress);
-            }
-
-            public void ArpAnalyzer_PayloadIndicatesHost(object sender, PayloadIndicatesHostEventArgs e)
-            {
-                var ipAddress = e.IPAddress;
-                var physicalAddress = e.PhysicalAddress;
-                topologyBuilder.AddHostInLan(physicalAddress, ipAddress);
-            }
-
-            public void DhcpAnalyzer_ServerDetected(object sender, IPAddress e)
-            {
-                topologyBuilder.AddDhcpServer(e);
-            }
-
-            public void DnsAnalyzer_ServerDetected(object sender, IPAddress e)
-            {
-                topologyBuilder.AddDnsServer(e);
-            }
-
-            public void IcmpAnalyzer_RegisteredPingReply(object sender, PingReplyEventArgs e)
-            {
-                IPAddress src = e.Source;
-                //byte id = (byte)e.Identifier;
-
-                var tracertResult = tracertResults.FirstOrDefault((kvp) => kvp.Key.Destination.Equals(src)).Key;
-                tracertResult.IsComplete = true;
-
-                topologyBuilder.IntegrateTracertResults(tracertResult);
-            }
-
-            public void IcmpAnalyzer_RegisteredPingRequestTimeToLiveExceeded(object sender, PingRequestTimeToLiveExeededEventArgs e)
-            {
-                IPAddress src = e.Source;
-                IPAddress intendedSrc = e.ExpectedSource;
-
-                var tracertResult = tracertResults.FirstOrDefault((kvp) => kvp.Key.Destination.Equals(src)).Key;
-                tracertResults[tracertResult] = true;
-                int hops = e.Hops;
-
-                tracertResult.AddHop(src, hops);
-            }
+            Analyzer = new();
         }
 
-        static PacketAnalyzer()
+        readonly TopologyBuilder topologyBuilder = new();
+
+        readonly Dictionary<TracertResults, bool> tracertResults = new();
+
+        public NetSniffer Sniffer { get; set; } = null;
+
+        public IPAddress LocalComputerIPAddress { get; set; } = null;
+
+        public PhysicalAddress LocalComputerPhysicalAddress { get; set; } = null;
+
+        void EthernetAnalyzer_PacketCaptured(object sender, DataLinkPacketEventArgs e)
         {
-            DatagramAnalyzer.IcmpAnalyzer.RegisteredPingReply += analyzerEventHandler.IcmpAnalyzer_RegisteredPingReply;
-            DatagramAnalyzer.IcmpAnalyzer.RegisteredPingRequestTimeToLiveExceeded += analyzerEventHandler.IcmpAnalyzer_RegisteredPingRequestTimeToLiveExceeded;
+            var source = e.Source;
+            var destination = e.Destination;
 
-            DatagramAnalyzer.EthernetAnalyzer.PacketCaptured += analyzerEventHandler.EthernetAnalyzer_PacketCaptured;
-            DatagramAnalyzer.IpV4Analyzer.PacketCaptured += analyzerEventHandler.IpV4Analyzer_PacketCaptured;
-
-            DatagramAnalyzer.DhcpAnalyzer.ServerDetected += analyzerEventHandler.DhcpAnalyzer_ServerDetected;
-            DatagramAnalyzer.DnsAnalyzer.ServerDetected += analyzerEventHandler.DnsAnalyzer_ServerDetected;
-
-            DatagramAnalyzer.ArpAnalyzer.PayloadIndicatesHost += analyzerEventHandler.ArpAnalyzer_PayloadIndicatesHost;
+            topologyBuilder.AddHost(source);
+            topologyBuilder.AddHost(destination);
         }
 
-        public static int TransmittedPackets { get; private set; } = 0;
+        void IpV4Analyzer_PacketCaptured(object sender, NetworkPacketEventArgs e)
+        {
+            var sourceIPAddress = e.SourceIPAddress;
+            var sourcePhysicalAddress = e.SourcePhysicalAddress;
 
-        public static int TransmittedBytes { get; private set; } = 0;
+            var destinationIPAddress = e.DestinationIPAddress;
+            var destinationPhysicalAddress = e.DestinationPhysicalAddress;
 
-        public static bool IsEthernet(Packet packet) => packet.DataLink.Kind == DataLinkKind.Ethernet;
+            topologyBuilder.AddHost(sourcePhysicalAddress, sourceIPAddress);
+            topologyBuilder.AddHost(destinationPhysicalAddress, destinationIPAddress);
+        }
 
-        public static PacketDescription AnalyzePacket(Packet packet, int packetId)
+        void ArpAnalyzer_PayloadIndicatesHost(object sender, PayloadIndicatesHostEventArgs e)
+        {
+            var ipAddress = e.IPAddress;
+            var physicalAddress = e.PhysicalAddress;
+            topologyBuilder.AddHostInLan(physicalAddress, ipAddress);
+        }
+
+        void DhcpAnalyzer_ServerDetected(object sender, IPAddress e)
+        {
+            topologyBuilder.AddDhcpServer(e);
+        }
+
+        void DnsAnalyzer_ServerDetected(object sender, IPAddress e)
+        {
+            topologyBuilder.AddDnsServer(e);
+        }
+
+        void IcmpAnalyzer_RegisteredPingReply(object sender, PingReplyEventArgs e)
+        {
+            IPAddress src = e.Source;
+            //byte id = (byte)e.Identifier;
+
+            var tracertResult = tracertResults.FirstOrDefault((kvp) => kvp.Key.Destination.Equals(src)).Key;
+            tracertResult.IsComplete = true;
+
+            topologyBuilder.IntegrateTracertResults(tracertResult);
+        }
+
+        void IcmpAnalyzer_RegisteredPingRequestTimeToLiveExceeded(object sender, PingRequestTimeToLiveExeededEventArgs e)
+        {
+            IPAddress src = e.Source;
+            IPAddress intendedSrc = e.ExpectedSource;
+
+            var tracertResult = tracertResults.FirstOrDefault((kvp) => kvp.Key.Destination.Equals(src)).Key;
+            tracertResults[tracertResult] = true;
+            int hops = e.Hops;
+
+            tracertResult.AddHop(src, hops);
+        }
+       
+
+        private PacketAnalyzer()
+        {
+            DatagramAnalyzer.IcmpAnalyzer.RegisteredPingReply += IcmpAnalyzer_RegisteredPingReply;
+            DatagramAnalyzer.IcmpAnalyzer.RegisteredPingRequestTimeToLiveExceeded += IcmpAnalyzer_RegisteredPingRequestTimeToLiveExceeded;
+
+            DatagramAnalyzer.EthernetAnalyzer.PacketCaptured += EthernetAnalyzer_PacketCaptured;
+            DatagramAnalyzer.IpV4Analyzer.PacketCaptured += IpV4Analyzer_PacketCaptured;
+
+            DatagramAnalyzer.DhcpAnalyzer.ServerDetected += DhcpAnalyzer_ServerDetected;
+            DatagramAnalyzer.DnsAnalyzer.ServerDetected += DnsAnalyzer_ServerDetected;
+
+            DatagramAnalyzer.ArpAnalyzer.PayloadIndicatesHost += ArpAnalyzer_PayloadIndicatesHost;
+        }
+
+        public int TransmittedPackets { get; private set; } = 0;
+
+        public int TransmittedBytes { get; private set; } = 0;
+
+        public bool IsEthernet(Packet packet) => packet.DataLink.Kind == DataLinkKind.Ethernet;
+
+        public PacketDescription AnalyzePacket(Packet packet, int packetId)
         {
             TransmittedPackets++;
             TransmittedBytes += packet.Length;
@@ -166,7 +169,7 @@ namespace NetSnifferLib.Analysis
             };
         }
 
-        public static GeneralStatistics GetGeneralStatistics()
+        public GeneralStatistics GetGeneralStatistics()
         {
             return new GeneralStatistics()
             {
@@ -190,12 +193,12 @@ namespace NetSnifferLib.Analysis
             };
         }
 
-        public static void Ping(IPAddress destination)
+        public void Ping(IPAddress destination)
         {
-            NetSniffer.Ping(destination, 128);
+            ((LiveSniffer)Sniffer).Ping(destination, 128);
         }
 
-        public static void Tracert(IPAddress destination)
+        public void Tracert(IPAddress destination)
         {
             int maxHops = 30;
 
@@ -204,7 +207,7 @@ namespace NetSnifferLib.Analysis
 
             for (int hops = 1; hops < maxHops; hops++)
             {
-                PingReply reply = NetSniffer.Ping(destination, (byte)hops);
+                PingReply reply = ((LiveSniffer)Sniffer).Ping(destination, (byte)hops);
 
                 switch (reply.Status)
                 {
@@ -227,22 +230,22 @@ namespace NetSnifferLib.Analysis
             topologyBuilder.IntegrateTracertResults(results);
         }
 
-        public static LanMap GetLanMap()
+        public LanMap GetLanMap()
         {
             return topologyBuilder.LanMap;
         }
 
-        public static List<LanHost> GetOriginalLanHosts()
+        public List<LanHost> GetOriginalLanHosts()
         {
             return topologyBuilder.GetOriginalLanHosts();
         }
 
-        public static List<WanHost> GetOriginalWanHosts()
+        public List<WanHost> GetOriginalWanHosts()
         {
             return topologyBuilder.GetOriginalWanHosts();
         }
 
-        public static WanMap GetWanMap()
+        public WanMap GetWanMap()
         {
             return topologyBuilder.WanMap;
         }

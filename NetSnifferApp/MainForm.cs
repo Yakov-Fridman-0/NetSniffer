@@ -14,8 +14,8 @@ namespace NetSnifferApp
 {
     public partial class MainForm : Form
     {
-        private SniffingOptions _sniffingOptions;
-        private NetSniffer _netSniffer;
+        private LiveSnifferArgs snifferArgs;
+        private NetSniffer sniffer;
 
         GeneralStatisticsForm statisticsForm;
         GraphicalTopologyForm topologyForm;
@@ -25,8 +25,8 @@ namespace NetSnifferApp
         {
             InitializeComponent();
 
-            _sniffingOptions = new SniffingOptions();
-            _netSniffer = null;
+            snifferArgs = new LiveSnifferArgs();
+            sniffer = null;
         }
 
         protected override void OnLoad(EventArgs e)
@@ -47,7 +47,7 @@ namespace NetSnifferApp
 
                 return;
             }
-            if (!packetFilter.ValidFilter)
+            if (!packetFilter.IsValidFilter)
             {
                 var text = "Please choose a valid capture filter";
                 var caption = "Sniffing Error";
@@ -67,10 +67,10 @@ namespace NetSnifferApp
 
             PhysicalAddress myPhysicalAddress =  selectedInterface.GetPhysicalAddress();
 
-            PacketAnalyzer.LocalComputerIPAddress = localComputerIPv4Address;
-            PacketAnalyzer.LocalComputerPhysicalAddress = myPhysicalAddress;
+            PacketAnalyzer.Analyzer.LocalComputerIPAddress = localComputerIPv4Address;
+            PacketAnalyzer.Analyzer.LocalComputerPhysicalAddress = myPhysicalAddress;
 
-            _sniffingOptions.NetworkInterface = selectedInterface;
+            snifferArgs.NetworkInterface = selectedInterface;
 
             StartSniffingAsync();
         }
@@ -82,13 +82,13 @@ namespace NetSnifferApp
 
         private void StartSniffing()
         {
-            _netSniffer = NetSniffer.CreateLiveSniffer(_sniffingOptions);
-            PacketAnalyzer.NetSniffer = _netSniffer;
+            sniffer = new LiveSniffer(snifferArgs);
+            PacketAnalyzer.Analyzer.Sniffer = sniffer;
 
-            _sniffingOptions = new SniffingOptions();
+            snifferArgs = new LiveSnifferArgs();
 
-            _netSniffer.PacketReceived += NetSniffer_PacketReceived;
-            _netSniffer.Start();
+            sniffer.PacketReceived += NetSniffer_PacketReceived;
+            sniffer.Start();
         }
 
         private void NetSniffer_PacketReceived(object sender, PcapDotNet.Packets.Packet e)
@@ -105,7 +105,7 @@ namespace NetSnifferApp
         private void BtnStop_Click(object sender, EventArgs e)
         {
 
-            var netSniffer = _netSniffer;
+            var netSniffer = sniffer;
 
             if (netSniffer == null)
                 return;
@@ -223,14 +223,14 @@ namespace NetSnifferApp
             GeneralStatisticsForm form = new();
 
             statisticsForm = form;
-            statisticsForm.NewStatisticsRequired += statisticsForm_NewStatisticsRequired;
+            statisticsForm.StatisticsUpdateRequested += statisticsForm_NewStatisticsRequired;
 
             form.Show();
         }
 
         private void statisticsForm_NewStatisticsRequired(object sender, EventArgs e)
         {
-            statisticsForm.SendNewStatistics(PacketAnalyzer.GetGeneralStatistics());
+            statisticsForm.UpdateStatistics(PacketAnalyzer.Analyzer.GetGeneralStatistics());
         }
 
         private void PacketFilter_FilterChanged(object sender, string e)
@@ -240,14 +240,14 @@ namespace NetSnifferApp
 
             string filter = e;
 
-            if (NetSniffer.IsValidFilter(filter))
+            if (NetSniffer.IsValidCaptureFilter(filter))
             {
-                packetFilter.ValidFilter = true;
-                _sniffingOptions.Filter = filter;
+                packetFilter.IsValidFilter = true;
+                snifferArgs.CaptureFilter = filter;
             }
             else
             {
-                packetFilter.ValidFilter = false;
+                packetFilter.IsValidFilter = false;
             }
         }
 
@@ -260,8 +260,8 @@ namespace NetSnifferApp
 
         public void UpdateTopology()
         {
-            topologyForm.UpdateLanMap(PacketAnalyzer.GetLanMap());
-            topologyForm.UpdateWanMap(PacketAnalyzer.GetWanMap());
+            topologyForm.UpdateLanMap(PacketAnalyzer.Analyzer.GetLanMap());
+            topologyForm.UpdateWanMap(PacketAnalyzer.Analyzer.GetWanMap());
         }
 
         private void TopologyForm_TopologyUpdateRequired(object sender, EventArgs e)
