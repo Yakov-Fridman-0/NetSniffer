@@ -41,7 +41,7 @@ namespace NetSnifferApp
 
             connectionsListBox.Items.CopyTo(oldConnections, 0);
 
-            connectionsListBox.Items.AddRange(oldConnections.Select((conn) => (WanHost)conn).Except(connections, new WanHost.SameIPAddress()).ToArray());
+            //connectionsListBox.Items.AddRange(oldConnections.Select((conn) => (WanHost)conn).Except(connections, new WanHost.SameIPAddress()).ToArray());
         }
 
         public static ConnectionsForm CreateConnectionsForm(IPAddress hostAddress, List<WanHost> connections)

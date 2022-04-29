@@ -116,14 +116,12 @@ namespace NetSnifferLib.Topology
                             nextHost = GetHost(nextAddr);
                         }
 
-                        if (!currHost.ConnectedHosts.Contains(nextHost, WanHost.IPAddressComparer))
+                        if (!currHost.ConnectedHosts.Contains(nextHost))//, WanHost.IPAddressComparer))
                             currHost.ConnectedHosts.Add(nextHost);
 
-                        if (!nextHost.ConnectedHosts.Contains(currHost, WanHost.IPAddressComparer))
+                        if (!nextHost.ConnectedHosts.Contains(currHost))//, WanHost.IPAddressComparer))
                             nextHost.ConnectedHosts.Add(currHost);
                     }
-
-                    
                 }
             }
         }

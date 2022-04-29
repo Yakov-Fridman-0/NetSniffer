@@ -12,6 +12,10 @@ namespace NetSnifferApp
 {
     public partial class DisplayFilterControl : UserControl
     {
+        static readonly Color blankColor = Color.FromKnownColor(KnownColor.Window);
+        static readonly Color validColor = Color.FromArgb(0, 222, 11); //Color.FromArgb(124, Color.Green);
+        static readonly Color invalidColor = Color.FromArgb(247, 95, 45); //Color.FromArgb(124, Color.Red);
+
         string _filter = string.Empty;
         public string Filter 
         {
@@ -45,9 +49,9 @@ namespace NetSnifferApp
                 _isValidFilter = value;
 
                 if (_isValidFilter)
-                    filterTextBox.BackColor = string.IsNullOrWhiteSpace(filterTextBox.Text)  ? Color.FromKnownColor(KnownColor.Window) : Color.Green; //Color.FromArgb(124, Color.Green);
+                    filterTextBox.BackColor = IsBlank()  ? blankColor : validColor; //Color.FromArgb(124, Color.Green);
                 else
-                    filterTextBox.BackColor = Color.Red; //Color.FromArgb(124, Color.Red);
+                    filterTextBox.BackColor = invalidColor; //Color.FromArgb(124, Color.Red);
             }
         }
 
@@ -56,6 +60,11 @@ namespace NetSnifferApp
             _filter = filterTextBox.Text;
 
             FilterChanged?.Invoke(this, _filter);
+        }
+
+        bool IsBlank()
+        {
+            return string.IsNullOrWhiteSpace(Filter);
         }
     }
 }

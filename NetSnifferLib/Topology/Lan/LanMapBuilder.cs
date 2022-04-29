@@ -58,23 +58,23 @@ namespace NetSnifferLib.Topology
                 return hosts.Any((host) => ipAddress.Equals(host.IPAddress));
         }
 
-        public bool RemoveHost(PhysicalAddress physicalAddress)
+/*        public bool RemoveHost(PhysicalAddress physicalAddress)
         {
             lock (hosts)
                 return hosts.Remove(
                     hosts.Find(
                         (host) => 
                         host.PhysicalAddress.Equals(physicalAddress)));
-        }
+        }*/
 
-        public bool RemoveHost(PhysicalAddress physicalAddress, IPAddress ipAddress)
+/*        public bool RemoveHost(PhysicalAddress physicalAddress, IPAddress ipAddress)
         {
             return hosts.Remove(
                 hosts.Find(
                     (host) =>
                     physicalAddress.Equals(host.PhysicalAddress) &&
                     ipAddress.Equals(host.IPAddress)));
-        }
+        }*/
 
         public IPAddress GetIPAddress(PhysicalAddress physicalAddress)
         {
@@ -90,26 +90,28 @@ namespace NetSnifferLib.Topology
 
         public bool ContainsRouter(PhysicalAddress physicalAddress)
         {
-            return routers.Any((router) => router.PhysicalAddress.Equals(physicalAddress));
+            lock (routers)
+                return routers.Any((router) => router.PhysicalAddress.Equals(physicalAddress));
         }
 
         public bool ContainsRouter(PhysicalAddress physicalAddress, IPAddress ipAddress)
         {
-            return routers.Any(
-                (router) =>
-                physicalAddress.Equals(router.PhysicalAddress) &&
-                ipAddress.Equals(router.IPAddress));
+            lock (routers)
+                return routers.Any(
+                    (router) =>
+                    physicalAddress.Equals(router.PhysicalAddress) &&
+                    ipAddress.Equals(router.IPAddress));
         }
 
-        public void AddRouter(PhysicalAddress physicalAddress)
+/*        public void AddRouter(PhysicalAddress physicalAddress)
         {
             routers.Add(new Router(physicalAddress));
-        }
+        }*/
 
-        public void AddRouter(PhysicalAddress physicalAddress, IPAddress ipAddress)
+/*        public void AddRouter(PhysicalAddress physicalAddress, IPAddress ipAddress)
         {
             routers.Add(new Router(physicalAddress, ipAddress));
-        }
+        }*/
 
         public void MakeHostRouter(PhysicalAddress physicalAddress)
         {
@@ -118,24 +120,26 @@ namespace NetSnifferLib.Topology
             lock (hosts)
                 host = hosts.Find((host) => physicalAddress.Equals(host.PhysicalAddress));
 
-            Router newRouter = host.IPAddress != null ? new Router(physicalAddress, host.IPAddress) : new Router(physicalAddress);
-            
-            lock (hosts)
-            {
-                hosts.Remove(host);
-                hosts.Add(newRouter);
+            /*            Router newRouter = host.IPAddress != IPAddress.Any ? new Router(physicalAddress, host.IPAddress) : new Router(physicalAddress);
 
-                if (ContainsDhcpServer(physicalAddress, host.IPAddress))
-                {
-                    dhcpServers.Remove(host);
-                    dhcpServers.Add(newRouter);
-                }
-            }
+                        lock (hosts)
+                        {
+                            hosts.Remove(host);
+                            hosts.Add(newRouter);
 
-            routers.Add(newRouter);
+                            if (ContainsDhcpServer(physicalAddress, host.IPAddress))
+                            {
+                                dhcpServers.Remove(host);
+                                dhcpServers.Add(newRouter);
+                            }
+                        }*/
+
+            //routers.Add(newRouter);
+            lock (routers)
+                routers.Add(host);
         }
 
-        public void AssignIPtoRouter(PhysicalAddress physicalAddress, IPAddress ipAddress)
+/*        public void AssignIPtoRouter(PhysicalAddress physicalAddress, IPAddress ipAddress)
         {
             routers.Find((router) => physicalAddress.Equals(router.PhysicalAddress)).IPAddress = ipAddress;
         }
@@ -143,7 +147,7 @@ namespace NetSnifferLib.Topology
         public void AddDhcpServer(PhysicalAddress physicalAddress, IPAddress iPAddress)
         {
             dhcpServers.Add(new DhcpServer(physicalAddress, iPAddress));
-        }
+        }*/
 
 
         public bool ContainsDhcpServer(PhysicalAddress physicalAddress, IPAddress ipAddress)
@@ -157,36 +161,38 @@ namespace NetSnifferLib.Topology
                 return false;
         }
 
-        public void MakeHostDhcpServer(PhysicalAddress physicalAddress, IPAddress ipAddress)
+        public void MakeHostDhcpServer(PhysicalAddress physicalAddress)
         {
             LanHost host = null;
             
             lock (hosts)
                  host = hosts.Find((h) => physicalAddress.Equals(h.PhysicalAddress));
 
-            DhcpServer newDhcpServer = new(physicalAddress, ipAddress);
+            /*            DhcpServer newDhcpServer = new(physicalAddress, ipAddress);
 
-            lock (hosts)
-            {
-                hosts.Remove(host);
-                hosts.Add(newDhcpServer);
+                        lock (hosts)
+                        {
+                            hosts.Remove(host);
+                            hosts.Add(newDhcpServer);
 
-                if (ContainsRouter(physicalAddress))
-                {
-                    routers.Remove(host);
-                    routers.Add(newDhcpServer);
-                }
-            }
+                            if (ContainsRouter(physicalAddress))
+                            {
+                                routers.Remove(host);
+                                routers.Add(newDhcpServer);
+                            }
+                        }*/
 
-            dhcpServers.Add(newDhcpServer);
+            //dhcpServers.Add(newDhcpServer);
+            dhcpServers.Add(host);
         }
 
         public bool ContainsDhcpServer(IPAddress ipAddress)
         {
-            return dhcpServers.Any((dhcpServer) => ipAddress.Equals(dhcpServer.IPAddress));
+            lock (dhcpServers)
+                return dhcpServers.Any((dhcpServer) => ipAddress.Equals(dhcpServer.IPAddress));
         }
 
-        public LanMap LanMap => new(hosts, routers, dhcpServers);
+        internal LanMap LanMap => new(hosts, routers, dhcpServers);
 
         internal List<LanHost> GetOriginalLanHosts()
         {

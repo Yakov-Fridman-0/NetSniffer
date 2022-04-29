@@ -8,46 +8,52 @@ using NetSnifferLib.StatefulAnalysis.Arp;
 
 namespace NetSnifferLib.Topology
 {
-    public class LanHost : IPhysicalAddress, IIPAddress, ICloneable, IEquatable<LanHost>
+    public class LanHost : IPhysicalAddress, IIPAddress//, ICloneable, IEquatable<LanHost>
     {
-        public PhysicalAddress PhysicalAddress { get; protected set; } = null;
+        public PhysicalAddress PhysicalAddress { get; internal set; } = null;
 
-        public static SamePhysicalAddress PhysicalAddressComparer { get; } = new();
+        /*        public static SamePhysicalAddress PhysicalAddressComparer { get; } = new();
 
-        public class SamePhysicalAddress : IEqualityComparer<LanHost>
+                public class SamePhysicalAddress : IEqualityComparer<LanHost>
+                {
+                    public bool Equals(LanHost x, LanHost y)
+                    {
+                        return x.PhysicalAddress.Equals(y.PhysicalAddress);
+                    }
+
+                    public int GetHashCode([DisallowNull] LanHost obj)
+                    {
+                        return obj.PhysicalAddress.GetHashCode();
+                    }
+                }*/
+
+        IPAddress _ipAddress = IPAddress.Any;
+        public IPAddress IPAddress
         {
-            public bool Equals(LanHost x, LanHost y)
-            {
-                return x.PhysicalAddress.Equals(y.PhysicalAddress);
-            }
+            get => _ipAddress;
 
-            public int GetHashCode([DisallowNull] LanHost obj)
-            {
-                return obj.PhysicalAddress.GetHashCode();
-            }
+            internal set => _ipAddress = value ?? throw new ArgumentNullException(nameof(value));
         }
 
-        public IPAddress IPAddress { get; set; } = null;
-
-        public LanHost(PhysicalAddress physicalAddress)
+        internal LanHost(PhysicalAddress physicalAddress)
         {
             PhysicalAddress = physicalAddress;
         }
 
-        public LanHost(PhysicalAddress physicalAddress, IPAddress ipAddress)
+        internal LanHost(PhysicalAddress physicalAddress, IPAddress ipAddress)
         {
             IPAddress = ipAddress;
             PhysicalAddress = physicalAddress;
         }
        
-        public object Clone()
+/*        public object Clone()
         {
             return new LanHost(
                 PhysicalAddressHelper.CloneAddress(PhysicalAddress),
                 IPAddressHelper.CloneAddress(IPAddress));
-        }
+        }*/
 
-        public bool Equals(LanHost other)
+/*        public bool Equals(LanHost other)
         {
             if (other == null)
                 return false;
@@ -55,23 +61,23 @@ namespace NetSnifferLib.Topology
             return PhysicalAddress.Equals(other.PhysicalAddress) && 
                 ((IPAddress?.Equals(other.IPAddress) ??
                 other.IPAddress?.Equals(other) ?? false) || (IPAddress == null && other.IPAddress == null));
-        }
+        }*/
 
-        public override int GetHashCode()
+/*        public override int GetHashCode()
         {
             return PhysicalAddress.GetHashCode() ^ IPAddress.GetHashCode();
-        }
+        }*/
 
         public override string ToString()
         {
             return string.Format("{0} {1}", PhysicalAddress.ToString(), IPAddress != null ? IPAddress.ToString() : "N/A");
         }
 
-        public override bool Equals(object obj)
+/*        public override bool Equals(object obj)
         {
             return Equals(obj as LanHost);
-        }
+        }*/
 
-        public ArpTable ArpTable { get; } = new();
+        internal ArpTable ArpTable { get; } = new();
     }
 }

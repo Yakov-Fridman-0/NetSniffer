@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Threading.Tasks.Dataflow;
 
+using PcapDotNet.Packets;
+
 using NetSnifferLib;
 using NetSnifferLib.Analysis;
 
@@ -17,10 +19,14 @@ namespace NetSnifferApp
 {
     public partial class ImprovedMainForm : Form
     {
-        GeneralStatisticsForm statisticsForm;
+        readonly ActionBlock<Packet> addPacketActionBlock;
+
+        GeneralStatisticsForm statisticsForm = null;
+        GeneralTopologyForm topologyForm = null;
 
         bool isLiveCapture = true;
         bool isCapturing = false;
+        bool captureEnded = false;
         bool isCaptureUnsaved = false;
 
         
@@ -40,6 +46,8 @@ namespace NetSnifferApp
         public ImprovedMainForm()
         {
             InitializeComponent();
+
+            addPacketActionBlock = new ActionBlock<Packet>(new Action<Packet>(packet => packetViewer.Add(packet)));
         }
 
         protected override void OnLoad(EventArgs e)
@@ -132,7 +140,24 @@ namespace NetSnifferApp
 
             sniffer.PacketReceived += Sniffer_PacketReceived;
             sniffer.PacketLimitReached += Sniffer_PacketLimitReached;
+            sniffer.CaptureStopped += OfflineSniffer_CaptureStopped;
             sniffer.StartAsync();
+        }
+
+        private void OfflineSniffer_CaptureStopped(object sender, EventArgs e)
+        {
+            isCapturing = false;
+            captureEnded = true;
+
+            if (statisticsForm != null)
+                statisticsForm.UpdateStatistics(PacketAnalyzer.Analyzer.GetGeneralStatistics());
+
+            if (topologyForm != null)
+            {
+                topologyForm.UpdateTopology(
+                    PacketAnalyzer.Analyzer.GetLanMap(),
+                    PacketAnalyzer.Analyzer.GetWanMap());
+            }
         }
 
         void StartLiveCapture()
@@ -174,9 +199,9 @@ namespace NetSnifferApp
             ));
         }
 
-        private void Sniffer_PacketReceived(object sender, PcapDotNet.Packets.Packet e)
+        private void Sniffer_PacketReceived(object sender, Packet e)
         {
-            packetViewer.Add(e);
+            addPacketActionBlock.Post(e);
         }
 
         void StopLiveCapture()
@@ -279,16 +304,59 @@ namespace NetSnifferApp
             {
                 IsLive = isLiveCapture
             };
-            statisticsForm.SetBaseTime(sniffer.StartingTime);
 
-            if (isLiveCapture)
+            statisticsForm.SetBaseTime(sniffer.StartingTime);
+            
+            statisticsForm.Show();
+
+            if (captureEnded)
+            {
+                statisticsForm.UpdateStatistics(PacketAnalyzer.Analyzer.GetGeneralStatistics());
+            }
+            else if (isLiveCapture)
             {
                 statisticsForm.StatisticsUpdateRequested += StatisticsForm_NewStatisticsRequested;
                 statisticsForm.FormClosed += StatisticsForm_FormClosed;
+                statisticsForm.StartRequestingUpdates();
             }
+        }
 
-            statisticsForm.Show();
-            statisticsForm.StartRequestingUpdates();
+        private void generalTopologyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (topologyForm != null)
+                return;
+
+            topologyForm = new GeneralTopologyForm
+            {
+                IsLive = isLiveCapture
+            };
+
+            topologyForm.Show();
+
+            if (captureEnded)
+            {
+                topologyForm.UpdateTopology(
+                    PacketAnalyzer.Analyzer.GetLanMap(),
+                    PacketAnalyzer.Analyzer.GetWanMap());
+            }
+            else if (isLiveCapture)
+            {
+                topologyForm.TopologyUpdateRequested += TopologyForm_TopologyUpdateRequested;
+                topologyForm.FormClosed += TopologyForm_FormClosed;
+                topologyForm.StartReuqestingUpdates();
+            }
+        }
+
+        private void TopologyForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            topologyForm = null;
+        }
+
+        private void TopologyForm_TopologyUpdateRequested(object sender, EventArgs e)
+        {
+            topologyForm.UpdateTopology(
+                PacketAnalyzer.Analyzer.GetLanMap(),
+                PacketAnalyzer.Analyzer.GetWanMap());
         }
 
         private void StatisticsForm_FormClosed(object sender, FormClosedEventArgs e)
@@ -347,14 +415,16 @@ namespace NetSnifferApp
             isPromiscuous = promiscuousCheckBox.Checked;
         }
 
-        private void captureFilter_FilterChanged(object sender, string e)
+        private void captureFilter_FilterChanged(object sender, EventArgs e)
         {
-            isValidFilter = NetSniffer.IsValidCaptureFilter(captureFilterString);
+            string filter = captureFilter.Filter;
 
-            if (isValidFilter)
+            if (NetSniffer.IsValidCaptureFilter(filter))
             {
-                captureFilterString = e;
+                captureFilterString = filter;
                 captureFilter.IsValidFilter = true;
+
+                isValidFilter = true;
                 startButton.Enabled = isOperationalInterface;
             }
             else

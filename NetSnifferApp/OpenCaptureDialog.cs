@@ -54,9 +54,9 @@ namespace NetSnifferApp
             NumberOfPackets = (int)packetNumberUpDown.Value;
         }
 
-        private void captureFilter_FilterChanged(object sender, string e)
+        private void captureFilter_FilterChanged(object sender, EventArgs e)
         {
-            string filter = e;
+            string filter = captureFilter.Filter;
 
             if (NetSniffer.IsValidCaptureFilter(filter))
             {

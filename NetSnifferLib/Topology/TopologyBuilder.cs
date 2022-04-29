@@ -88,13 +88,13 @@ namespace NetSnifferLib.Topology
                         //AddHostInWan(ipAddress);
                     }
                 }
-                else if (otherIPAddress == null)
+                else if (otherIPAddress == IPAddress.Any)
                 {
                     lanMapBuilder.AssignIPToHost(physicalAddress, ipAddress);
                 }
                 else if (!otherIPAddress.Equals(ipAddress))
                 {
-                    lanMapBuilder.AssignIPToHost(physicalAddress, null);
+                    lanMapBuilder.AssignIPToHost(physicalAddress, IPAddress.Any);
 
                     MakeHostRouter(physicalAddress);
 
@@ -107,11 +107,11 @@ namespace NetSnifferLib.Topology
             }
         }
 
-        private void AddRouter(PhysicalAddress physicalAddress)
+/*        private void AddRouter(PhysicalAddress physicalAddress)
         {
             if (!lanMapBuilder.ContainsRouter(physicalAddress))
                 lanMapBuilder.AddRouter(physicalAddress);
-        }
+        }*/
 
         private void MakeHostRouter(PhysicalAddress physicalAddress)
         {
@@ -119,11 +119,11 @@ namespace NetSnifferLib.Topology
                 lanMapBuilder.MakeHostRouter(physicalAddress);
         }
 
-        private void MakeHostDhcpServer(PhysicalAddress physicalAddress, IPAddress ipAddress)
+/*        private void MakeHostDhcpServer(PhysicalAddress physicalAddress, IPAddress ipAddress)
         {
             if (!lanMapBuilder.ContainsDhcpServer(physicalAddress, ipAddress))
                 lanMapBuilder.MakeHostDhcpServer(physicalAddress, ipAddress);
-        }
+        }*/
 
         //Checks input
         public void AddDhcpServer(IPAddress ipAddress)
@@ -134,24 +134,26 @@ namespace NetSnifferLib.Topology
             if (lanMapBuilder.ContainsDhcpServer(ipAddress))
                 return;
 
-            PhysicalAddress physicalAddress = null;
+            //PhysicalAddress physicalAddress = null;
             //IP address is in LAN
-            if (lanMapBuilder.ContainsHost(ipAddress))
-            {
-                physicalAddress = lanMapBuilder.GetPhysicalAddress(ipAddress);
-            }          
+            //if (lanMapBuilder.ContainsHost(ipAddress))
+            //{
+            //  physicalAddress = lanMapBuilder.GetPhysicalAddress(ipAddress);
+            //}          
             //IP address was added to WAN
-            else
-            {
-                wanMapBuilder.RemoveHost(ipAddress);
+            //else
+            //{
+            //    wanMapBuilder.RemoveHost(ipAddress);
 
-                var kvp = routerDiscoveredByWanHosts.First((kvp) => kvp.Key.Contains(ipAddress));
-                physicalAddress = kvp.Value;
-                //routerDiscoveredByWanHosts.Remove(kvp.Key);
-                //lanMapBuilder.AddDhcpServer(kvp.Value, ipAddress);
-            }
-            
-            lanMapBuilder.MakeHostDhcpServer(physicalAddress, ipAddress);
+            //    var kvp = routerDiscoveredByWanHosts.First((kvp) => kvp.Key.Contains(ipAddress));
+            //    physicalAddress = kvp.Value;
+            //routerDiscoveredByWanHosts.Remove(kvp.Key);
+            //lanMapBuilder.AddDhcpServer(kvp.Value, ipAddress);
+            //}
+
+
+            PhysicalAddress physicalAddress = lanMapBuilder.LanMap.Hosts.Find(host => ipAddress.Equals(host.IPAddress)).PhysicalAddress;
+            lanMapBuilder.MakeHostDhcpServer(physicalAddress);
         }
 
         //Checks input

@@ -8,7 +8,7 @@ namespace NetSnifferApp
     {
         const string NumberFormat = "{0:N}";
         const string BytesFormat = "{0:N} B";
-        const string SecondsFormat = "{0:N} s";
+        const string SecondsFormat = "{0:0.0} s";
 
         public event EventHandler StatisticsUpdateRequested;
 
@@ -49,8 +49,6 @@ namespace NetSnifferApp
 
                     zeroButton.Visible = false;
 
-                    updateTimer.Interval = 2000;
-
                     elapsedTimeTitleLabel.Text = "Total Time";
                 }
             }
@@ -69,10 +67,7 @@ namespace NetSnifferApp
         {
             currentStatistics = newStatistics;
 
-            if (_isLive)
-            {
-                ShowStatistics(newStatistics - baseStatistics);
-            }
+            ShowStatistics(newStatistics - baseStatistics);
         }
 
         public void StartRequestingUpdates()
@@ -92,22 +87,22 @@ namespace NetSnifferApp
 
         public void StopRequestingUpdates()
         {
-            if (_isLive)
-            {
-                titleLabel.Text = "Capture stopped";
-                titleLabel.Visible = true;
+            //if (_isLive)
+            //{
+            titleLabel.Text = "Capture stopped";
+            titleLabel.Visible = true;
 
-                freezeButtom.Enabled = false;
-                zeroButton.Enabled = false;
+            freezeButtom.Enabled = false;
+            zeroButton.Enabled = false;
 
-                elapsedTimeTimer.Stop();
-                updateTimer.Stop();
-            }
-            else
-            {
-                //timeLabel.Text = string.Format(SecondsFormat, (DateTime.Now - startingTime).TotalSeconds);
-                ShowStatistics(currentStatistics);
-            }    
+            elapsedTimeTimer.Stop();
+            updateTimer.Stop();
+            //}
+            //else
+            //{
+            //    //timeLabel.Text = string.Format(SecondsFormat, (DateTime.Now - startingTime).TotalSeconds);
+            //    ShowStatistics(currentStatistics);
+            //}
         }
 
         public void Clear()

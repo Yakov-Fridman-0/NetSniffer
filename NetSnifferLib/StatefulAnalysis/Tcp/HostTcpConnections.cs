@@ -10,15 +10,13 @@ using PcapDotNet.Packets.Transport;
 
 namespace NetSnifferLib.StatefulAnalysis.Tcp
 {
-    public class TcpConnectionManager
+/*    public class HostTcpConnections
     {
-        IPAddress IPAddress { get; init; }
-
         public Dictionary<int, TcpConnection> connections = new();
 
-        public TcpConnectionManager(IPAddress ipAddress)
+        public HostTcpConnections()
         {
-            IPAddress = ipAddress;
+            
         }
 
         public void RegisterSentData(
@@ -76,5 +74,5 @@ namespace NetSnifferLib.StatefulAnalysis.Tcp
 
             }
         }
-    }
+    }*/
 }

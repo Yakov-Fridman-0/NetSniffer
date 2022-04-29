@@ -40,98 +40,112 @@ namespace NetSnifferLib.Topology
     {
         public static WanMap Empty => new(new List<WanHost>(), new List<WanHost>(), new List<WanHost>(), new List<WanHost>());
 
-        public List<WanHost> Hosts { get; } = new();
+        internal List<WanHost> Hosts { get; } = new();
 
-        public List<WanHost> LanRouters { get; } = new();
+        public ReadOnlyCollection<WanHost> HostsAsReadOnly => Hosts.AsReadOnly();
 
-        public List<WanHost> WanRouters { get; } = new();
+        internal List<WanHost> LanRouters { get; } = new();
 
-        public List<WanHost> DnsServers { get; } = new();
+        internal List<WanHost> WanRouters { get; } = new();
+
+        internal List<WanHost> DnsServers { get; } = new();
 
         public WanHost GetHostByIPAddress(IPAddress address)
         {
-            return Hosts.FirstOrDefault(host => host.IPAddress.Equals(address));
+            lock (Hosts)
+                return Hosts.FirstOrDefault(host => host.IPAddress.Equals(address));
         }
 
         public WanMap(List<WanHost> hosts, List<WanHost> lanRouters, List<WanHost> wanRouters, List<WanHost> dnsServers)
         {
-            Hosts = hosts.Select((host) => (WanHost)host.Clone()).ToList();
+            Hosts = new List<WanHost>(hosts); //hosts.Select((host) => (WanHost)host.Clone()).ToList();
 
-            LanRouters = lanRouters.Select((router) => hosts.Find((host) => host.IPAddress.Equals(router.IPAddress))).ToList();
+            LanRouters = new List<WanHost>(lanRouters); //lanRouters.Select((router) => hosts.Find((host) => host.IPAddress.Equals(router.IPAddress))).ToList();
 
-            WanRouters = wanRouters.Select((router) => hosts.Find((host) => host.IPAddress.Equals(router.IPAddress))).ToList();
+            WanRouters = new List<WanHost>(wanRouters); //wanRouters.Select((router) => hosts.Find((host) => host.IPAddress.Equals(router.IPAddress))).ToList();
 
-            DnsServers = dnsServers.Select((server) => hosts.Find((host) => host.IPAddress.Equals(server.IPAddress))).ToList();
+            DnsServers = new List<WanHost>(dnsServers); //dnsServers.Select((server) => hosts.Find((host) => host.IPAddress.Equals(server.IPAddress))).ToList();
         }
 
         public WanMapDiff GetDiff(WanMap previousMap)
         {
-            List<WanHost> hostsAdded = new(), hostsRemoved;
-            List<WanConnection> connectionsAdded = new(), connectionsRemoved = new();
+            List<WanHost> hostsAdded, hostsRemoved;
+            //List<WanConnection> connectionsAdded = new(), connectionsRemoved = new();
             List<WanHost> lanRoutersAdded, lanRoutersRemoved;
             List<WanHost> wanRoutersAdded, wanRoutersRemoved;
             List<WanHost> dnsServersAdded, dnsServersRemoved;
 
-            foreach (var host in Hosts)
-            {
-                var hostAddr = host.IPAddress;
-                var prevHost = previousMap.Hosts.FirstOrDefault((aHost) => hostAddr.Equals(aHost.IPAddress));
+            /*            foreach (var host in Hosts)
+                        {
+                            var hostAddr = host.IPAddress;
+                            var prevHost = previousMap.Hosts.FirstOrDefault((aHost) => hostAddr.Equals(aHost.IPAddress));
 
-                if (prevHost == null)
-                {
-                    hostsAdded.Add(host);
-                }
-                else
-                {
-                    var connectedAddrs = host.ConnectedHosts.Select((connectedHost) => connectedHost.IPAddress);
-                    var prevConnectedAddrs = prevHost.ConnectedHosts.Select((connectedHost) => connectedHost.IPAddress);
+                            if (prevHost == null)
+                            {
+                                hostsAdded.Add(host);
+                            }
+                            else
+                            {
+                                var connectedAddrs = host.ConnectedHosts.Select((connectedHost) => connectedHost.IPAddress);
+                                var prevConnectedAddrs = prevHost.ConnectedHosts.Select((connectedHost) => connectedHost.IPAddress);
 
-                    var allAddedConnsToHost = connectedAddrs.Except(
-                        prevConnectedAddrs, IPAddressHelper.EqulityComparer).Select(
-                            (addr) => new WanConnection(hostAddr, addr));
+                                var allAddedConnsToHost = connectedAddrs.Except(
+                                    prevConnectedAddrs, IPAddressHelper.EqulityComparer).Select(
+                                        (addr) => new WanConnection(hostAddr, addr));
 
-                    var addedConnsNotRegisteredYet = allAddedConnsToHost.Where((conn) => !connectionsAdded.Contains(conn));
-                    connectionsAdded.AddRange(addedConnsNotRegisteredYet);
+                                var addedConnsNotRegisteredYet = allAddedConnsToHost.Where((conn) => !connectionsAdded.Contains(conn));
+                                connectionsAdded.AddRange(addedConnsNotRegisteredYet);
 
-                    var allRemovedConnsFromHost = connectedAddrs.Except(
-                        prevConnectedAddrs, IPAddressHelper.EqulityComparer).Select(
-                            (addr) => new WanConnection(hostAddr, addr));
+                                var allRemovedConnsFromHost = connectedAddrs.Except(
+                                    prevConnectedAddrs, IPAddressHelper.EqulityComparer).Select(
+                                        (addr) => new WanConnection(hostAddr, addr));
 
-                    var removedConnsNotRegisteredYet = allRemovedConnsFromHost.Where((conn) => !connectionsRemoved.Contains(conn));
-                    connectionsRemoved.AddRange(removedConnsNotRegisteredYet);
-                }
-            }
+                                var removedConnsNotRegisteredYet = allRemovedConnsFromHost.Where((conn) => !connectionsRemoved.Contains(conn));
+                                connectionsRemoved.AddRange(removedConnsNotRegisteredYet);
+                            }
+                        }*/
 
-            hostsRemoved = previousMap.Hosts.Except(Hosts, WanHost.IPAddressComparer).ToList();
+            hostsAdded = Hosts.Except(previousMap.Hosts).ToList();
+            hostsRemoved = previousMap.Hosts.Except(Hosts/*, WanHost.IPAddressComparer*/).ToList();
 
-            lanRoutersAdded = LanRouters.Except(previousMap.LanRouters, WanHost.IPAddressComparer).ToList();
-            lanRoutersRemoved = previousMap.LanRouters.Except(LanRouters, WanHost.IPAddressComparer).ToList();
+            lanRoutersAdded = LanRouters.Except(previousMap.LanRouters/*, WanHost.IPAddressComparer */).ToList();
+            lanRoutersRemoved = previousMap.LanRouters.Except(LanRouters/*, WanHost.IPAddressComparer */).ToList();
 
-            wanRoutersAdded = WanRouters.Except(previousMap.WanRouters, WanHost.IPAddressComparer).ToList();
-            wanRoutersRemoved = previousMap.WanRouters.Except(WanRouters, WanHost.IPAddressComparer).ToList();
+            wanRoutersAdded = WanRouters.Except(previousMap.WanRouters/*, WanHost.IPAddressComparer */).ToList();
+            wanRoutersRemoved = previousMap.WanRouters.Except(WanRouters/*, WanHost.IPAddressComparer */).ToList();
 
-            dnsServersAdded = DnsServers.Except(previousMap.DnsServers, WanHost.IPAddressComparer).ToList();
-            dnsServersRemoved = previousMap.DnsServers.Except(DnsServers, WanHost.IPAddressComparer).ToList();
+            dnsServersAdded = DnsServers.Except(previousMap.DnsServers/*, WanHost.IPAddressComparer */).ToList();
+            dnsServersRemoved = previousMap.DnsServers.Except(DnsServers/*, WanHost.IPAddressComparer */).ToList();
 
             return new WanMapDiff
             {
-                HostsAdded = hostsAdded.Select((host) => (WanHost)host.Clone()).ToList(),
-                HostRemoved = hostsRemoved.Select((host) => (WanHost)host.Clone()).ToList(),
+                HostsAdded = hostsAdded.AsReadOnly(), //.Select((host) => (WanHost)host.Clone()).ToList(),
+                HostRemoved = hostsRemoved.AsReadOnly(), //.Select((host) => (WanHost)host.Clone()).ToList(),
 
-                ConnectionsAdded = connectionsAdded,
-                ConnectionsRemoved = connectionsRemoved,
+                //ConnectionsAdded = connectionsAdded.AsReadOnly(),
+                //ConnectionsRemoved = connectionsRemoved.AsReadOnly(),
 
-                LanRouterAdded = lanRoutersAdded.Select((router) => Hosts.Find((host) => host.IPAddress.Equals(router.IPAddress))).ToList(),
-                LanRouterRemoved = lanRoutersRemoved.Select((router) => previousMap.Hosts.Find((host) => host.IPAddress.Equals(router.IPAddress))).ToList(),
+                LanRouterAdded = lanRoutersAdded.AsReadOnly(), //.Select((router) => Hosts.Find((host) => host.IPAddress.Equals(router.IPAddress))).ToList(),
+                LanRouterRemoved = lanRoutersRemoved.AsReadOnly(), //.Select((router) => previousMap.Hosts.Find((host) => host.IPAddress.Equals(router.IPAddress))).ToList(),
 
-                WanRoutersAdded = wanRoutersAdded.Select((router) => Hosts.Find((host) => host.IPAddress.Equals(router.IPAddress))).ToList(),
-                WanRouterRemoved = wanRoutersRemoved.Select((router) => previousMap.Hosts.Find((host) => host.IPAddress.Equals(router.IPAddress))).ToList(),
+                WanRoutersAdded = wanRoutersAdded.AsReadOnly(), //.Select((router) => Hosts.Find((host) => host.IPAddress.Equals(router.IPAddress))).ToList(),
+                WanRouterRemoved = wanRoutersRemoved.AsReadOnly(), //.Select((router) => previousMap.Hosts.Find((host) => host.IPAddress.Equals(router.IPAddress))).ToList(),
 
-                DnsServersAdded = dnsServersAdded.Where(
-                    (server) => server != null).Select((server) => Hosts.Find((host) => host.IPAddress.Equals(server.IPAddress))).Where((server) => server != null).ToList(),
-                DnsServersRemoved = dnsServersRemoved.Select((server) =>
-                previousMap.Hosts.Find((host) => host.IPAddress.Equals(server.IPAddress))).ToList()
+                DnsServersAdded = dnsServersAdded.AsReadOnly(), //.Where((server) => server != null).Select((server) => Hosts.Find((host) => host.IPAddress.Equals(server.IPAddress))).Where((server) => server != null).ToList(),
+                DnsServersRemoved = dnsServersRemoved.AsReadOnly() //.Select((server) => previousMap.Hosts.Find((host) => host.IPAddress.Equals(server.IPAddress))).ToList()
             };
+        }
+
+        public void Update(WanMapDiff mapDiff)
+        {
+            Hosts.AddRange(mapDiff.HostsAdded);
+            //Hosts.Remove(mapDiff.HostRemoved);
+
+            LanRouters.AddRange(mapDiff.LanRouterAdded);
+
+            WanRouters.AddRange(mapDiff.WanRoutersAdded);
+
+            DnsServers.AddRange(mapDiff.DnsServersAdded);
         }
     }
 }

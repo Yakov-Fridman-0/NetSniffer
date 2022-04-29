@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,32 +10,31 @@ namespace NetSnifferLib.Topology
 {
     public class WanMapDiff
     {
-        public List<WanHost> HostsAdded { get; set; }
+        public ReadOnlyCollection<WanHost> HostsAdded { get; init; }
 
-        public List<WanHost> HostRemoved { get; set; }
+        public ReadOnlyCollection<WanHost> HostRemoved { get; init; }
 
-        public List<WanConnection> ConnectionsAdded { get; set; }
+        //public ReadOnlyCollection<WanConnection> ConnectionsAdded { get; init; }
 
-        public List<WanConnection> ConnectionsRemoved { get; set; }
+        //public ReadOnlyCollection<WanConnection> ConnectionsRemoved { get; init; }
 
-        public List<WanHost> LanRouterAdded { get; set; }
+        public ReadOnlyCollection<WanHost> LanRouterAdded { get; init; }
 
-        public List<WanHost> LanRouterRemoved { get; set; }
+        public ReadOnlyCollection<WanHost> LanRouterRemoved { get; init; }
 
-        public List<WanHost> WanRoutersAdded { get; set; }
+        public ReadOnlyCollection<WanHost> WanRoutersAdded { get; init; }
 
-        public List<WanHost> WanRouterRemoved { get; set; }
+        public ReadOnlyCollection<WanHost> WanRouterRemoved { get; init; }
 
-        public List<WanHost> DnsServersAdded { get; set; }
+        public ReadOnlyCollection<WanHost> DnsServersAdded { get; init; }
 
-        public List<WanHost> DnsServersRemoved { get; set; }
+        public ReadOnlyCollection<WanHost> DnsServersRemoved { get; init; }
 
         public bool IsEmpty => 
             HostsAdded.Count == 0 && HostRemoved.Count == 0 && 
-            ConnectionsAdded.Count == 0 && ConnectionsRemoved.Count == 0 &&
+            //ConnectionsAdded.Count == 0 && ConnectionsRemoved.Count == 0 &&
             LanRouterAdded.Count == 0 && LanRouterRemoved.Count == 0 &&
             WanRoutersAdded.Count == 0 && WanRouterRemoved.Count == 0 &&
             DnsServersAdded.Count == 0 && DnsServersRemoved.Count == 0;
-
     }
 }

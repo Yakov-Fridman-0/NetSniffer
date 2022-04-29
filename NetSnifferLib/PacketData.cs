@@ -188,12 +188,14 @@ namespace NetSnifferLib
 
         public static PacketData GetPacketDataByPacketId(int packetId)
         {
-            return allPacketDatas[packetId];
+            lock (allPacketDatas)
+                return allPacketDatas[packetId];
         }
 
         public static void Reset()
         {
-            allPacketDatas.Clear();
+            lock (allPacketDatas)
+                allPacketDatas.Clear();
         }
 
         public class PacketDataComparer : IComparer<PacketData>
@@ -245,13 +247,14 @@ namespace NetSnifferLib
             PacketId = packetId;
             Packet = packet;
 
-            allPacketDatas.Add(packetId, this);
+            lock (allPacketDatas)
+                allPacketDatas.Add(packetId, this);
         }
 
-        public void Analyze()
+        public async void Analyze()
         {
             if (PacketAnalyzer.Analyzer.IsEthernet(Packet))
-                DescriptionReady.Invoke(PacketId, PacketAnalyzer.Analyzer.AnalyzePacket(Packet, PacketId));
+                DescriptionReady.Invoke(PacketId, await PacketAnalyzer.Analyzer.AnalyzePacketAsync(Packet, PacketId));
             else
                 DescriptionReady.Invoke(PacketId, new PacketDescription(Packet.Timestamp, "N/A", null, null, Packet.Length, "N/A"));
         }

@@ -95,7 +95,7 @@ namespace NetSnifferApp
             lock (allPacketsData)
                 allPacketsData.Add(packetData, item);
 
-            //packetsListView.Invoke(
+            //packetsListView.Invoke( 
             //    new MethodInvoker(() =>
             //    {
             //        packetsListView.Items.Add(item);

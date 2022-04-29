@@ -34,6 +34,8 @@ namespace NetSnifferLib
 
         public event EventHandler PacketLimitReached = delegate { };
 
+        public event EventHandler CaptureStopped = delegate { };
+
         public void SaveCapture(string fileName, string displayFilterString)
         {
             DisplayFilter displayFilter = null;
@@ -69,9 +71,13 @@ namespace NetSnifferLib
             PacketData.Reset();
             PacketAnalyzer.CreateNewAnalyzer();
 
+            PacketAnalyzer.Analyzer.Sniffer = this;
+
             StartingTime = DateTime.Now;
             communicator.ReceivePackets(MaxPacketNumber, packet => eventRaiser.Post(packet));
             StoppingTime = DateTime.Now;
+
+            CaptureStopped.Invoke(this, new EventArgs());
         }
 
         public Task StartAsync()

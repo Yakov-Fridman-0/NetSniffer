@@ -1,233 +1,333 @@
 ﻿using System;
-using System.Net;
-using System.Net.NetworkInformation;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Net;
 
 using PcapDotNet.Packets.Transport;
-
-using NetSnifferLib.StatefulAnalysis;
 
 namespace NetSnifferLib.StatefulAnalysis.Tcp
 {
     public sealed class TcpConnection
     {
-        object statucLock = new();
+        readonly object statusLock = new();
 
         TcpConnectionStatus _status;
 
-        public TcpConnectionStatus Status => _status;
-
-
-        public IPEndPoint EndPoint1 { get; init; }
-        
-        uint senderInitialRawSequenceNumber;
-
-        uint senderNextSequenceNumber = 1;
-
-        uint ExpectedSenderRawSequenceNumber => senderInitialRawSequenceNumber + senderNextSequenceNumber;
-
-        public uint DataSent => senderNextSequenceNumber - 1;
-
-
-
-
-        public IPEndPoint ReceiverEndPoint { get; init; }
-
-        uint receiverInitialRawSequenceNumber;
-
-        uint receiverNextSequnceNumber = 1;
-
-        uint ExpectedReceiverRawSequenceNumber => receiverInitialRawSequenceNumber + receiverNextSequnceNumber;
-
-        public uint DataReceived => receiverNextSequnceNumber - 1;
-
-
-
-        //public bool SenderInitiatedOpening => true;
-
-        public bool SenderInitialtedClosing { get; private set; }
-
-
-        public TcpConnection(IPEndPoint receiverEndPoint, IPEndPoint senderEndPoint)
+        public TcpConnectionStatus Status
         {
-            ReceiverEndPoint = receiverEndPoint;
-            //SenderEndPoint = senderEndPoint;
-
-            _status = TcpConnectionStatus.None;
+            get => _status;
+            set
+            {
+                lock (statusLock)
+                    _status = value;
+            }
         }
 
-        public void ReportPacket(TcpControlBits flags, uint rawSequenceNumber, uint rawAcknowledgementNumber, uint payloadLength)
+        //readonly List<(uint, uint)> 
+
+        public IPEndPoint ConnectorEndPoint { get; private set; }
+        
+        uint connetorInitialRawSequenceNumber;
+
+        uint connectorNextSequenceNumber = 1;
+
+        uint ExpectedListenerRawSequenceNumber => connetorInitialRawSequenceNumber + connectorNextSequenceNumber;
+
+        //public uint DataSentByConnector => connectorNextSequenceNumber - 1;
+        public uint DataSentByConnector { get; private set; } = 0;
+
+
+        public IPEndPoint ListenerEndPoint { get; private set; }
+
+        uint listenerInitialRawSequenceNumber;
+
+        uint listenerNextSequnceNumber = 1;
+
+        uint ExpectedReceiverRawSequenceNumber => listenerInitialRawSequenceNumber + listenerNextSequnceNumber;
+
+        //public uint DataSentByListener => listenerNextSequnceNumber - 1;
+        public uint DataSentByListener { get; private set; } = 0;
+
+        public bool WasDetectedAtCreation { get; private set; }
+
+        private TcpConnection()
+        {
+
+        }
+
+        public static TcpConnection CreateConnection(IPEndPoint senderIPEndPoint, IPEndPoint receiverIPEndPoint, TcpControlBits flags, uint rawSequenceNumber, uint rawAcknowledgementNumber, uint payloadLength)
+        {
+            var connection = new TcpConnection();
+
+            if ((flags & TcpControlBits.Synchronize) != 0)
+            {
+                //SYN
+                if ((flags & TcpControlBits.Acknowledgment) == 0)
+                {
+                    connection.WasDetectedAtCreation = true;
+                    connection.Status = TcpConnectionStatus.Syn; 
+
+                    connection.ConnectorEndPoint = senderIPEndPoint;
+                    connection.ListenerEndPoint = receiverIPEndPoint;
+                    connection.DataSentByConnector += payloadLength;
+
+                    connection.connetorInitialRawSequenceNumber = rawSequenceNumber;
+                }
+                //SYN-ACK
+                else
+                {
+                    connection.WasDetectedAtCreation = true;
+                    connection.Status = TcpConnectionStatus.SynAck;
+
+                    connection.ListenerEndPoint = senderIPEndPoint;
+                    connection.ConnectorEndPoint = receiverIPEndPoint;
+                    connection.DataSentByListener += payloadLength;
+
+                    connection.connetorInitialRawSequenceNumber = rawAcknowledgementNumber;
+                    connection.listenerInitialRawSequenceNumber = rawSequenceNumber;
+                }
+            }
+            else if ((flags & TcpControlBits.Fin) != 0)
+            {
+                //FIN
+                if ((flags & TcpControlBits.Acknowledgment) == 0)
+                {
+                    connection.WasDetectedAtCreation = false;
+                    connection.Status = TcpConnectionStatus.Fin;
+                    // arbitary choice
+                    connection.ConnectorEndPoint = senderIPEndPoint;
+                    connection.connetorInitialRawSequenceNumber = rawAcknowledgementNumber;
+                    connection.DataSentByConnector += payloadLength;
+
+                    connection.ListenerEndPoint = receiverIPEndPoint;
+                    connection.listenerInitialRawSequenceNumber = rawSequenceNumber;
+                }
+                //FIN-ACK
+                else
+                {
+                    connection.WasDetectedAtCreation = false;
+                    connection.Status = TcpConnectionStatus.FinAck;
+                    // arbitary choice
+                    connection.ConnectorEndPoint = senderIPEndPoint;
+                    connection.connetorInitialRawSequenceNumber = rawAcknowledgementNumber;
+                    connection.DataSentByConnector += payloadLength;
+
+                    connection.ListenerEndPoint = receiverIPEndPoint;
+                    connection.listenerInitialRawSequenceNumber = rawSequenceNumber;
+                }
+            }
+            //ACK
+            else if ((flags & TcpControlBits.Acknowledgment) != 0)
+            {
+                connection.WasDetectedAtCreation = false;
+                // arbitary choice
+                connection.ConnectorEndPoint = senderIPEndPoint;
+                connection.connetorInitialRawSequenceNumber = rawAcknowledgementNumber;
+                connection.DataSentByConnector += payloadLength;
+
+                connection.ListenerEndPoint = receiverIPEndPoint;
+                connection.listenerInitialRawSequenceNumber = rawSequenceNumber;
+            }
+/*            else
+            {
+                throw new ArgumentException($"{nameof(flags)} pakcet is no fin, syn or ack");
+            }*/
+
+            return connection;
+        }
+
+        public void AnalyzeConnectorPacket(TcpControlBits flags, uint rawSequenceNumber, uint rawAcknowledgementNumber, uint payloadLength)
         {
             if ((flags & TcpControlBits.Synchronize) != 0)
             {
-/*                if ()
-                {
+                //SYN
+                /*                if ((flags & TcpControlBits.Acknowledgment) == 0)
+                                {
 
-                }*/
+                                }*/
+                //SYN-ACK
+                //else
+                //{
+
+                //}
+                _status = TcpConnectionStatus.Syn;
+            }
+            else if ((flags & TcpControlBits.Fin) != 0)
+            {
+                //FIN
+                if ((flags & TcpControlBits.Acknowledgment) == 0) 
+                {
+                    _status = TcpConnectionStatus.Fin;
+                }
+                //FIN-ACK
+                else
+                {
+                    _status = TcpConnectionStatus.FinAck;
+                }
+            }
+            //ACK
+            else if ((flags & TcpControlBits.Acknowledgment) != 0)
+            {
+                if (_status == TcpConnectionStatus.SynAck)
+                    _status = TcpConnectionStatus.Established;
+                else if (_status == TcpConnectionStatus.FinAck)
+                    _status = TcpConnectionStatus.Closed;
+
             }
 
-/*            switch (_status)
+            //connectorNextSequenceNumber = rawSequenceNumber + payloadLength;
+            DataSentByConnector += payloadLength;
+/*            else
             {
-                case TcpConnectionStatus.None:
-                    if ((flags & TcpControlBits.Synchronize) != 0)
-                    {
-                        _status = TcpConnectionStatus.Syn;
+                throw new ArgumentException($"{nameof(flags)} pakcet is no fin, syn or ack");
+            }*/
+        }
 
-                        Interlocked.Exchange(ref senderInitialRawSequenceNumber, rawSequenceNumber);
-                        Interlocked.Exchange(ref senderNextSequenceNumber, 1);
+        public void AnalyzeListenerPacket(TcpControlBits flags, uint rawSequenceNumber, uint rawAcknowledgementNumber, uint payloadLength)
+        {
+
+            if ((flags & TcpControlBits.Synchronize) != 0)
+            {
+                //SYN
+                /*                if ((flags & TcpControlBits.Acknowledgment) == 0)
+                                {
+
+                                }*/
+                //SYN-ACK
+                /*                else
+                                {
+
+                                }*/
+                _status = TcpConnectionStatus.SynAck;
+            }
+            else if ((flags & TcpControlBits.Fin) != 0)
+            {
+                //FIN
+                if ((flags & TcpControlBits.Acknowledgment) == 0)
+                {
+                    _status = TcpConnectionStatus.Fin;
+                }
+                //FIN-ACK
+                else
+                {
+                    _status = TcpConnectionStatus.FinAck;
+                }
+            }
+            //ACK
+            else if ((flags & TcpControlBits.Acknowledgment) != 0)
+            {
+                //listenerNextSequnceNumber = rawSequenceNumber + payloadLength;
+                if (_status == TcpConnectionStatus.SynAck)
+                    _status = TcpConnectionStatus.Established;
+                else if (_status == TcpConnectionStatus.FinAck)
+                    _status = TcpConnectionStatus.Closed;
+            }
+
+            DataSentByListener += payloadLength;
+/*            else if ()
+            {
+                throw new ArgumentException($"{nameof(flags)} pakcet is no fin, syn or ack");
+            }*/
+        }
+
+        /*        public void ReportReceivedPacket(TcpControlBits flags, uint rawSequenceNumber, uint rawAcknowledgemtnNumber, uint payloadLength)
+                {
+                    switch (Status)
+                    {
+                        case TcpConnectionStatus.None:
+                            _status = TcpConnectionStatus.Established;
+                            Interlocked.Exchange(ref senderInitialRawSequenceNumber, rawSequenceNumber);
+                            Interlocked.Exchange(ref senderNextSequenceNumber, 0);
+                            Interlocked.Exchange(ref receiverInitialRawSequenceNumber, rawAcknowledgemtnNumber);
+                            Interlocked.Exchange(ref receiverNextSequnceNumber, 0);
+
+                            UpdateReceivedSequenceAndAcknowledgmentNumbers(rawSequenceNumber, rawAcknowledgemtnNumber, payloadLength);
+
+                            break;
+                        case TcpConnectionStatus.Syn:
+                            if ((flags & (TcpControlBits.Synchronize | TcpControlBits.Acknowledgment)) != 0)
+                            {
+                                _status = TcpConnectionStatus.SynAck;
+
+                                Interlocked.Exchange(ref receiverNextSequnceNumber, rawSequenceNumber);
+                                Interlocked.Exchange(ref receiverInitialRawSequenceNumber, 1);
+                            }
+                            break;
+                        case TcpConnectionStatus.Established:
+                            if ((flags & TcpControlBits.Fin) != 0)
+                            {
+                                _status = TcpConnectionStatus.Fin;
+                                SenderInitialtedClosing = false;                      
+                            }
+
+                            UpdateReceivedSequenceAndAcknowledgmentNumbers(rawSequenceNumber, rawAcknowledgemtnNumber, payloadLength);
+
+                            break;
+                        case TcpConnectionStatus.Fin:
+                            if ((flags & (TcpControlBits.Fin | TcpControlBits.Acknowledgment)) != 0)
+                            {
+                                if (SenderInitialtedClosing)
+                                    _status = TcpConnectionStatus.FinAck;
+                            }
+                            break;
+                        case TcpConnectionStatus.FinAck:
+                            if ((flags & TcpControlBits.Acknowledgment) != 0)
+                            {
+                                if (!SenderInitialtedClosing)
+                                    _status = TcpConnectionStatus.Closed;
+                            }
+                            break;
+                    }
+                }
+
+
+                private bool UpdateSentSequenceAndAcknowledgmentNumbers(uint rawSequenceNumber, uint rawAcknowledgementNumber, uint payloadLength)
+                {
+                    bool result;
+                    if (rawSequenceNumber != ExpectedListenerRawSequenceNumber)
+                    {
+                        //TODO
+                        return false;
                     }
                     else
                     {
-                        _status = TcpConnectionStatus.Established;
-                        Interlocked.Exchange(ref senderInitialRawSequenceNumber, rawSequenceNumber);
-                        Interlocked.Exchange(ref senderNextSequenceNumber, 0);
-                        Interlocked.Exchange(ref receiverInitialRawSequenceNumber, rawAcknowledgementNumber);
-                        Interlocked.Exchange(ref receiverNextSequnceNumber, 0);
-
-                        UpdateSentSequenceAndAcknowledgmentNumbers(rawSequenceNumber, rawAcknowledgementNumber, payloadLength);
+                        Interlocked.Add(ref connectorNextSequenceNumber, payloadLength);
+                        result = true;
                     }
-                    break;
-                case TcpConnectionStatus.SynAck:
-                    if ((flags & TcpControlBits.Acknowledgment) != 0)
+
+                    if (rawAcknowledgementNumber != ExpectedReceiverRawSequenceNumber)
                     {
-                        _status = TcpConnectionStatus.Established;
+                        //TODO
+                        return false;
                     }
-
-                    UpdateSentSequenceAndAcknowledgmentNumbers(rawSequenceNumber, rawAcknowledgementNumber, payloadLength);
-
-                    break;
-                case TcpConnectionStatus.Established:
-                    if ((flags & TcpControlBits.Fin) != 0)
+                    else
                     {
-                        _status = TcpConnectionStatus.Fin;
-                        SenderInitialtedClosing = true;
+                        return result && true;
                     }
+                }
 
-                    UpdateSentSequenceAndAcknowledgmentNumbers(rawSequenceNumber, rawAcknowledgementNumber, payloadLength);
-
-                    break;
-                case TcpConnectionStatus.Fin:
-                    if ((flags & (TcpControlBits.Fin | TcpControlBits.Acknowledgment)) != 0)
+                private bool UpdateReceivedSequenceAndAcknowledgmentNumbers(uint rawSequenceNumber, uint rawAcknowledgementNumber, uint payloadLength)
+                {
+                    bool result;
+                    if (rawSequenceNumber != ExpectedReceiverRawSequenceNumber)
                     {
-                        if (!SenderInitialtedClosing)
-                            _status = TcpConnectionStatus.FinAck;
-                        //else
-                          //  throw new InvalidOperationException("Receiver should send Fin Ack");
+                        //TODO
+                        return false;
                     }
-                    break;
-                case TcpConnectionStatus.FinAck:
-                    if ((flags & TcpControlBits.Acknowledgment) != 0)
+                    else
                     {
-                        if (SenderInitialtedClosing)
-                            _status = TcpConnectionStatus.Closed;
+                        Interlocked.Add(ref listenerNextSequnceNumber, payloadLength);
+                        result = true;
                     }
-                    break;
-            }*/
-        }
 
-        public void ReportReceivedPacket(TcpControlBits flags, uint rawSequenceNumber, uint rawAcknowledgemtnNumber, uint payloadLength)
-        {
-/*            switch (Status)
-            {
-                case TcpConnectionStatus.None:
-                    _status = TcpConnectionStatus.Established;
-                    Interlocked.Exchange(ref senderInitialRawSequenceNumber, rawSequenceNumber);
-                    Interlocked.Exchange(ref senderNextSequenceNumber, 0);
-                    Interlocked.Exchange(ref receiverInitialRawSequenceNumber, rawAcknowledgemtnNumber);
-                    Interlocked.Exchange(ref receiverNextSequnceNumber, 0);
-
-                    UpdateReceivedSequenceAndAcknowledgmentNumbers(rawSequenceNumber, rawAcknowledgemtnNumber, payloadLength);
-
-                    break;
-                case TcpConnectionStatus.Syn:
-                    if ((flags & (TcpControlBits.Synchronize | TcpControlBits.Acknowledgment)) != 0)
+                    if (rawAcknowledgementNumber != ExpectedReceiverRawSequenceNumber)
                     {
-                        _status = TcpConnectionStatus.SynAck;
-
-                        Interlocked.Exchange(ref receiverNextSequnceNumber, rawSequenceNumber);
-                        Interlocked.Exchange(ref receiverInitialRawSequenceNumber, 1);
+                        //TODO
+                        return false;
                     }
-                    break;
-                case TcpConnectionStatus.Established:
-                    if ((flags & TcpControlBits.Fin) != 0)
+                    else
                     {
-                        _status = TcpConnectionStatus.Fin;
-                        SenderInitialtedClosing = false;                      
+                        return result && true;
                     }
-
-                    UpdateReceivedSequenceAndAcknowledgmentNumbers(rawSequenceNumber, rawAcknowledgemtnNumber, payloadLength);
-
-                    break;
-                case TcpConnectionStatus.Fin:
-                    if ((flags & (TcpControlBits.Fin | TcpControlBits.Acknowledgment)) != 0)
-                    {
-                        if (SenderInitialtedClosing)
-                            _status = TcpConnectionStatus.FinAck;
-                    }
-                    break;
-                case TcpConnectionStatus.FinAck:
-                    if ((flags & TcpControlBits.Acknowledgment) != 0)
-                    {
-                        if (!SenderInitialtedClosing)
-                            _status = TcpConnectionStatus.Closed;
-                    }
-                    break;
-            }*/
-        }
-
-
-        private bool UpdateSentSequenceAndAcknowledgmentNumbers(uint rawSequenceNumber, uint rawAcknowledgementNumber, uint payloadLength)
-        {
-            bool result;
-            if (rawSequenceNumber != ExpectedSenderRawSequenceNumber)
-            {
-                //TODO
-                return false;
-            }
-            else
-            {
-                Interlocked.Add(ref senderNextSequenceNumber, payloadLength);
-                result = true;
-            }
-
-            if (rawAcknowledgementNumber != ExpectedReceiverRawSequenceNumber)
-            {
-                //TODO
-                return false;
-            }
-            else
-            {
-                return result && true;
-            }
-        }
-
-        private bool UpdateReceivedSequenceAndAcknowledgmentNumbers(uint rawSequenceNumber, uint rawAcknowledgementNumber, uint payloadLength)
-        {
-            bool result;
-            if (rawSequenceNumber != ExpectedReceiverRawSequenceNumber)
-            {
-                //TODO
-                return false;
-            }
-            else
-            {
-                Interlocked.Add(ref receiverNextSequnceNumber, payloadLength);
-                result = true;
-            }
-                
-            if (rawAcknowledgementNumber != ExpectedReceiverRawSequenceNumber)
-            {
-                //TODO
-                return false;
-            }
-            else
-            {
-                return result && true;
-            }
-        }
+                }*/
     }
 }

@@ -46,7 +46,7 @@ namespace NetSnifferLib.Analysis.Transport
 
             var optionsInfo = string.Join(" ", from kvp in options select $"{ kvp.Key}: {kvp.Value}");
 
-            TcpStatefulAnalyzer.ReportDatagram(datagram, context);
+            TcpStatefulAnalyzer.AnalyzeDatagram(datagram, context);
 
             return string.Join(" ", new[] { portsInfo, flagsInfo, optionsInfo });
         }

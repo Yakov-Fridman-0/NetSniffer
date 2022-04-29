@@ -12,8 +12,6 @@ namespace NetSnifferApp
 
         void BecomeServer();
 
-        void BecomeRouterAndServer();
-
         bool IsRouter { get; }
 
         bool IsServer { get; }

@@ -3,6 +3,7 @@ using System.Net;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using PcapDotNet.Packets;
 
@@ -73,7 +74,6 @@ namespace NetSnifferLib.Analysis
         void IcmpAnalyzer_RegisteredPingReply(object sender, PingReplyEventArgs e)
         {
             IPAddress src = e.Source;
-            //byte id = (byte)e.Identifier;
 
             var tracertResult = tracertResults.FirstOrDefault((kvp) => kvp.Key.Destination.Equals(src)).Key;
             tracertResult.IsComplete = true;
@@ -92,7 +92,6 @@ namespace NetSnifferLib.Analysis
 
             tracertResult.AddHop(src, hops);
         }
-       
 
         private PacketAnalyzer()
         {
@@ -169,6 +168,11 @@ namespace NetSnifferLib.Analysis
             };
         }
 
+        public Task<PacketDescription> AnalyzePacketAsync(Packet packet, int packetId)
+        {
+            return Task.Run(new Func<PacketDescription>(() => AnalyzePacket(packet, packetId)));
+        }
+
         public GeneralStatistics GetGeneralStatistics()
         {
             return new GeneralStatistics()
@@ -235,19 +239,19 @@ namespace NetSnifferLib.Analysis
             return topologyBuilder.LanMap;
         }
 
-        public List<LanHost> GetOriginalLanHosts()
+        internal List<LanHost> GetLanHosts()
         {
             return topologyBuilder.GetOriginalLanHosts();
-        }
-
-        public List<WanHost> GetOriginalWanHosts()
-        {
-            return topologyBuilder.GetOriginalWanHosts();
         }
 
         public WanMap GetWanMap()
         {
             return topologyBuilder.WanMap;
+        }
+
+        internal List<WanHost> GetWanHosts()
+        {
+            return topologyBuilder.GetOriginalWanHosts();
         }
     }
 }

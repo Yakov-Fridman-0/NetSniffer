@@ -22,6 +22,8 @@ namespace NetSnifferLib
             CreateCommunicator();
         }
 
+
+
         protected override PacketDevice GetPacketDevice()
         {
             return new OfflinePacketDevice(dumpFileName);

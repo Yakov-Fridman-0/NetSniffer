@@ -36,18 +36,20 @@ namespace NetSnifferApp
             // filterTextBox
             // 
             this.filterTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.filterTextBox.Location = new System.Drawing.Point(0, 5);
+            this.filterTextBox.Location = new System.Drawing.Point(0, 11);
+            this.filterTextBox.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.filterTextBox.Name = "filterTextBox";
-            this.filterTextBox.Size = new System.Drawing.Size(279, 23);
+            this.filterTextBox.Size = new System.Drawing.Size(324, 27);
             this.filterTextBox.TabIndex = 0;
             this.filterTextBox.TextChanged += new System.EventHandler(this.filterTextBox_TextChanged);
             // 
             // clearButton
             // 
             this.clearButton.Anchor = System.Windows.Forms.AnchorStyles.Right;
-            this.clearButton.Location = new System.Drawing.Point(281, 5);
+            this.clearButton.Location = new System.Drawing.Point(330, 9);
+            this.clearButton.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.clearButton.Name = "clearButton";
-            this.clearButton.Size = new System.Drawing.Size(24, 23);
+            this.clearButton.Size = new System.Drawing.Size(27, 31);
             this.clearButton.TabIndex = 2;
             this.clearButton.Text = "X";
             this.clearButton.UseVisualStyleBackColor = true;
@@ -55,12 +57,15 @@ namespace NetSnifferApp
             // 
             // DisplayFilterControl
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.clearButton);
             this.Controls.Add(this.filterTextBox);
+            this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.MaximumSize = new System.Drawing.Size(1000, 49);
+            this.MinimumSize = new System.Drawing.Size(0, 49);
             this.Name = "DisplayFilterControl";
-            this.Size = new System.Drawing.Size(305, 37);
+            this.Size = new System.Drawing.Size(360, 49);
             this.ResumeLayout(false);
             this.PerformLayout();
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Net;
 
 using NetSnifferLib.StatefulAnalysis.Tcp;
@@ -8,26 +9,29 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace NetSnifferLib.Topology
 {
-    public class WanHost : IIPAddress, ICloneable, IEquatable<WanHost>
+    public class WanHost : IIPAddress//, ICloneable, IEquatable<WanHost>
     {
         public IPAddress IPAddress { get; }
 
-        public TcpConnectionManager ConnectionManager { get; }
+        //public HostTcpConnections TcpConnections { get; }
+        internal List<TcpConnection> TcpConnections { get; } = new();
 
-        public static SameIPAddress IPAddressComparer { get; } = new();
+        public ReadOnlyCollection<TcpConnection> TcpConnectionsAsReadOnly => TcpConnections.AsReadOnly();
+
+        //public static SameIPAddress IPAddressComparer { get; } = new();
 
         public List<WanHost> ConnectedHosts { get; } = new();
 
         public WanHost(IPAddress ipAddress)
         {
             IPAddress = ipAddress;
-            ConnectionManager = new(ipAddress);
+            TcpConnections = new();
         }
 
         public WanHost(IPAddress ipAddress, List<WanHost> connectedHosts)
         {
             IPAddress = ipAddress;
-            ConnectionManager = new(ipAddress);
+            TcpConnections = new();
 
             ConnectedHosts = connectedHosts;
         }
@@ -37,7 +41,7 @@ namespace NetSnifferLib.Topology
             return IPAddress.ToString();
         }
 
-        public class SameIPAddress : IEqualityComparer<WanHost>
+/*        public class SameIPAddress : IEqualityComparer<WanHost>
         {
             public bool Equals(WanHost x, WanHost y)
             {
@@ -79,11 +83,11 @@ namespace NetSnifferLib.Topology
         public override bool Equals(object obj)
         {
             return Equals(obj as WanHost);
-        }
+        }*/
 
-        public override int GetHashCode()
+/*        public override int GetHashCode()
         {
             return IPAddress.GetHashCode() ^ ConnectedHosts.Aggregate(1, (oldHash, host) => oldHash ^ host.IPAddress.GetHashCode());
-        }
+        }*/
     }
 }

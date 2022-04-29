@@ -12,6 +12,7 @@ using PcapDotNet.Core.Extensions;
 using PcapDotNet.Packets;
 
 using NetSnifferLib.General;
+using NetSnifferLib.Analysis;
 
 namespace NetSnifferLib
 {
@@ -24,6 +25,8 @@ namespace NetSnifferLib
             @interface = args.NetworkInterface;
 
             CreateCommunicator();
+
+            PacketAnalyzer.Analyzer.Sniffer = this;
         }
 
         protected override LivePacketDevice GetPacketDevice()

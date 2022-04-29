@@ -18,7 +18,30 @@ namespace NetSnifferApp
 {
     public partial class LanHostControl : UserControl, IHostControl
     {
+        bool _isIPAddressShown = false;
+
+        public bool IsIPAddressShown
+        {
+            get => _isIPAddressShown;
+            set
+            {
+                _isIPAddressShown = value;
+                
+                if (_isIPAddressShown)
+                {
+                    copyIPAddressToolStripMenuItem.Visible = false;
+                    ipAddressLabel.Visible = false;
+                }
+                else
+                {
+                    copyIPAddressToolStripMenuItem.Visible = false;
+                    ipAddressLabel.Visible = false;
+                }
+            }
+        }
+        
         LanHost _host = null;
+
         public LanHost Host
         {
             get => _host;
@@ -27,28 +50,31 @@ namespace NetSnifferApp
                 _host = value;
                 physicalAddressLabel.Text = AddressFormat.ToString(_host.PhysicalAddress);
 
-                if (_host.IPAddress != null)
-                    ipAddressLabel.Text = AddressFormat.ToString(_host.IPAddress);
+                if (_host.IPAddress != IPAddress.Any)
+                {
+                    ShowIPAddress();
+                    _isIPAddressShown = true;
+                }
             }
         }
 
         WanHost _wanHost = null;
 
         public WanHost WanHost 
-        { 
-            get
-            {
-                if (IsRouter)
-                    return _wanHost;
-                else
-                    throw new InvalidOperationException();
-            }
+        {
+            get => _wanHost;
             set
             {
-                if (IsRouter)
-                    _wanHost = value;
+                _wanHost = value;
+
+                if (_wanHost != null)
+                {
+
+                }
                 else
-                    throw new InvalidOperationException();
+                {
+
+                }
             }
         }
 
@@ -63,26 +89,68 @@ namespace NetSnifferApp
 
         public void BecomeRouter()
         {
-            pictureBox.Image = imageList.Images["Router"];
             IsRouter = true;
+
+            if (IsServer)
+                BecomeRouterAndServer();
+            else
+                pictureBox.Image = imageList.Images["Router"];
         }
 
         public void BecomeServer()
         {
-            pictureBox.Image = imageList.Images["Server"];
             IsServer = true;
+
+            if (IsRouter)
+                BecomeRouterAndServer();
+            else
+                pictureBox.Image = imageList.Images["Server"];
         }
 
-        public void BecomeRouterAndServer()
+        protected void BecomeRouterAndServer()
         {
             pictureBox.Image = imageList.Images["RouterAndServer"];
-            IsRouter = true;
-            IsServer = true;
         }
 
-        public void SetIPAddress(IPAddress address)
+        public void ShowIPAddress()
         {
-            ipAddressLabel.Text = AddressFormat.ToString(address);
+            _isIPAddressShown = true;
+
+            ipAddressLabel.Visible = true;
+            ipAddressLabel.Text = AddressFormat.ToString(_host.IPAddress);
+
+            showTCPConnectionsToolStripMenuItem.Visible = true;
+
+            copyIPAddressToolStripMenuItem.Visible = true;
+        }
+
+        public void HideIPAddress()
+        {
+            _isIPAddressShown = false;
+
+            ipAddressLabel.Visible = false;
+            copyIPAddressToolStripMenuItem.Visible = false;
+        }
+
+        private void copyMACAdrressToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Clipboard.SetText(_host.PhysicalAddress.ToString());
+        }
+
+        private void copyIPAddressToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Clipboard.SetText(_host.IPAddress.ToString());
+        }
+
+        private void showTCPConnectionsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var form = new TcpStreamsForm()
+            {
+                Host = _wanHost
+            };
+
+            form.Show();
+            form.StartRefreshing();
         }
     }
 }

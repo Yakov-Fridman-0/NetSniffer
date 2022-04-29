@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,8 +11,8 @@ namespace NetSnifferLib.Topology
 {
     public class AddressMapping : IEquatable<AddressMapping>
     {
-        public IPAddress IPAddress { get; set; }
-        public PhysicalAddress PhysicalAddress { get; set; }
+        public IPAddress IPAddress { get; init; }
+        public PhysicalAddress PhysicalAddress { get; init; }
 
         public bool Equals(AddressMapping other)
         {
@@ -31,41 +32,24 @@ namespace NetSnifferLib.Topology
 
     public class LanMapDiff
     {
-        public List<LanHost> HostsAdded { get; set; }
+        public ReadOnlyCollection<LanHost> HostsAdded { get; init; }
 
-        public List<LanHost> HostsRemoved { get; set; }
+        public ReadOnlyCollection<LanHost> HostsRemoved { get; init; }
 
-        public List<AddressMapping> PhysicalAddressIPAddressMappingModified { get; set; }
+        //public ReadOnlyCollection<AddressMapping> PhysicalAddressIPAddressMappingModified { get; init; }
 
-        public List<LanHost> RoutersAdded { get; set; }
+        public ReadOnlyCollection<LanHost> RoutersAdded { get; init; }
 
-        public List<LanHost> RoutersRemoved { get; set; }
+        public ReadOnlyCollection<LanHost> RoutersRemoved { get; init; }
 
-        public List<LanHost> DhcpServersAdded { get; set; }
+        public ReadOnlyCollection<LanHost> DhcpServersAdded { get; init; }
 
-        public List<LanHost> DhcpServersRemoved { get; set; }
-
-        //public LanMapDiff(
-        //    List<LanHost> hostsAdded, List<LanHost> hostsRemoved, List<LanHost> hostsChanged,
-        //    List<LanHost> routersAdded, List<LanHost> routersRemoved, List<LanHost> routersChanged,
-        //    List<LanHost> dhcpServersAdded, List<LanHost> dhcpServersRemoved, List<LanHost> dhcpServersChanged)
-        //{
-        //    HostsAdded = hostsAdded.Select((host) => (LanHost)host.Clone()).ToList();
-        //    HostsRemoved = hostsRemoved.Select((host) => (LanHost)host.Clone()).ToList();
-        //    HostsModified = hostsChanged.Select((host) => (LanHost)host.Clone()).ToList();
-
-        //    RoutersAdded = routersAdded.Select((host) => (LanHost)host.Clone()).ToList();
-        //    RoutersRemoved = routersRemoved.Select((host) => (LanHost)host.Clone()).ToList();
-
-        //    DhcpServersAdded = dhcpServersAdded.Select((host) => (LanHost)host.Clone()).ToList();
-        //    DhcpServersRemoved = dhcpServersRemoved.Select((host) => (LanHost)host.Clone()).ToList();
-        //}
+        public ReadOnlyCollection<LanHost> DhcpServersRemoved { get; init; }
 
         public bool IsEmpty =>
             HostsAdded.Count == 0 && HostsRemoved.Count == 0 &&
-            PhysicalAddressIPAddressMappingModified.Count == 0 &&
+            //PhysicalAddressIPAddressMappingModified.Count == 0 &&
             RoutersAdded.Count == 0 && RoutersRemoved.Count == 0 &&
             DhcpServersAdded.Count == 0 && DhcpServersRemoved.Count == 0;
-
     }
 }

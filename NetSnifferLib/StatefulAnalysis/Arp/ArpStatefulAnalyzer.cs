@@ -45,12 +45,12 @@ namespace NetSnifferLib.StatefulAnalysis.Arp
             UnansweredRequestsTokenSources.TryAdd(request, source);
         }
 
-        static public void ReportRequest(ArpDatagram request, int packetId)
+        static public void AnalyzeRequest(ArpDatagram request, int packetId)
         {
             AllDatagrams.Add(request);
         }
 
-        static public void ReportReply(ArpDatagram reply, int packetId)
+        static public void AnalyzeReply(ArpDatagram reply, int packetId)
         {
             AllDatagrams.Add(reply);
 
@@ -62,10 +62,10 @@ namespace NetSnifferLib.StatefulAnalysis.Arp
 
             LanHost targetHost = null, otherHost = null;
 
-            var allHosts = PacketAnalyzer.Analyzer.GetOriginalLanHosts();
+            var allHosts = PacketAnalyzer.Analyzer.GetLanHosts();
 
             lock (allHosts)
-                targetHost = PacketAnalyzer.Analyzer.GetOriginalLanHosts().First(host => host.PhysicalAddress.Equals(targetPhysicalAddress));
+                targetHost = PacketAnalyzer.Analyzer.GetLanHosts().First(host => host.PhysicalAddress.Equals(targetPhysicalAddress));
 
             targetHost.ArpTable.UpdateEntry(senderIPAddress, senderPhysicalAddress, IdManager.GetPacket(packetId).Timestamp, packetId);
 

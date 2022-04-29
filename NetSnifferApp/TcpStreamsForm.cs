@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -9,126 +10,133 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using NetSnifferLib.Topology;
-using NetSnifferLib.Analysis;
+using NetSnifferLib.StatefulAnalysis.Tcp;
 
 namespace NetSnifferApp
 {
     public partial class TcpStreamsForm : Form
     {
+        WanHost _host;
+
+        readonly Dictionary<TcpConnection, ListViewItem> items = new();
+
+        public WanHost Host 
+        {
+            get => _host;
+            set
+            {
+                _host = value;
+                ipAddressLabel.Text = _host.IPAddress.ToString();
+            }
+        }
+
         public TcpStreamsForm()
         {
             InitializeComponent();
+
+            streamsListView.Sorting = SortOrder.Ascending;
         }
 
-        private void hostsComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        public void StartRefreshing()
         {
-            connectionsListView.Items.Clear();
+            refreshTimer.Start();
+        }
 
-            var host = (WanHost)hostsComboBox.SelectedItem;
+        private void refreshTimer_Tick(object sender, EventArgs e)
+        {
+            var connections = _host.TcpConnectionsAsReadOnly;
+
+            var newConnections = connections.Except(items.Keys).ToList();
+            var oldConnections = items.Keys.Intersect(connections).ToList();
+            //var connectionsRemoved = items.Keys.Except(connections).ToList();
+
             
-            if (host != null)
+            foreach (var conn in newConnections)
             {
-                foreach (var (port, connection) in host.ConnectionManager.connections)
+                int port;
+                int remotePort;
+                uint dataSent;
+                uint dataReceived;
+                IPAddress remoteAddress;
+
+                if (conn.ConnectorEndPoint.Address.Equals(_host.IPAddress))
                 {
-                    if (connection == null)
-                        return;
+                    port = conn.ConnectorEndPoint.Port;
 
-                    if (connection.ReceiverEndPoint.Address.Equals(host.IPAddress))
-                    {
-                        connectionsListView.Items.Add(new ListViewItem(new[]
-                        {
-                        port.ToString(),
-                        connection.ReceiverEndPoint.Address.ToString(),
-                        connection.ReceiverEndPoint.Port.ToString(),
-                        connection.DataSent.ToString(),
-                        connection.DataReceived.ToString()
-                        })
-                        {
-                            Name = port.ToString()
-                        });
-                    }
-                    else
-                    {
-                        connectionsListView.Items.Add(new ListViewItem(new[]
-{
-                        port.ToString(),
-                        //connection.SenderEndPoint.Address.ToString(),
-                        //connection.SenderEndPoint.Port.ToString(),
-                        connection.DataSent.ToString(),
-                        connection.DataReceived.ToString()
-                        })
-                        {
-                            Name = port.ToString()
-                        });
-                    }
+                    remoteAddress = conn.ListenerEndPoint.Address;
+                    remotePort = conn.ListenerEndPoint.Port;
 
-                }
-            }
-        }
-
-        private void TcpStreamsForm_Load(object sender, EventArgs e)
-        {
-            hostsComboBox.Items.AddRange(PacketAnalyzer.Analyzer.GetOriginalWanHosts().ToArray());
-        }
-
-        private void timer1_Tick(object sender, EventArgs e)
-        {
-            var newHosts = PacketAnalyzer.Analyzer.GetOriginalWanHosts();
-            var hosts = hostsComboBox.Items.Cast<WanHost>();
-
-            foreach (var newHost in newHosts)
-            {
-                if (hosts.Contains(newHost))
-                {
-                    if (hostsComboBox.SelectedItem == newHost)
-                    {
-                        foreach (var (port, connection) in newHost.ConnectionManager.connections)
-                        {
-                            if (connection == null)
-                                return;
-
-                            if (connection.ReceiverEndPoint.Address.Equals(newHost.IPAddress))
-                            {
-                                connectionsListView.Items.Add(new ListViewItem(new[]
-                                {
-                        port.ToString(),
-                        connection.ReceiverEndPoint.Address.ToString(),
-                        connection.ReceiverEndPoint.Port.ToString(),
-                        connection.DataSent.ToString(),
-                        connection.DataReceived.ToString()
-                        })
-                                {
-                                    Name = port.ToString()
-                                });
-                            }
-                            else
-                            {
-                                connectionsListView.Items.Add(new ListViewItem(new[]
-        {
-                        port.ToString(),
-                        //connection.SenderEndPoint.Address.ToString(),
-                        //connection.SenderEndPoint.Port.ToString(),
-                        connection.DataSent.ToString(),
-                        connection.DataReceived.ToString()
-                        })
-                                {
-                                    Name = port.ToString()
-                                });
-                            }
-                        }
-                    }
+                    dataSent = conn.DataSentByConnector;
+                    dataReceived = conn.DataSentByListener; 
                 }
                 else
                 {
-                    hostsComboBox.Items.Add(newHost);
+                    port = conn.ListenerEndPoint.Port;
+
+                    remoteAddress = conn.ConnectorEndPoint.Address;
+                    remotePort = conn.ConnectorEndPoint.Port;
+
+                    dataSent = conn.DataSentByListener;
+                    dataReceived = conn.DataSentByConnector;
+                }
+
+                var newItem = new ListViewItem(new[] { port.ToString(), "->", remoteAddress.ToString(), remotePort.ToString(), dataSent.ToString(), dataReceived.ToString() })
+                {
+                    Name = port.ToString()
+                };
+
+                items.Add(conn, newItem);
+
+                streamsListView.SuspendLayout();
+                streamsListView.Items.Add(newItem);
+                streamsListView.ResumeLayout();
+            }
+
+            foreach (var conn in oldConnections)
+            {
+                uint dataSent;
+                uint dataReceived;
+                ListViewItem item;
+
+                if (conn.ConnectorEndPoint.Address.Equals(_host.IPAddress))
+                {
+                    dataSent = conn.DataSentByConnector;
+                    dataReceived = conn.DataSentByListener;
+                    item = streamsListView.Items[conn.ConnectorEndPoint.Port.ToString()];
+                }
+                else
+                {
+                    dataSent = conn.DataSentByListener;
+                    dataReceived = conn.DataSentByConnector;
+                    item = streamsListView.Items[conn.ListenerEndPoint.Port.ToString()];
+                }
+
+               
+
+                if (item.SubItems[4].Text != dataSent.ToString())
+                {
+                    item.SubItems[4].Text = dataSent.ToString();
+                    streamsListView.Invalidate();
+                }
+
+                if (item.SubItems[5].Text != dataReceived.ToString())
+                {
+                    item.SubItems[5].Text = dataReceived.ToString();                    
+                    streamsListView.Invalidate();
                 }
             }
 
-            foreach (var host in hosts)
+
+            foreach (var conn in items.Keys)
             {
-                if (!newHosts.Contains(host))
-                    hostsComboBox.Items.Remove(host);
+                if (!connections.Contains(conn))
+                {
+                    items.Remove(conn, out ListViewItem item);
+                    streamsListView.Items.Remove(item);
+                }
             }
+
+
         }
     }
 }

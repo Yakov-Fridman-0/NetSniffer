@@ -9,32 +9,34 @@ using System.Threading.Tasks;
 
 namespace NetSnifferLib.Topology
 {
-    public class LanMap : IEquatable<LanMap>
+    public class LanMap //: IEquatable<LanMap>
     {
         public static LanMap Empty => new(new List<LanHost>(), new List<LanHost>(), new List<LanHost>());
 
-        public List<LanHost> Hosts { get; }
+        internal List<LanHost> Hosts { get; }
 
-        public List<LanHost> Routers { get; }
+        public ReadOnlyCollection<LanHost> ReadOnlyHosts => Hosts.AsReadOnly();
 
-        public List<LanHost> DhcpServers { get; }
+        internal List<LanHost> Routers { get; }
 
-        public LanMap(List<LanHost> hosts, List<LanHost> routers, List<LanHost> dhcpServers)
+        internal List<LanHost> DhcpServers { get; }
+
+        internal LanMap(List<LanHost> hosts, List<LanHost> routers, List<LanHost> dhcpServers)
         {
-            Hosts = hosts.Select((host) => (LanHost)host.Clone()).ToList();
-            Routers = routers.Select((router) => Hosts.Find((host) => LanHost.PhysicalAddressComparer.Equals(host, router))).ToList();
-            DhcpServers = dhcpServers.Select((dhcpServers) => Hosts.Find((host) => LanHost.PhysicalAddressComparer.Equals(host, dhcpServers))).ToList();
+            Hosts = new List<LanHost>(hosts); //hosts.Select((host) => (LanHost)host.Clone()).ToList();
+            Routers = new List<LanHost>(routers); //routers.Select((router) => Hosts.Find((host) => LanHost.PhysicalAddressComparer.Equals(host, router))).ToList();
+            DhcpServers = new List<LanHost>(dhcpServers); //dhcpServers.Select((dhcpServers) => Hosts.Find((host) => LanHost.PhysicalAddressComparer.Equals(host, dhcpServers))).ToList();
         }
 
-        public bool Equals(LanMap other)
+/*        public bool Equals(LanMap other)
         {
             if (other == null)
                 return false;
 
             return false;
-        }
+        }*/
 
-        public override bool Equals(object obj)
+/*        public override bool Equals(object obj)
         {
             return Equals(obj as LanMap);
         }
@@ -45,20 +47,20 @@ namespace NetSnifferLib.Topology
                 Hosts.Aggregate(0, (int hash, LanHost host) => host.GetHashCode() ^ hash) ^ 
                 Routers.Aggregate(0, (int hash, LanHost router) => router.GetHashCode() ^ hash) ^ 
                 DhcpServers.Aggregate(0, (int hash, LanHost dhcpServer) => dhcpServer.GetHashCode() ^ hash);
-        }
+        }*/
 
-        public LanMap Except(LanMap other)
+/*        public LanMap Except(LanMap other)
         {
             return new LanMap(
                 other.Hosts.Except(Hosts).ToList(),
                 other.Routers.Except(Routers).ToList(),
                 other.DhcpServers.Except(DhcpServers).ToList());
-        }
+        }*/
 
         public LanMapDiff GetDiff(LanMap previousMap)
         {
-            List<LanHost> hostsAdded = new(), hostsRemoved;
-            List<AddressMapping> addressMappingsModified = new();
+            List<LanHost> hostsAdded, hostsRemoved;
+            //List<AddressMapping> addressMappingsModified;
             List<LanHost> routersAdded, routersRemoved;
             List<LanHost> dhcpServersAdded, dhcpServersRemoved;
 
@@ -66,165 +68,88 @@ namespace NetSnifferLib.Topology
             var prevRouters = previousMap.Routers;
             var prevDhcpServers = previousMap.DhcpServers;
 
-            foreach (var host in Hosts)
-            {
-                var prevHost = prevHosts.FirstOrDefault((aPrevHost) => LanHost.PhysicalAddressComparer.Equals(host, aPrevHost));
-                
-                if (prevHost == null)
-                {
-                    hostsAdded.Add(host);
-                }
-                else
-                {
-                    if (!(host.IPAddress == null && prevHost.IPAddress == null))
-                    {
-                        if ((host.IPAddress == null && prevHost.IPAddress != null) ||
-                            (host.IPAddress != null) && (prevHost.IPAddress == null) ||
-                            !host.IPAddress.Equals(prevHost.IPAddress))
+            /*            foreach (var host in Hosts)
                         {
-                            addressMappingsModified.Add(
-                                new AddressMapping()
+                            var prevHost = prevHosts.FirstOrDefault((aPrevHost) => LanHost.PhysicalAddressComparer.Equals(host, aPrevHost));
+
+                            if (prevHost == null)
+                            {
+                                hostsAdded.Add(host);
+                            }
+                            else
+                            {
+                                if (!(host.IPAddress == null && prevHost.IPAddress == null))
                                 {
-                                    PhysicalAddress = host.PhysicalAddress,
-                                    IPAddress = host.IPAddress
-                                });
-                        }
-                    }
-  
-                }
-            }
+                                    if ((host.IPAddress == null && prevHost.IPAddress != null) ||
+                                        (host.IPAddress != null) && (prevHost.IPAddress == null) ||
+                                        !host.IPAddress.Equals(prevHost.IPAddress))
+                                    {
+                                        addressMappingsModified.Add(
+                                            new AddressMapping()
+                                            {
+                                                PhysicalAddress = host.PhysicalAddress,
+                                                IPAddress = host.IPAddress
+                                            });
+                                    }
+                                }
+                            }
+                        }*/
 
-            hostsRemoved = prevHosts.Except(Hosts, LanHost.PhysicalAddressComparer).ToList();
+            hostsAdded = Hosts.Except(prevHosts).ToList();
+            hostsRemoved = prevHosts.Except(Hosts).ToList();
 
-            routersAdded = Routers.Except(prevRouters, LanHost.PhysicalAddressComparer).ToList();
-            routersRemoved = prevRouters.Except(Routers, LanHost.PhysicalAddressComparer).ToList();
+            routersAdded = Routers.Except(prevRouters).ToList();
+            routersRemoved = prevRouters.Except(Routers).ToList();
 
-            dhcpServersAdded = DhcpServers.Except(prevDhcpServers, LanHost.PhysicalAddressComparer).ToList();
-            dhcpServersRemoved = prevDhcpServers.Except(DhcpServers, LanHost.PhysicalAddressComparer).ToList();
+            dhcpServersAdded = DhcpServers.Except(prevDhcpServers).ToList();
+            dhcpServersRemoved = prevDhcpServers.Except(DhcpServers).ToList();
 
             return new LanMapDiff
             {
-                HostsAdded = hostsAdded,
-                HostsRemoved = hostsRemoved,
+                HostsAdded = hostsAdded.AsReadOnly(),
+                HostsRemoved = hostsRemoved.AsReadOnly(),
 
-                PhysicalAddressIPAddressMappingModified = addressMappingsModified,
+                //PhysicalAddressIPAddressMappingModified = addressMappingsModified.AsReadOnly(),
 
-                RoutersAdded = routersAdded,
-                RoutersRemoved = routersRemoved,
+                RoutersAdded = routersAdded.AsReadOnly(),
+                RoutersRemoved = routersRemoved.AsReadOnly(),
 
-                DhcpServersAdded = dhcpServersAdded,
-                DhcpServersRemoved = dhcpServersRemoved
+                DhcpServersAdded = dhcpServersAdded.AsReadOnly(),
+                DhcpServersRemoved = dhcpServersRemoved.AsReadOnly()
             };
+        }
 
-            //foreach (LanHost host in Hosts)
-            //{
-            //    PhysicalAddress physicalAdd = host.PhysicalAddress;
-            //    IPAddress ipAdd = host.IPAddress;
-            //    LanHost prevHost = previousMap.Hosts.FirstOrDefault((aHost) => aHost.PhysicalAddress.Equals(physicalAdd));
+        public void Update(LanMapDiff diff)
+        {
+            foreach (var host in diff.HostsAdded)
+                Hosts.Add(host);
 
-            //    if (prevHost != null)
-            //    {
-            //        if(prevHost.IPAddress == null)
-            //        {
-            //            if (host.IPAddress != null)
-            //                hostsChanged.Add(host);
-            //        }
-            //        else
-            //        {
-            //            if (!prevHost.IPAddress.Equals(ipAdd))
-            //                hostsChanged.Add(host);
-            //        }
-            //    }
-            //    else
-            //    {
-            //        hostsAdded.Add(host);
-            //    }
-            //}
+            foreach (var host in diff.HostsRemoved)
+                Hosts.Remove(host);
 
-            //foreach (LanHost router in Routers)
-            //{
-            //    PhysicalAddress physicalAdd = router.PhysicalAddress;
-            //    IPAddress ipAdd = router.IPAddress;
-            //    LanHost prevRouter = previousMap.Routers.FirstOrDefault((aRouter) => aRouter.PhysicalAddress.Equals(physicalAdd));
+            foreach (var router in diff.RoutersAdded)
+                Routers.Add(router);
 
-            //    if (prevRouter != null)
-            //    {
-            //        if (prevRouter.IPAddress == null)
-            //        {
-            //            if (router.IPAddress != null)
-            //                routersChanged.Add(router);
-            //        }
-            //        else
-            //        {
-            //            if (!prevRouter.IPAddress.Equals(ipAdd))
-            //                routersChanged.Add(router);
-            //        }
-            //    }
-            //    else
-            //    {
-            //        routersAdded.Add(router);
-            //    }
-            //}
+            foreach (var router in diff.RoutersRemoved)
+                Routers.Remove(router);
 
-            //foreach (LanHost server in DhcpServers)
-            //{
-            //    PhysicalAddress physicalAdd = server.PhysicalAddress;
-            //    IPAddress ipAdd = server.IPAddress;
-            //    LanHost prevServer = previousMap.DhcpServers.FirstOrDefault((aServer) => aServer.PhysicalAddress.Equals(physicalAdd));
+            foreach (var server in diff.DhcpServersAdded)
+                DhcpServers.Add(server);
 
-            //    if (prevServer != null)
-            //    {
-            //        if (prevServer.IPAddress == null)
-            //        {
-            //            if (server.IPAddress != null)
-            //                dhcpServersChanged.Add(server);
-            //        }
-            //        else
-            //        {
-            //            if (!prevServer.IPAddress.Equals(ipAdd))
-            //                dhcpServersChanged.Add(server);
-            //        }
-            //    }
-            //    else
-            //    {
-            //        dhcpServersAdded.Add(server);
-            //    }
-            //}
-
-            //foreach (LanHost prevHost in previousMap.Hosts)
-            //{
-            //    PhysicalAddress physicalAdd = prevHost.PhysicalAddress;
-
-            //    if(!Hosts.Any((host) => host.PhysicalAddress.Equals(physicalAdd)))
-            //    {
-            //        hostsRemoved.Add(prevHost);
-            //    }
-            //}
-
-            //foreach (LanHost prevRouter in previousMap.Routers)
-            //{
-            //    PhysicalAddress physicalAdd = prevRouter.PhysicalAddress;
-
-            //    if (!Routers.Any((router) => router.PhysicalAddress.Equals(physicalAdd)))
-            //    {
-            //        hostsRemoved.Add(prevRouter);
-            //    }
-            //}
-
-            //foreach (LanHost prevServer in previousMap.DhcpServers)
-            //{
-            //    PhysicalAddress physicalAdd = prevServer.PhysicalAddress;
-
-            //    if (!DhcpServers.Any((server) => server.PhysicalAddress.Equals(physicalAdd)))
-            //    {
-            //        hostsRemoved.Add(prevServer);
-            //    }
-            //}
+            foreach (var server in diff.DhcpServersRemoved)
+                DhcpServers.Remove(server);
         }
 
         public LanHost GetHostByPhysicalAddress(PhysicalAddress address)
         {
-            return Hosts.FirstOrDefault(host => host.PhysicalAddress.Equals(address));
+            lock (Hosts)
+                return Hosts.FirstOrDefault(host => host.PhysicalAddress.Equals(address));
+        }
+
+        public LanHost GetHostByIPAddress(IPAddress address)
+        {
+            lock (Hosts)
+                return Hosts.FirstOrDefault(host => host.IPAddress.Equals(address));
         }
     }
 }

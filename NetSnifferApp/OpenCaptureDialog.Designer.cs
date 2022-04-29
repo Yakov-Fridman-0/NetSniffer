@@ -91,7 +91,7 @@ namespace NetSnifferApp
             this.captureFilter.Name = "captureFilter";
             this.captureFilter.Size = new System.Drawing.Size(422, 49);
             this.captureFilter.TabIndex = 4;
-            this.captureFilter.FilterChanged += new System.EventHandler<string>(this.captureFilter_FilterChanged);
+            this.captureFilter.FilterChanged += new System.EventHandler(this.captureFilter_FilterChanged);
             // 
             // packetNumberUpDown
             // 

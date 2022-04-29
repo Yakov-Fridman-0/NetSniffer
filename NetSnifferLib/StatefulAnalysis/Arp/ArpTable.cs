@@ -143,7 +143,7 @@ namespace NetSnifferLib.StatefulAnalysis.Arp
         {
             if (!arpTable.ContainsKey(ipAddress))
             {
-                if (DetectDoS)
+/*                if (DetectDoS)
                 {
                     if (entriesCreationTime.Count >= EntryCreationDoSCount)
                     {
@@ -154,7 +154,7 @@ namespace NetSnifferLib.StatefulAnalysis.Arp
                             DoSDetected = true;
                         }
                     }
-                }
+                }*/
 
                 entriesCreationTime.Add(receivedTime);
                 transactionHistory.Add(
