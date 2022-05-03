@@ -18,7 +18,7 @@ namespace NetSnifferLib
 
         delegate bool PacketDataCondition(PacketData packetData);
 
-        private PacketDataCondition Condition { get; init; }
+        private PacketDataCondition Condition { get; init; } = new(packetData => true);
 
         public static DisplayFilter EmptyFilter { get; } = new(new PacketDataCondition(PacketData => true));
 
@@ -79,9 +79,72 @@ namespace NetSnifferLib
             // multi-coditioanl
             if (logicalOperatotrs.Any(@operator => filterString.Contains(@operator)))
             {
-                var match = Regex.Match(filterString, @"");
+                var match = Regex.Match(filterString, @"^(?<leftCondition>>\((?<c>)|[^()]+|\)(?<-c>))*(?(c)(?!))(?<operator>&&|\|\|)(?<rightCondition>>(?<c>)|[^()]+|\)(?<-c>))*(?(c)(?!))$", RegexOptions.None, TimeSpan.FromSeconds(3));
 
-                return false;
+                string leftCondition, @operator, rightCondition;
+                if  (match.Success && match.Groups.Cast<Group>().Where(group => !group.Value.Equals("")).ToList().Count == 4)
+                {
+                    leftCondition = Clean(match.Groups["leftCondition"].Value);
+                    @operator = match.Groups["operator"].Value;
+                    rightCondition = Clean(match.Groups["rightCondition"].Value);
+                }
+                else
+                {
+                    match = Regex.Match(filterString, @"(?<condition>\((?>\((?<c>)|[^()]+|\)(?<-c>))*(?(c)(?!))\))", RegexOptions.None, TimeSpan.FromSeconds(0.5));
+
+                    if (!match.Success)
+                        return false;
+
+                    var leftConditionRaw = match.Groups["condition"].Value;
+                    leftCondition = Clean(UnfoldPatamthesis(leftConditionRaw));
+
+                    filterString = filterString.Remove(filterString.IndexOf(leftConditionRaw), leftConditionRaw.Length);
+
+                    var nextMatch = match.NextMatch();
+                    if (nextMatch.Success)
+                    {
+                        var rightConditionRaw = nextMatch.Captures[0].Value;
+                        rightCondition = UnfoldPatamthesis(Clean(rightConditionRaw));
+
+                        filterString = filterString.Remove(filterString.IndexOf(rightConditionRaw), rightConditionRaw.Length);
+                    }
+                    else
+                    {
+                        match = Regex.Match(filterString.Trim('&', '|', ' '), @"(?<condition>(?>\((?<c>)|[^()]+|\)(?<-c>))*(?(c)(?!)))", RegexOptions.None, TimeSpan.FromSeconds(0.5));
+
+                        if (!match.Success)
+                            return false;
+
+                        rightCondition = match.Captures[0].Value;
+
+                        filterString = filterString.Remove(filterString.IndexOf(rightCondition), rightCondition.Length);
+                    }
+
+                    @operator = filterString.Trim();
+
+                    if (@operator is not "&&" and not "||")
+                        return false;
+                }
+
+                PacketDataCondition condition1 = null, condition2 = null;
+
+                if (TryGetCondition(leftCondition, ref condition1) && TryGetCondition(rightCondition, ref condition2))
+                {
+                    switch (@operator)
+                    {
+                        case "&&":
+                            condition = new PacketDataCondition(packetData => condition1(packetData) && condition2(packetData));
+                            break;
+                        case "||":
+                            condition = new PacketDataCondition(packetData => condition1(packetData) || condition2(packetData));
+                            break;
+                    }
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
             //single-conditioanl
             else
@@ -115,12 +178,11 @@ namespace NetSnifferLib
 
                     return false;
                 }
-
                 
                 // has no operators
                 else
                 {
-                    string protocol = filterString;
+                    string protocol = UnfoldPatamthesis(filterString);
 
                     if (ProtocolNameComparer.IsValidProtocol(protocol))
                     {
@@ -157,6 +219,16 @@ namespace NetSnifferLib
         {
             var result = variable.Equals(value);
             return result;
+        }
+
+        static string UnfoldPatamthesis(string text)
+        {
+            if (text[0] == '(' && text[^1] == ')')
+            {
+                text = text[1..^1];
+            }
+
+            return text;
         }
 
         static bool VariableNotEquals(object variable, object value)

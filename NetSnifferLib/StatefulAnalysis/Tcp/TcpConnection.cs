@@ -114,9 +114,8 @@ namespace NetSnifferLib.StatefulAnalysis.Tcp
                     connection.ListenerEndPoint = receiverIPEndPoint;
                     connection.listenerInitialRawSequenceNumber = rawSequenceNumber;
                 }
-            }
-            //ACK
-            else if ((flags & TcpControlBits.Acknowledgment) != 0)
+            }            //ACK ot PSH or URG
+            else //if ((flags & TcpControlBits.Acknowledgment) != 0)
             {
                 connection.WasDetectedAtCreation = false;
                 // arbitary choice
@@ -126,11 +125,20 @@ namespace NetSnifferLib.StatefulAnalysis.Tcp
 
                 connection.ListenerEndPoint = receiverIPEndPoint;
                 connection.listenerInitialRawSequenceNumber = rawSequenceNumber;
+
+                if ((flags & TcpControlBits.Reset) != 0)
+                {
+                    connection.Status = TcpConnectionStatus.Rst;
+                }
+                else
+                {
+                    connection.Status = TcpConnectionStatus.Established;
+                }
             }
-/*            else
-            {
-                throw new ArgumentException($"{nameof(flags)} pakcet is no fin, syn or ack");
-            }*/
+            //else
+            //{
+            //    throw new ArgumentException($"{nameof(flags)} pakcet is no fin, syn or ack");
+            //}
 
             return connection;
         }
@@ -184,7 +192,6 @@ namespace NetSnifferLib.StatefulAnalysis.Tcp
 
         public void AnalyzeListenerPacket(TcpControlBits flags, uint rawSequenceNumber, uint rawAcknowledgementNumber, uint payloadLength)
         {
-
             if ((flags & TcpControlBits.Synchronize) != 0)
             {
                 //SYN

@@ -64,7 +64,7 @@ namespace NetSnifferApp
         {
             if (isCaptureUnsaved)
             {
-                var dialogResult = MessageBox.Show("Do you want to save the capture before quiting?", "Save Capture", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Error);
+                var dialogResult = MessageBox.Show("Do you want to save the capture before quiting?", "Save Capture", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Information);
 
                 switch (dialogResult)
                 {
@@ -211,6 +211,11 @@ namespace NetSnifferApp
             if (statisticsForm != null)
             {
                 statisticsForm.StopRequestingUpdates();
+            }
+
+            if (topologyForm != null)
+            {
+                //topologyForm.StopRequestingUpdates();
             }
 
             sniffer.PacketReceived -= Sniffer_PacketReceived;
@@ -438,7 +443,7 @@ namespace NetSnifferApp
         {
             if (isCapturing)
             {
-                MessageBox.Show("Stop cature before saving", "Capture Running", MessageBoxButtons.OKCancel, MessageBoxIcon.Error);
+                MessageBox.Show("Stop cature before saving", "Capture Running", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
             }
             else
             {
@@ -475,7 +480,7 @@ namespace NetSnifferApp
 
             if (isCaptureUnsaved)
             {
-                var dialogResult = MessageBox.Show("Do you want to save the capture before starting a new one?", "Save Capture", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
+                var dialogResult = MessageBox.Show("Do you want to save the capture before starting a new one?", "Save Capture", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Information);
                 
                 switch (dialogResult)
                 {
@@ -508,6 +513,7 @@ namespace NetSnifferApp
             if (statisticsForm != null)
             {
                 statisticsForm.Clear();
+                statisticsForm.SetBaseTime(DateTime.Now);
                 statisticsForm.IsLive = true;
                 statisticsForm.StartRequestingUpdates();
             }
@@ -529,6 +535,11 @@ namespace NetSnifferApp
         private void packetNumberUpDown_ValueChanged(object sender, EventArgs e)
         {
             numberOfPackets = (int)packetNumberUpDown.Value;
+        }
+
+        private void logToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            new AttackLogForm().Show();
         }
     }
 }

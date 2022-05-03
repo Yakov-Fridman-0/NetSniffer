@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
@@ -11,100 +12,100 @@ namespace NetSnifferLib.StatefulAnalysis.Arp
 {
     public class ArpTable
     {
-        bool _detectDoS = true;
-        readonly object detectDoSLock = new();
+        //bool _detectDoS = true;
+        //readonly object detectDoSLock = new();
 
-        public bool DetectDoS
-        { 
-            get
-            {
-                lock (detectDoSLock)
-                    return _detectDoS;
-            }
-            set
-            {
-                lock (detectDoSLock)
-                    _detectDoS = value;
-            }
-        }
+        //public bool DetectDoS
+        //{
+        //    get
+        //    {
+        //        lock (detectDoSLock)
+        //            return _detectDoS;
+        //    }
+        //    set
+        //    {
+        //        lock (detectDoSLock)
+        //            _detectDoS = value;
+        //    }
+        //}
 
-        public bool DoSDetected { get; private set; } = false;
-
-
-        static int entryModificationDoSInverval = 250; // ms
-        static readonly object entryModificationDoSInvervalLock = new();
-        
-        public static int EntryModificationDoSInverval 
-        { 
-            get
-            {
-                lock (entryModificationDoSInvervalLock)
-                    return entryModificationDoSInverval;
-            }
-            set
-            {
-                lock (entryModificationDoSInvervalLock)
-                    entryModificationDoSInverval = value;
-            }
-        }
+        //public bool DoSDetected { get; private set; } = false;
 
 
-        static int _enrtyModificationDoSCount = 3; // ms
-        static readonly object enrtyModificationDoSCountLock = new();
-        
-        public static int EnrtyModificationDoSCount
-        {
-            get
-            {
-                lock (entryModificationDoSInvervalLock)
-                    return _enrtyModificationDoSCount;
-            }
-            set
-            {
-                lock (enrtyModificationDoSCountLock)
-                    _enrtyModificationDoSCount =  value;
-            }
-        }
+        //static int entryModificationDoSInverval = 250; // ms
+        //static readonly object entryModificationDoSInvervalLock = new();
+
+        //public static int EntryModificationDoSInverval
+        //{
+        //    get
+        //    {
+        //        lock (entryModificationDoSInvervalLock)
+        //            return entryModificationDoSInverval;
+        //    }
+        //    set
+        //    {
+        //        lock (entryModificationDoSInvervalLock)
+        //            entryModificationDoSInverval = value;
+        //    }
+        //}
 
 
-        static int _entryCreationDoSInterval = 250; // ms
-        static readonly object entryCreationDoSIntervalLock = new();
-        
-        public static int EntryCreationDoSInterval 
-        { 
-            get
-            {
-                lock (entryCreationDoSIntervalLock)
-                    return _entryCreationDoSInterval;
-            }
-            set
-            {
-                lock (entryCreationDoSIntervalLock)
-                    _entryCreationDoSInterval = value;
-            }
-        }
+        //static int _enrtyModificationDoSCount = 3; // ms
+        //static readonly object enrtyModificationDoSCountLock = new();
+
+        //public static int EnrtyModificationDoSCount
+        //{
+        //    get
+        //    {
+        //        lock (entryModificationDoSInvervalLock)
+        //            return _enrtyModificationDoSCount;
+        //    }
+        //    set
+        //    {
+        //        lock (enrtyModificationDoSCountLock)
+        //            _enrtyModificationDoSCount = value;
+        //    }
+        //}
 
 
-        static int _entryCreationDoSCount = 5;
-        static readonly object entryCreationDoSCountLock = new();
-        
-        public static int EntryCreationDoSCount
-        {
-            get
-            {
-                lock (entryCreationDoSCountLock)
-                    return _enrtyModificationDoSCount;
-            }
-            set
-            {
-                lock (enrtyModificationDoSCountLock)
-                    _enrtyModificationDoSCount = value;
-            }
-        }
+        //static int _entryCreationDoSInterval = 250; // ms
+        //static readonly object entryCreationDoSIntervalLock = new();
+
+        //public static int EntryCreationDoSInterval
+        //{
+        //    get
+        //    {
+        //        lock (entryCreationDoSIntervalLock)
+        //            return _entryCreationDoSInterval;
+        //    }
+        //    set
+        //    {
+        //        lock (entryCreationDoSIntervalLock)
+        //            _entryCreationDoSInterval = value;
+        //    }
+        //}
+
+
+        //static int _entryCreationDoSCount = 5;
+        //static readonly object entryCreationDoSCountLock = new();
+
+        //public static int EntryCreationDoSCount
+        //{
+        //    get
+        //    {
+        //        lock (entryCreationDoSCountLock)
+        //            return _enrtyModificationDoSCount;
+        //    }
+        //    set
+        //    {
+        //        lock (enrtyModificationDoSCountLock)
+        //            _enrtyModificationDoSCount = value;
+        //    }
+        //}
 
         readonly Dictionary<IPAddress, PhysicalAddress> arpTable = new(IPAddressHelper.EqulityComparer);
 
-        readonly Dictionary<IPAddress, List<ArpEntryTransaction>> transactionHistory = new(IPAddressHelper.EqulityComparer);
+        readonly ConcurrentDictionary<IPAddress, List<ArpEntryTransaction>> transactionHistory = new(IPAddressHelper.EqulityComparer);
 
         readonly List<DateTime> entriesCreationTime = new();
         
@@ -157,7 +158,7 @@ namespace NetSnifferLib.StatefulAnalysis.Arp
                 }*/
 
                 entriesCreationTime.Add(receivedTime);
-                transactionHistory.Add(
+                transactionHistory.TryAdd(
                     ipAddress,
                     new List<ArpEntryTransaction>()
                     {
@@ -167,7 +168,9 @@ namespace NetSnifferLib.StatefulAnalysis.Arp
                             receivedTime,
                             packetId)
                     });
-                arpTable.Add(ipAddress, physicalAddress);
+
+                lock (arpTable)
+                    arpTable.Add(ipAddress, physicalAddress);
             }
             else
             {
@@ -177,11 +180,16 @@ namespace NetSnifferLib.StatefulAnalysis.Arp
 
         void ModifiyEntry(IPAddress ipAddress, PhysicalAddress physicalAddress, DateTime receivedTime, int packetId)
         {
-            if (arpTable.ContainsKey(ipAddress))
+            bool result;
+
+            lock (arpTable)
+                result = arpTable.ContainsKey(ipAddress);
+
+            if (result)
             {
                 var transactions = transactionHistory[ipAddress];
 
-                if (DetectDoS)
+/*                if (DetectDoS)
                 {
                     if (transactions.Count >= _enrtyModificationDoSCount)
                     {
@@ -192,7 +200,7 @@ namespace NetSnifferLib.StatefulAnalysis.Arp
                             DoSDetected = true;
                         }
                     }
-                }
+                }*/
 
                 transactions.Add(
                     new(
@@ -202,7 +210,9 @@ namespace NetSnifferLib.StatefulAnalysis.Arp
                         transactionTime: receivedTime, 
                         packetId: packetId
                     ));
-                arpTable[ipAddress] = physicalAddress;
+
+                lock (arpTable)
+                    arpTable[ipAddress] = physicalAddress;
             }
             else
             {

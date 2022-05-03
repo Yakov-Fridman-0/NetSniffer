@@ -48,6 +48,10 @@ namespace NetSnifferApp
             this.topologyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.generalTopologyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainPanel = new System.Windows.Forms.Panel();
+            this.capturePanel = new System.Windows.Forms.Panel();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.panel2 = new System.Windows.Forms.Panel();
+            this.packetViewer = new NetSnifferApp.PacketViewer();
             this.startPanel = new System.Windows.Forms.Panel();
             this.label6 = new System.Windows.Forms.Label();
             this.packetNumberUpDown = new System.Windows.Forms.NumericUpDown();
@@ -58,20 +62,18 @@ namespace NetSnifferApp
             this.interfaceComboBox = new System.Windows.Forms.ComboBox();
             this.captureFilter = new NetSnifferApp.CaptureFilter();
             this.startButton = new System.Windows.Forms.Button();
-            this.capturePanel = new System.Windows.Forms.Panel();
-            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.panel2 = new System.Windows.Forms.Panel();
-            this.packetViewer = new NetSnifferApp.PacketViewer();
+            this.attackToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.logToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             panel1 = new System.Windows.Forms.Panel();
             panel1.SuspendLayout();
             this.controlFlowLayoutPanel.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.mainPanel.SuspendLayout();
-            this.startPanel.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.packetNumberUpDown)).BeginInit();
             this.capturePanel.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.panel2.SuspendLayout();
+            this.startPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.packetNumberUpDown)).BeginInit();
             this.SuspendLayout();
             // 
             // panel1
@@ -86,7 +88,7 @@ namespace NetSnifferApp
             panel1.Location = new System.Drawing.Point(3, 4);
             panel1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             panel1.Name = "panel1";
-            panel1.Size = new System.Drawing.Size(1010, 82);
+            panel1.Size = new System.Drawing.Size(1010, 78);
             panel1.TabIndex = 0;
             // 
             // moreInfoLabel
@@ -174,7 +176,8 @@ namespace NetSnifferApp
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openToolStripMenuItem,
             this.statisticsToolStripMenuItem,
-            this.topologyToolStripMenuItem});
+            this.topologyToolStripMenuItem,
+            this.attackToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Padding = new System.Windows.Forms.Padding(7, 3, 0, 3);
@@ -255,128 +258,8 @@ namespace NetSnifferApp
             this.mainPanel.Location = new System.Drawing.Point(0, 30);
             this.mainPanel.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.mainPanel.Name = "mainPanel";
-            this.mainPanel.Size = new System.Drawing.Size(1016, 897);
+            this.mainPanel.Size = new System.Drawing.Size(1016, 852);
             this.mainPanel.TabIndex = 2;
-            // 
-            // startPanel
-            // 
-            this.startPanel.Controls.Add(this.label6);
-            this.startPanel.Controls.Add(this.packetNumberUpDown);
-            this.startPanel.Controls.Add(this.promiscuousCheckBox);
-            this.startPanel.Controls.Add(this.interfaceInfo);
-            this.startPanel.Controls.Add(this.label2);
-            this.startPanel.Controls.Add(this.label1);
-            this.startPanel.Controls.Add(this.interfaceComboBox);
-            this.startPanel.Controls.Add(this.captureFilter);
-            this.startPanel.Controls.Add(this.startButton);
-            this.startPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.startPanel.Location = new System.Drawing.Point(0, 0);
-            this.startPanel.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.startPanel.Name = "startPanel";
-            this.startPanel.Size = new System.Drawing.Size(1016, 897);
-            this.startPanel.TabIndex = 1;
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(305, 797);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(136, 20);
-            this.label6.TabIndex = 8;
-            this.label6.Text = "Number of Packets:";
-            // 
-            // packetNumberUpDown
-            // 
-            this.packetNumberUpDown.Increment = new decimal(new int[] {
-            50,
-            0,
-            0,
-            0});
-            this.packetNumberUpDown.Location = new System.Drawing.Point(439, 792);
-            this.packetNumberUpDown.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.packetNumberUpDown.Maximum = new decimal(new int[] {
-            100000000,
-            0,
-            0,
-            0});
-            this.packetNumberUpDown.Name = "packetNumberUpDown";
-            this.packetNumberUpDown.Size = new System.Drawing.Size(137, 27);
-            this.packetNumberUpDown.TabIndex = 7;
-            this.packetNumberUpDown.ValueChanged += new System.EventHandler(this.packetNumberUpDown_ValueChanged);
-            // 
-            // promiscuousCheckBox
-            // 
-            this.promiscuousCheckBox.AutoSize = true;
-            this.promiscuousCheckBox.Checked = true;
-            this.promiscuousCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.promiscuousCheckBox.Location = new System.Drawing.Point(624, 795);
-            this.promiscuousCheckBox.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.promiscuousCheckBox.Name = "promiscuousCheckBox";
-            this.promiscuousCheckBox.Size = new System.Drawing.Size(114, 24);
-            this.promiscuousCheckBox.TabIndex = 6;
-            this.promiscuousCheckBox.Text = "Promiscuous";
-            this.promiscuousCheckBox.UseVisualStyleBackColor = true;
-            this.promiscuousCheckBox.CheckedChanged += new System.EventHandler(this.promiscuousCheckBox_CheckedChanged);
-            // 
-            // interfaceInfo
-            // 
-            this.interfaceInfo.Interface = null;
-            this.interfaceInfo.Location = new System.Drawing.Point(248, 161);
-            this.interfaceInfo.Margin = new System.Windows.Forms.Padding(3, 5, 3, 5);
-            this.interfaceInfo.Name = "interfaceInfo";
-            this.interfaceInfo.Size = new System.Drawing.Size(519, 623);
-            this.interfaceInfo.TabIndex = 4;
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(325, 119);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(101, 20);
-            this.label2.TabIndex = 3;
-            this.label2.Text = "Capture Filter:";
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(325, 56);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(70, 20);
-            this.label1.TabIndex = 2;
-            this.label1.Text = "Interface:";
-            // 
-            // interfaceComboBox
-            // 
-            this.interfaceComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.interfaceComboBox.FormattingEnabled = true;
-            this.interfaceComboBox.Location = new System.Drawing.Point(435, 51);
-            this.interfaceComboBox.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.interfaceComboBox.Name = "interfaceComboBox";
-            this.interfaceComboBox.Size = new System.Drawing.Size(219, 28);
-            this.interfaceComboBox.TabIndex = 0;
-            this.interfaceComboBox.SelectedIndexChanged += new System.EventHandler(this.interfaceComboBox_SelectedIndexChanged);
-            // 
-            // captureFilter
-            // 
-            this.captureFilter.IsValidFilter = true;
-            this.captureFilter.Location = new System.Drawing.Point(435, 104);
-            this.captureFilter.Margin = new System.Windows.Forms.Padding(3, 5, 3, 5);
-            this.captureFilter.Name = "captureFilter";
-            this.captureFilter.Size = new System.Drawing.Size(249, 49);
-            this.captureFilter.TabIndex = 1;
-            this.captureFilter.FilterChanged += new System.EventHandler(this.captureFilter_FilterChanged);
-            // 
-            // startButton
-            // 
-            this.startButton.Enabled = false;
-            this.startButton.Location = new System.Drawing.Point(465, 851);
-            this.startButton.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.startButton.Name = "startButton";
-            this.startButton.Size = new System.Drawing.Size(86, 31);
-            this.startButton.TabIndex = 5;
-            this.startButton.Text = "Start";
-            this.startButton.UseVisualStyleBackColor = true;
-            this.startButton.Click += new System.EventHandler(this.startButton_Click);
             // 
             // capturePanel
             // 
@@ -385,7 +268,7 @@ namespace NetSnifferApp
             this.capturePanel.Location = new System.Drawing.Point(0, 0);
             this.capturePanel.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.capturePanel.Name = "capturePanel";
-            this.capturePanel.Size = new System.Drawing.Size(1016, 897);
+            this.capturePanel.Size = new System.Drawing.Size(1016, 852);
             this.capturePanel.TabIndex = 0;
             // 
             // tableLayoutPanel1
@@ -402,17 +285,17 @@ namespace NetSnifferApp
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10.13413F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 89.86588F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(1016, 897);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(1016, 852);
             this.tableLayoutPanel1.TabIndex = 7;
             // 
             // panel2
             // 
             this.panel2.Controls.Add(this.packetViewer);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel2.Location = new System.Drawing.Point(3, 94);
+            this.panel2.Location = new System.Drawing.Point(3, 90);
             this.panel2.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(1010, 799);
+            this.panel2.Size = new System.Drawing.Size(1010, 758);
             this.panel2.TabIndex = 1;
             // 
             // packetViewer
@@ -421,19 +304,164 @@ namespace NetSnifferApp
             this.packetViewer.Location = new System.Drawing.Point(0, 0);
             this.packetViewer.Margin = new System.Windows.Forms.Padding(3, 5, 3, 5);
             this.packetViewer.Name = "packetViewer";
-            this.packetViewer.Size = new System.Drawing.Size(1010, 799);
+            this.packetViewer.Size = new System.Drawing.Size(1010, 758);
             this.packetViewer.TabIndex = 0;
+            // 
+            // startPanel
+            // 
+            this.startPanel.Controls.Add(this.label6);
+            this.startPanel.Controls.Add(this.packetNumberUpDown);
+            this.startPanel.Controls.Add(this.promiscuousCheckBox);
+            this.startPanel.Controls.Add(this.interfaceInfo);
+            this.startPanel.Controls.Add(this.label2);
+            this.startPanel.Controls.Add(this.label1);
+            this.startPanel.Controls.Add(this.interfaceComboBox);
+            this.startPanel.Controls.Add(this.captureFilter);
+            this.startPanel.Controls.Add(this.startButton);
+            this.startPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.startPanel.Location = new System.Drawing.Point(0, 0);
+            this.startPanel.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.startPanel.Name = "startPanel";
+            this.startPanel.Size = new System.Drawing.Size(1016, 852);
+            this.startPanel.TabIndex = 1;
+            // 
+            // label6
+            // 
+            this.label6.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(303, 770);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(136, 20);
+            this.label6.TabIndex = 8;
+            this.label6.Text = "Number of Packets:";
+            // 
+            // packetNumberUpDown
+            // 
+            this.packetNumberUpDown.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.packetNumberUpDown.Increment = new decimal(new int[] {
+            50,
+            0,
+            0,
+            0});
+            this.packetNumberUpDown.Location = new System.Drawing.Point(445, 765);
+            this.packetNumberUpDown.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.packetNumberUpDown.Maximum = new decimal(new int[] {
+            100000000,
+            0,
+            0,
+            0});
+            this.packetNumberUpDown.Name = "packetNumberUpDown";
+            this.packetNumberUpDown.Size = new System.Drawing.Size(137, 27);
+            this.packetNumberUpDown.TabIndex = 7;
+            this.packetNumberUpDown.ValueChanged += new System.EventHandler(this.packetNumberUpDown_ValueChanged);
+            // 
+            // promiscuousCheckBox
+            // 
+            this.promiscuousCheckBox.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.promiscuousCheckBox.AutoSize = true;
+            this.promiscuousCheckBox.Checked = true;
+            this.promiscuousCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.promiscuousCheckBox.Location = new System.Drawing.Point(622, 768);
+            this.promiscuousCheckBox.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.promiscuousCheckBox.Name = "promiscuousCheckBox";
+            this.promiscuousCheckBox.Size = new System.Drawing.Size(114, 24);
+            this.promiscuousCheckBox.TabIndex = 6;
+            this.promiscuousCheckBox.Text = "Promiscuous";
+            this.promiscuousCheckBox.UseVisualStyleBackColor = true;
+            this.promiscuousCheckBox.CheckedChanged += new System.EventHandler(this.promiscuousCheckBox_CheckedChanged);
+            // 
+            // interfaceInfo
+            // 
+            this.interfaceInfo.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.interfaceInfo.Interface = null;
+            this.interfaceInfo.Location = new System.Drawing.Point(208, 134);
+            this.interfaceInfo.Margin = new System.Windows.Forms.Padding(3, 5, 3, 5);
+            this.interfaceInfo.Name = "interfaceInfo";
+            this.interfaceInfo.Size = new System.Drawing.Size(596, 623);
+            this.interfaceInfo.TabIndex = 4;
+            // 
+            // label2
+            // 
+            this.label2.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(278, 90);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(101, 20);
+            this.label2.TabIndex = 3;
+            this.label2.Text = "Capture Filter:";
+            // 
+            // label1
+            // 
+            this.label1.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(278, 29);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(70, 20);
+            this.label1.TabIndex = 2;
+            this.label1.Text = "Interface:";
+            // 
+            // interfaceComboBox
+            // 
+            this.interfaceComboBox.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.interfaceComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.interfaceComboBox.FormattingEnabled = true;
+            this.interfaceComboBox.Location = new System.Drawing.Point(399, 24);
+            this.interfaceComboBox.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.interfaceComboBox.Name = "interfaceComboBox";
+            this.interfaceComboBox.Size = new System.Drawing.Size(219, 28);
+            this.interfaceComboBox.TabIndex = 0;
+            this.interfaceComboBox.SelectedIndexChanged += new System.EventHandler(this.interfaceComboBox_SelectedIndexChanged);
+            // 
+            // captureFilter
+            // 
+            this.captureFilter.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.captureFilter.IsValidFilter = true;
+            this.captureFilter.Location = new System.Drawing.Point(399, 75);
+            this.captureFilter.Margin = new System.Windows.Forms.Padding(3, 5, 3, 5);
+            this.captureFilter.Name = "captureFilter";
+            this.captureFilter.Size = new System.Drawing.Size(249, 49);
+            this.captureFilter.TabIndex = 1;
+            this.captureFilter.FilterChanged += new System.EventHandler(this.captureFilter_FilterChanged);
+            // 
+            // startButton
+            // 
+            this.startButton.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.startButton.Enabled = false;
+            this.startButton.Location = new System.Drawing.Point(460, 813);
+            this.startButton.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.startButton.Name = "startButton";
+            this.startButton.Size = new System.Drawing.Size(86, 31);
+            this.startButton.TabIndex = 5;
+            this.startButton.Text = "Start";
+            this.startButton.UseVisualStyleBackColor = true;
+            this.startButton.Click += new System.EventHandler(this.startButton_Click);
+            // 
+            // attackToolStripMenuItem
+            // 
+            this.attackToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.logToolStripMenuItem});
+            this.attackToolStripMenuItem.Name = "attackToolStripMenuItem";
+            this.attackToolStripMenuItem.Size = new System.Drawing.Size(65, 24);
+            this.attackToolStripMenuItem.Text = "Attack";
+            // 
+            // logToolStripMenuItem
+            // 
+            this.logToolStripMenuItem.Name = "logToolStripMenuItem";
+            this.logToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.logToolStripMenuItem.Text = "Log";
+            this.logToolStripMenuItem.Click += new System.EventHandler(this.logToolStripMenuItem_Click);
             // 
             // ImprovedMainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1016, 927);
+            this.ClientSize = new System.Drawing.Size(1016, 882);
             this.Controls.Add(this.mainPanel);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.Name = "ImprovedMainForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "NetSniffer";
             panel1.ResumeLayout(false);
             panel1.PerformLayout();
@@ -441,12 +469,12 @@ namespace NetSnifferApp
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.mainPanel.ResumeLayout(false);
-            this.startPanel.ResumeLayout(false);
-            this.startPanel.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.packetNumberUpDown)).EndInit();
             this.capturePanel.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.panel2.ResumeLayout(false);
+            this.startPanel.ResumeLayout(false);
+            this.startPanel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.packetNumberUpDown)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -486,5 +514,7 @@ namespace NetSnifferApp
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.NumericUpDown packetNumberUpDown;
         private System.Windows.Forms.Label captureFilterTitleLabel;
+        private System.Windows.Forms.ToolStripMenuItem attackToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem logToolStripMenuItem;
     }
 }

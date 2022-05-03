@@ -24,7 +24,7 @@ namespace NetSnifferLib
 
         public static string Simplify(string protocol)
         {
-            protocol = protocol.ToLower();
+            protocol = protocol.ToLower().Trim();
 
             return protocol switch
             {
@@ -36,7 +36,8 @@ namespace NetSnifferLib
 
         public static bool IsValidProtocol(string protocol)
         {
-            return protocol is "dns" or "dhcp" or "http" ? false : layers.ContainsKey(Simplify(protocol));
+            var simplified = Simplify(protocol);
+            return protocol is not "dns" and not "dhcp" and not "http" && layers.ContainsKey(simplified);
         }
 
         public int Compare(string x, string y)

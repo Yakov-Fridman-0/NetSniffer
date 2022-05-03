@@ -128,7 +128,8 @@ namespace NetSnifferLib.Topology
 
         internal List<WanHost> GetOriginalWanHosts()
         {
-            return hosts.ToList();
+            lock (hosts)
+                return hosts.ToList();
         }
 
         public WanMap WanMap => new(hosts.ToList(), lanRouters.ToList(), wanRouters.ToList(), dnsServers.ToList());

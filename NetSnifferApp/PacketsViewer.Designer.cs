@@ -43,8 +43,8 @@ namespace NetSnifferApp
             this.Protocol = new System.Windows.Forms.ColumnHeader();
             this.Source = new System.Windows.Forms.ColumnHeader();
             this.Destination = new System.Windows.Forms.ColumnHeader();
-            this.PayloadLength = new System.Windows.Forms.ColumnHeader();
-            this.Description = new System.Windows.Forms.ColumnHeader();
+            this.length = new System.Windows.Forms.ColumnHeader();
+            this.info = new System.Windows.Forms.ColumnHeader();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.label3 = new System.Windows.Forms.Label();
             this.displayFilterControl = new NetSnifferApp.DisplayFilterControl();
@@ -86,12 +86,12 @@ namespace NetSnifferApp
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.binaryDataTextBox.Font = new System.Drawing.Font("Courier New", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            this.binaryDataTextBox.Location = new System.Drawing.Point(3, 29);
+            this.binaryDataTextBox.Location = new System.Drawing.Point(8, 40);
             this.binaryDataTextBox.Multiline = true;
             this.binaryDataTextBox.Name = "binaryDataTextBox";
             this.binaryDataTextBox.ReadOnly = true;
             this.binaryDataTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.binaryDataTextBox.Size = new System.Drawing.Size(705, 90);
+            this.binaryDataTextBox.Size = new System.Drawing.Size(703, 92);
             this.binaryDataTextBox.TabIndex = 1;
             this.binaryDataTextBox.Resize += new System.EventHandler(this.binaryDataTextBox_Resize);
             // 
@@ -160,8 +160,8 @@ namespace NetSnifferApp
             this.Protocol,
             this.Source,
             this.Destination,
-            this.PayloadLength,
-            this.Description});
+            this.length,
+            this.info});
             this.packetsListView.FullRowSelect = true;
             this.packetsListView.GridLines = true;
             this.packetsListView.HideSelection = false;
@@ -175,6 +175,7 @@ namespace NetSnifferApp
             this.packetsListView.UseCompatibleStateImageBehavior = false;
             this.packetsListView.View = System.Windows.Forms.View.Details;
             this.packetsListView.SelectedIndexChanged += new System.EventHandler(this.packetsListView_SelectedIndexChanged);
+            this.packetsListView.Resize += new System.EventHandler(this.packetsListView_Resize);
             // 
             // Index
             // 
@@ -184,36 +185,32 @@ namespace NetSnifferApp
             // Time
             // 
             this.Time.Text = "Time";
-            this.Time.Width = 45;
+            this.Time.Width = 200;
             // 
             // Protocol
             // 
             this.Protocol.Text = "Protocol";
-            this.Protocol.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.Protocol.Width = 80;
+            this.Protocol.Width = 100;
             // 
             // Source
             // 
             this.Source.Text = "Source";
-            this.Source.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.Source.Width = 57;
+            this.Source.Width = 120;
             // 
             // Destination
             // 
             this.Destination.Text = "Destination";
-            this.Destination.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.Destination.Width = 100;
+            this.Destination.Width = 120;
             // 
-            // PayloadLength
+            // length
             // 
-            this.PayloadLength.Text = "Payload Length";
-            this.PayloadLength.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.PayloadLength.Width = 114;
+            this.length.Text = "Length";
+            this.length.Width = 80;
             // 
-            // Description
+            // info
             // 
-            this.Description.Text = "Description";
-            this.Description.Width = 150;
+            this.info.Text = "Info";
+            this.info.Width = 130;
             // 
             // splitContainer1
             // 
@@ -251,6 +248,8 @@ namespace NetSnifferApp
             this.displayFilterControl.IsValidFilter = true;
             this.displayFilterControl.Location = new System.Drawing.Point(104, 14);
             this.displayFilterControl.Margin = new System.Windows.Forms.Padding(3, 5, 3, 5);
+            this.displayFilterControl.MaximumSize = new System.Drawing.Size(1000, 49);
+            this.displayFilterControl.MinimumSize = new System.Drawing.Size(0, 49);
             this.displayFilterControl.Name = "displayFilterControl";
             this.displayFilterControl.Size = new System.Drawing.Size(561, 49);
             this.displayFilterControl.TabIndex = 1;
@@ -294,8 +293,8 @@ namespace NetSnifferApp
         private System.Windows.Forms.ColumnHeader Protocol;
         private System.Windows.Forms.ColumnHeader Source;
         private System.Windows.Forms.ColumnHeader Destination;
-        private System.Windows.Forms.ColumnHeader PayloadLength;
-        private System.Windows.Forms.ColumnHeader Description;
+        private System.Windows.Forms.ColumnHeader length;
+        private System.Windows.Forms.ColumnHeader info;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private DisplayFilterControl displayFilterControl;
         private System.Windows.Forms.Label label3;

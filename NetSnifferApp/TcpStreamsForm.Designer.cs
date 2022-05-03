@@ -37,15 +37,16 @@ namespace NetSnifferApp
             this.port = new System.Windows.Forms.ColumnHeader();
             this.arrowColumn = new System.Windows.Forms.ColumnHeader();
             this.remoteIPAddressColumn = new System.Windows.Forms.ColumnHeader();
-            this.columnHeader3 = new System.Windows.Forms.ColumnHeader();
+            this.remotePortColumnHeader = new System.Windows.Forms.ColumnHeader();
             this.columnHeader1 = new System.Windows.Forms.ColumnHeader();
             this.columnHeader2 = new System.Windows.Forms.ColumnHeader();
+            this.statusColumnHeader = new System.Windows.Forms.ColumnHeader();
             this.SuspendLayout();
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(211, 23);
+            this.label1.Location = new System.Drawing.Point(265, 24);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(81, 20);
             this.label1.TabIndex = 0;
@@ -54,7 +55,7 @@ namespace NetSnifferApp
             // ipAddressLabel
             // 
             this.ipAddressLabel.AutoSize = true;
-            this.ipAddressLabel.Location = new System.Drawing.Point(298, 23);
+            this.ipAddressLabel.Location = new System.Drawing.Point(352, 24);
             this.ipAddressLabel.Name = "ipAddressLabel";
             this.ipAddressLabel.Size = new System.Drawing.Size(50, 20);
             this.ipAddressLabel.TabIndex = 1;
@@ -72,16 +73,17 @@ namespace NetSnifferApp
             this.streamsListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.port,
             this.arrowColumn,
+            this.remotePortColumnHeader,
             this.remoteIPAddressColumn,
-            this.columnHeader3,
             this.columnHeader1,
-            this.columnHeader2});
+            this.columnHeader2,
+            this.statusColumnHeader});
             this.streamsListView.FullRowSelect = true;
             this.streamsListView.GridLines = true;
             this.streamsListView.HideSelection = false;
             this.streamsListView.Location = new System.Drawing.Point(12, 59);
             this.streamsListView.Name = "streamsListView";
-            this.streamsListView.Size = new System.Drawing.Size(585, 301);
+            this.streamsListView.Size = new System.Drawing.Size(687, 301);
             this.streamsListView.TabIndex = 2;
             this.streamsListView.UseCompatibleStateImageBehavior = false;
             this.streamsListView.View = System.Windows.Forms.View.Details;
@@ -100,26 +102,31 @@ namespace NetSnifferApp
             this.remoteIPAddressColumn.Text = "Remote IP Address";
             this.remoteIPAddressColumn.Width = 150;
             // 
-            // columnHeader3
+            // remotePortColumnHeader
             // 
-            this.columnHeader3.Text = "Remote Port";
-            this.columnHeader3.Width = 100;
+            this.remotePortColumnHeader.Text = "Remote Port";
+            this.remotePortColumnHeader.Width = 100;
             // 
             // columnHeader1
             // 
             this.columnHeader1.Text = "Data Sent";
-            this.columnHeader1.Width = 100;
+            this.columnHeader1.Width = 120;
             // 
             // columnHeader2
             // 
             this.columnHeader2.Text = "Data Received";
-            this.columnHeader2.Width = 100;
+            this.columnHeader2.Width = 120;
+            // 
+            // statusColumnHeader
+            // 
+            this.statusColumnHeader.Text = "Status";
+            this.statusColumnHeader.Width = 100;
             // 
             // TcpStreamsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(609, 386);
+            this.ClientSize = new System.Drawing.Size(711, 386);
             this.Controls.Add(this.streamsListView);
             this.Controls.Add(this.ipAddressLabel);
             this.Controls.Add(this.label1);
@@ -141,6 +148,7 @@ namespace NetSnifferApp
         private System.Windows.Forms.ColumnHeader remoteIPAddressColumn;
         private System.Windows.Forms.ColumnHeader columnHeader1;
         private System.Windows.Forms.ColumnHeader columnHeader2;
-        private System.Windows.Forms.ColumnHeader columnHeader3;
+        private System.Windows.Forms.ColumnHeader remotePortColumnHeader;
+        private System.Windows.Forms.ColumnHeader statusColumnHeader;
     }
 }

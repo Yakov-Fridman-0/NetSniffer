@@ -14,6 +14,7 @@ namespace NetSnifferLib.StatefulAnalysis.Tcp
         Established,
         Fin,
         FinAck,
-        Closed
+        Closed,
+        Rst
     }
 }

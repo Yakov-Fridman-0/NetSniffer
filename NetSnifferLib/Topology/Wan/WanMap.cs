@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
@@ -134,6 +135,11 @@ namespace NetSnifferLib.Topology
                 DnsServersAdded = dnsServersAdded.AsReadOnly(), //.Where((server) => server != null).Select((server) => Hosts.Find((host) => host.IPAddress.Equals(server.IPAddress))).Where((server) => server != null).ToList(),
                 DnsServersRemoved = dnsServersRemoved.AsReadOnly() //.Select((server) => previousMap.Hosts.Find((host) => host.IPAddress.Equals(server.IPAddress))).ToList()
             };
+        }
+
+        public Task<WanMapDiff> GetDiffAsync(WanMap previousMap)
+        {
+            return Task.Run(() => GetDiff(previousMap));
         }
 
         public void Update(WanMapDiff mapDiff)

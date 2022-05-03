@@ -2,24 +2,123 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using NetSnifferLib.Topology;
+using System.Threading;
 using NetSnifferLib.Analysis;
-using NetSnifferLib.General;
 using NetSnifferLib.Analysis.Network;
+using NetSnifferLib.StatefulAnalysis;
+using NetSnifferLib.General;
+using NetSnifferLib.Topology;
 
 using PcapDotNet.Packets.Transport;
 
 namespace NetSnifferLib.StatefulAnalysis.Tcp
 {
-    static class TcpStatefulAnalyzer
+    class TcpStatefulAnalyzer
     {
-        static readonly List<TcpConnection> allConnections = new();
+        public static TcpStatefulAnalyzer Analyzer { get; set; } = new();
 
-        public static void AnalyzeDatagram(TcpDatagram datagram, NetworkContext context)
+        readonly List<TcpConnection> allConnections = new();
+
+        readonly Dictionary<TcpConnection, List<int>> connectionsPacketIds = new();
+
+        //bool isAnalyzig = false;
+
+        //Timer synFloodTimer;
+
+        int synTimeout = 1000;
+
+        int synFloodInterval = 2000;
+
+        int synFloodSynCount = 10;
+
+        int timeBetweenSeperateSynFloods = 10000;
+
+        Dictionary<Attack, List<TcpConnection>> synFloods = new();
+        Dictionary<TcpConnection, Attack> synFloodsByConncetion = new();
+
+        void DetectSynFlood()
         {
+            IEnumerable<TcpConnection> notInAttack;
+            
+            lock (allConnections)
+                notInAttack = allConnections.Where(connection => !synFloodsByConncetion.ContainsKey(connection));
+
+            var onlySynConnections = notInAttack.Where(connection => connection.Status == TcpConnectionStatus.Syn);
+            var timedOut = onlySynConnections.Where(connection => (IdManager.GetPacketTimestamp(connectionsPacketIds[connection][0]) - DateTime.Now).Milliseconds > synTimeout);
+
+            var onlySynConnectionsByHost = onlySynConnections.GroupBy(connection => connection.ListenerEndPoint.Address);
+
+
+            foreach (var group in onlySynConnectionsByHost)     
+            {
+                //List<IGrouping<IPAddress, TcpConnection>> groups = new();
+
+                if (group.Count() > synFloodSynCount)
+                {
+                    DateTime firstPacketTime = group.Min(connection => IdManager.GetPacketTimestamp(connectionsPacketIds[connection][0]));
+                    DateTime lastPacketTime = group.Max(connection => IdManager.GetPacketTimestamp(connectionsPacketIds[connection][0]));
+
+                    if ((lastPacketTime - firstPacketTime).Milliseconds < timeBetweenSeperateSynFloods)
+                    {
+                        var synFlood = new Attack(
+                             name: "Syn Flood",
+                             packetIds: group.Select(connection => connectionsPacketIds[connection][0]).ToArray(),
+                             attackers: group.Select(connection => new IpAddressContainer(connection.ConnectorEndPoint.Address)).ToArray(),
+                             targets: new[] { new IpAddressContainer(group.Key) });
+
+                        synFloods.Add(synFlood, group.ToList());
+
+                        foreach (var connection in group)
+                        {
+                            synFloodsByConncetion.Add(connection, synFlood);
+                            var packetData = PacketData.GetPacketDataByPacketId(connectionsPacketIds[connection][0]);
+                            packetData.AddAttack(synFlood);
+                        }
+
+                        return;
+                    }
+
+                    var connectionGroupsByTime = group.GroupBy(connection => (IdManager.GetPacketTimestamp(connectionsPacketIds[connection][0]) - firstPacketTime).TotalMilliseconds / timeBetweenSeperateSynFloods);
+                        
+                    foreach (var timeGroup in connectionGroupsByTime)
+                    {
+                        if (timeGroup.Count() > synFloodSynCount)
+                        {
+                            var synFlood = new Attack(
+                                name: "Syn Flood",
+                                packetIds: timeGroup.Select(connection => connectionsPacketIds[connection][0]).ToArray(),
+                                attackers: timeGroup.Select(connection => new IpAddressContainer(connection.ConnectorEndPoint.Address)).ToArray(),
+                                targets: new[] { new IpAddressContainer(group.Key) });
+
+                            synFloods.Add(synFlood, timeGroup.ToList());
+
+                            foreach (var connection in timeGroup)
+                            {
+                                synFloodsByConncetion.Add(connection, synFlood);
+                                var packetData = PacketData.GetPacketDataByPacketId(connectionsPacketIds[connection][0]);
+                                packetData.AddAttack(synFlood);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        int n = 0;
+        public void AnalyzeDatagram(TcpDatagram datagram, NetworkContext context, int packetId)
+        {
+            n++;
+            if (n == 100)
+            {
+                n = 0;
+                DetectSynFlood();
+            }
+/*            if (!isAnalyzig)
+            {
+                isAnalyzig = true;
+                synFloodTimer = new Timer(new TimerCallback(obj => DetectSynFlood()), null, 0, 2000);
+            }*/
+
             var sourceAddress = context.Source.IPAddress;
             var sourcePort = datagram.SourcePort;
 
@@ -55,7 +154,10 @@ namespace NetSnifferLib.StatefulAnalysis.Tcp
                 connection.AnalyzeListenerPacket(flags, sequenceNumber, acknowledgementNumber, payloadLength);
 
                 if (connection.Status == TcpConnectionStatus.Closed)
+                {
                     allConnections.Remove(connection);
+                    //connectionsPacketIds.Remove(connection);
+                }
 
                 return;
             }
@@ -64,20 +166,31 @@ namespace NetSnifferLib.StatefulAnalysis.Tcp
             {
                 connection = TcpConnection.CreateConnection(sourceEndPoint, destinationEndPoint, flags, sequenceNumber, acknowledgementNumber, payloadLength);
 
-                var hosts = PacketAnalyzer.Analyzer.GetWanHosts();
-                
-                var sourceHost = hosts.Find(host => host.IPAddress.Equals(sourceAddress));
-                var destinationHost = hosts.Find(host => host.IPAddress.Equals(destinationAddress));
+
+                List<WanHost> hosts;
+                WanHost sourceHost, destinationHost;
+
+                do
+                {
+                    hosts = PacketAnalyzer.Analyzer.GetWanHosts();
+                    destinationHost = hosts.Find(host => host.IPAddress.Equals(destinationAddress));
+                    sourceHost = hosts.Find(host => host.IPAddress.Equals(sourceAddress));
+                } while (destinationHost == null || sourceHost == null);
 
                 sourceHost.TcpConnections.Add(connection);
                 destinationHost.TcpConnections.Add(connection);
 
                 lock (allConnections)
                     allConnections.Add(connection);
+
+                lock (connectionsPacketIds)
+                    connectionsPacketIds.Add(connection, new List<int>());
             }
+
+            connectionsPacketIds[connection].Add(packetId);
         }
 
-        static TcpConnection GetConnectionByIPEndPoints(IPEndPoint connector, IPEndPoint listener)
+        TcpConnection GetConnectionByIPEndPoints(IPEndPoint connector, IPEndPoint listener)
         {
             lock (allConnections)
                 return allConnections.FirstOrDefault(

@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Net;
 using System.Linq;
-using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -15,17 +16,28 @@ namespace NetSnifferApp
     public partial class WanViewer : UserControl
     {
         readonly Dictionary<WanHost, WanHostControl> hostControls = new();
+        readonly Dictionary<WanHost, WanHostItem> hostItems = new();
+
+        readonly List<WanHost> orderedHosts = new();
+
+        readonly List<WanHost> lanRouters = new();
+
         readonly List<WanHost> routers = new();
 
         readonly List<(WanHost, WanHost)> connections = new();
 
-        int numberOfLanRouters = 0;
-
         int centerX;
         int centerY;
 
-        int minRadious = 100;
-        int maxRadious = 700;
+        public bool IsLive { get; set; } = false;
+
+        const double angleDiff = Math.PI / 3;
+        const int radious = 50;
+
+        const int minRadious = 100;
+        const int maxRadious = 700;
+
+        readonly Dictionary<WanHostControl, double> angle = new();
 
         readonly Random random = new(10);
 
@@ -57,14 +69,32 @@ namespace NetSnifferApp
         {
             var control = new WanHostControl
             {
-                Host = host
+                IsLive = IsLive,
+
+                Host = host,
+                Visible = true,
+
+                Width = 60,
+                Height = 52
             };
-            Controls.Add(control);
+
+            var item = new WanHostItem(host);
+
+            Invoke(new MethodInvoker(() =>
+            { 
+                Controls.Add(control);
+                comboBox1.Items.Add(item);
+            }));
 
             hostControls.Add(host, control);
-            
+            hostItems.Add(host, item);
 
             PlaceHost(control);
+        }
+
+        public Task AddHostAsync(WanHost host)
+        {
+            return Task.Run(() => AddHost(host));
         }
 
         public void RemoveHost(WanHost host)
@@ -73,6 +103,9 @@ namespace NetSnifferApp
             {
                 hostControls.Remove(host, out WanHostControl control);
                 Controls.Remove(control);
+
+                hostItems.Remove(host, out WanHostItem item);
+                comboBox1.Items.Remove(item);
             }
         }
 
@@ -81,16 +114,26 @@ namespace NetSnifferApp
             routers.Add(host);
             hostControls.Remove(host);
 
-            numberOfLanRouters++;
+            lanRouters.Add(host);
 
             var control = new WanHostControl
             {
                 Host = host
             };
+
             control.BecomeRouter();
             hostControls.Add(host, control);
 
+            Invoke(new MethodInvoker(() => Controls.Add(control)));
+
             PlaceLanRouter(control);
+
+            //OrderConnectedHosts(host);
+        }
+
+        public Task AddLanRouterAsync(WanHost host)
+        {
+            return Task.Run(() => AddLanRouter(host));
         }
 
         public void MakeHostWanRouter(WanHost host)
@@ -109,24 +152,21 @@ namespace NetSnifferApp
         public void PlaceHost(WanHostControl control)
         {
             SuspendLayout();
-            Controls.Add(control);
 
             var location = GetRandomLocationForHost(control);
             var borderLocation = location + control.Size;
 
-            control.Location = location;
+            control.Invoke( new MethodInvoker(() => control.Location = location));
 
-            while (location.X < 0 || borderLocation.X > Width || location.Y < 0 || borderLocation.Y > Height || IsInOtherControl(control).Count > 0)
+            while (location.X < 0 || borderLocation.X > Width || location.Y < 0 || borderLocation.Y > Height || GetShadowedControls(control).Count > 0)
             {
                 location = GetRandomLocationForHost(control);
                 borderLocation = location + control.Size;
 
-                control.Location = location;
+                control.Invoke(new MethodInvoker(() => control.Location = location));
             }
 
-            var hidden = IsInOtherControl(control);
-
-            control.Location = location;
+            control.Invoke(new MethodInvoker(() => control.Location = location));
 
             ResumeLayout();
 
@@ -147,7 +187,17 @@ namespace NetSnifferApp
         public void AddConnection(WanHost host1, WanHost host2)
         {
             if (!connections.Contains((host1, host2)))
-                connections.Add((host1, host2));
+                connections.Add((host1, host2));  
+        }
+
+        public void ShowConnections()
+        {
+            foreach (var router in lanRouters)
+            {
+                OrderConnectedHosts(router);
+            }
+
+            Invalidate();
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -166,7 +216,7 @@ namespace NetSnifferApp
             }
         }
 
-        List<WanHostControl> IsInOtherControl(WanHostControl control)
+        List<WanHostControl> GetShadowedControls(WanHostControl control)
         {
             /*            var borderLocation = location + control.Size;
 
@@ -298,11 +348,56 @@ namespace NetSnifferApp
         public void PlaceLanRouter(WanHostControl control)
         {
             SuspendLayout();
-            Controls.Add(control);
 
-            control.Location = GetRandomLocationForLanRouter(control);
+            var location = GetRandomLocationForLanRouter(control);
 
+            Invoke(new MethodInvoker(() => control.Location = location));
             ResumeLayout();
+        }
+
+        void OrderConnectedHosts(WanHost router)
+        {
+            var control = hostControls[router];
+            var angle = Math.Atan2(control.Location.Y - centerY, control.Location.X - centerX);
+
+            var prevLocation = new Point((int)(control.Location.X - radious * Math.Cos(angle)), (int)(control.Location.Y - radious * Math.Sin(angle)));
+            
+            if (!orderedHosts.Contains(router))
+                orderedHosts.Add(router);
+
+            BuildChain(control, angle, prevLocation, null);
+        }
+
+        void BuildChain(WanHostControl control, double baseAngle, Point baseLocation, WanHost prevHost)
+        {
+            var nextLocationX = (int)(baseLocation.X + radious * Math.Cos(baseAngle));
+            var nextLocationY = (int)(baseLocation.Y + radious * Math.Sin(baseAngle));
+
+            var newLocation = new Point(nextLocationX, nextLocationY);
+
+            var host = control.Host;
+
+            if (!orderedHosts.Contains(host))
+            {
+                Invoke(new MethodInvoker(() => control.Location = newLocation));
+                orderedHosts.Add(host);
+            }
+
+            var connectedHosts = new List<WanHost>(control.Host.ConnectedHosts);
+            connectedHosts.Remove(prevHost);
+
+            if (connectedHosts.Count == 0)
+                return;
+
+            var nextHost = connectedHosts[0];
+            BuildChain(hostControls[nextHost], baseAngle, newLocation, host);
+
+            foreach (var (otherHost, index) in connectedHosts.Skip(1).Select((host, i) => (host, i)))
+            {
+                var sign = (index % 2 - 0.5) * 2;
+                var newAngle = baseAngle + sign * (angleDiff * index / 2);
+                BuildChain(hostControls[otherHost], newAngle, newLocation, host);
+            }
         }
 
         private void WanViewer_Resize(object sender, EventArgs e)
@@ -311,6 +406,44 @@ namespace NetSnifferApp
             centerY = Height / 2;
 
             label1.Location = new Point(centerX - label1.Width / 2, centerY - label1.Height / 2);
+        }
+
+        WanHostControl markedHost = null;
+
+/*        private void searchTextBox_TextChanged(object sender, EventArgs e)
+        {
+            var text = searchTextBox.Text;
+
+            if (Regex.IsMatch(text, @"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$"))
+            {
+                var address = IPAddress.Parse(text);
+                var host = hostControls.FirstOrDefault(kvp => kvp.Key.IPAddress.Equals(address)).Value;
+                
+                if (host != null)
+                {
+                    host.Mark();
+                    markedHost = host;
+                }
+            }
+            else
+            {
+                if (markedHost != null)
+                    markedHost.UnMark();
+            }
+        }*/
+
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var item = (WanHostItem)(comboBox1.SelectedItem);
+
+            if (item != null)
+            {
+                if (markedHost?.Marked ?? false)
+                    markedHost.UnMark();
+
+                markedHost = hostControls[item.Host];
+                markedHost.Mark();
+            }
         }
     }
 }

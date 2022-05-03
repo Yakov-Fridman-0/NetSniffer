@@ -42,15 +42,23 @@ namespace NetSnifferApp
             refreshTimer.Start();
         }
 
-        private void refreshTimer_Tick(object sender, EventArgs e)
+        public void StopRefreshing()
+        {
+            refreshTimer.Stop();
+        }
+
+        Task RefreshConnectionsAsync()
+        {
+            return Task.Run(() => RefreshConnections());
+        }
+
+        void RefreshConnections()
         {
             var connections = _host.TcpConnectionsAsReadOnly;
 
             var newConnections = connections.Except(items.Keys).ToList();
             var oldConnections = items.Keys.Intersect(connections).ToList();
-            //var connectionsRemoved = items.Keys.Except(connections).ToList();
 
-            
             foreach (var conn in newConnections)
             {
                 int port;
@@ -58,6 +66,8 @@ namespace NetSnifferApp
                 uint dataSent;
                 uint dataReceived;
                 IPAddress remoteAddress;
+
+                TcpConnectionStatus status = conn.Status;
 
                 if (conn.ConnectorEndPoint.Address.Equals(_host.IPAddress))
                 {
@@ -67,7 +77,7 @@ namespace NetSnifferApp
                     remotePort = conn.ListenerEndPoint.Port;
 
                     dataSent = conn.DataSentByConnector;
-                    dataReceived = conn.DataSentByListener; 
+                    dataReceived = conn.DataSentByListener;
                 }
                 else
                 {
@@ -80,16 +90,40 @@ namespace NetSnifferApp
                     dataReceived = conn.DataSentByConnector;
                 }
 
-                var newItem = new ListViewItem(new[] { port.ToString(), "->", remoteAddress.ToString(), remotePort.ToString(), dataSent.ToString(), dataReceived.ToString() })
+                ListViewItem newItem = null;
+
+                Invoke(new MethodInvoker(() =>
+                newItem = new ListViewItem(
+                    new[] {
+                        port.ToString(),
+                        "->",
+                        remotePort.ToString(),
+                        remoteAddress.ToString(),
+                        dataSent.ToString(),
+                        dataReceived.ToString(),
+                        status switch
+                        {
+                            TcpConnectionStatus.Syn or TcpConnectionStatus.SynAck => "Opening",
+                            TcpConnectionStatus.Established => "Established",
+                            TcpConnectionStatus.Fin or TcpConnectionStatus.FinAck => "Closing",
+                            TcpConnectionStatus.Closed => "Closed",
+                            TcpConnectionStatus.Rst => "Reseted",
+                            _ => string.Empty
+                        }
+                    }
+                    )
                 {
                     Name = port.ToString()
-                };
+                }));
 
                 items.Add(conn, newItem);
-
-                streamsListView.SuspendLayout();
-                streamsListView.Items.Add(newItem);
-                streamsListView.ResumeLayout();
+                streamsListView.Invoke(
+                new MethodInvoker(() =>
+                { 
+                    //streamsListView.SuspendLayout();
+                    streamsListView.Items.Add(newItem);
+                    //streamsListView.ResumeLayout();
+                }));
             }
 
             foreach (var conn in oldConnections)
@@ -98,45 +132,67 @@ namespace NetSnifferApp
                 uint dataReceived;
                 ListViewItem item;
 
+                string statusString = conn.Status switch
+                {
+                    TcpConnectionStatus.Syn or TcpConnectionStatus.SynAck => "Opening",
+                    TcpConnectionStatus.Established => "Established",
+                    TcpConnectionStatus.Fin or TcpConnectionStatus.FinAck => "Closing",
+                    TcpConnectionStatus.Closed => "Closed",
+                    TcpConnectionStatus.Rst => "Reseted",
+                    _ => string.Empty
+                };
+
                 if (conn.ConnectorEndPoint.Address.Equals(_host.IPAddress))
                 {
                     dataSent = conn.DataSentByConnector;
                     dataReceived = conn.DataSentByListener;
-                    item = streamsListView.Items[conn.ConnectorEndPoint.Port.ToString()];
+                    item = (ListViewItem)Invoke(new Func<ListViewItem>(() => streamsListView.Items[conn.ConnectorEndPoint.Port.ToString()]));
                 }
                 else
                 {
                     dataSent = conn.DataSentByListener;
                     dataReceived = conn.DataSentByConnector;
-                    item = streamsListView.Items[conn.ListenerEndPoint.Port.ToString()];
+                    item = (ListViewItem)Invoke(new Func<ListViewItem>(() => streamsListView.Items[conn.ListenerEndPoint.Port.ToString()]));
                 }
 
-               
+                streamsListView.Invoke(
+                    new MethodInvoker(() =>
+                    {
+                        if (item.SubItems[4].Text != dataSent.ToString())
+                        //{
+                            item.SubItems[4].Text = dataSent.ToString();
+                        //streamsListView.Invalidate();
+                        //}
 
-                if (item.SubItems[4].Text != dataSent.ToString())
-                {
-                    item.SubItems[4].Text = dataSent.ToString();
-                    streamsListView.Invalidate();
-                }
+                        if (item.SubItems[5].Text != dataReceived.ToString())
+                        //{
+                            item.SubItems[5].Text = dataReceived.ToString();
+                        //streamsListView.Invalidate();
+                        //}
 
-                if (item.SubItems[5].Text != dataReceived.ToString())
-                {
-                    item.SubItems[5].Text = dataReceived.ToString();                    
-                    streamsListView.Invalidate();
-                }
+                        if (item.SubItems[6].Text != statusString)
+                        //{
+                            item.SubItems[6].Text = statusString;
+                        //streamsListView.Invalidate();
+                        //}
+                    }));
             }
-
 
             foreach (var conn in items.Keys)
             {
                 if (!connections.Contains(conn))
                 {
                     items.Remove(conn, out ListViewItem item);
-                    streamsListView.Items.Remove(item);
+                    streamsListView.Invoke(new MethodInvoker(() => streamsListView.Items.Remove(item)));
                 }
             }
+        }
 
-
+        async private void refreshTimer_Tick(object sender, EventArgs e)
+        {
+            refreshTimer.Stop();
+            await RefreshConnectionsAsync();
+            refreshTimer.Start();
         }
     }
 }

@@ -19,10 +19,10 @@ namespace NetSnifferLib
         static readonly ConcurrentDictionary<int, Packet> packetsById = new();
         static readonly ConcurrentDictionary<int, Message> messagesById = new();
 
-        public static int GetNewMessageId(Message message)
+/*        public static int GetNewMessageId(Message message)
         {
             return Interlocked.Increment(ref nextMessageId);
-        }
+        }*/
 
         public static int GetNewPacketId(Packet packet)
         {
@@ -32,14 +32,19 @@ namespace NetSnifferLib
             return newId;
         }
 
-        public static Message GetMessag(int id)
+/*        public static Message GetMessag(int id)
         {
             return messagesById[id];
-        }
+        }*/
 
         public static Packet GetPacket(int id)
         {
             return packetsById[id];
+        }
+
+        public static DateTime GetPacketTimestamp(int id)
+        {
+            return GetPacket(id).Timestamp;
         }
 
         public static int GetId(Packet packet)

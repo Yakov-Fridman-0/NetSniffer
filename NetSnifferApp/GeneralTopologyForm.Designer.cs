@@ -36,7 +36,7 @@ namespace NetSnifferApp
             this.titleLabel = new System.Windows.Forms.Label();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.lanViewer = new NetSnifferApp.LanViewer();
-            this.wanViewer1 = new NetSnifferApp.WanViewer();
+            this.wanViewer = new NetSnifferApp.WanViewer();
             label1 = new System.Windows.Forms.Label();
             label2 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -73,7 +73,7 @@ namespace NetSnifferApp
             // titleLabel
             // 
             this.titleLabel.AutoSize = true;
-            this.titleLabel.Location = new System.Drawing.Point(412, 9);
+            this.titleLabel.Location = new System.Drawing.Point(603, 9);
             this.titleLabel.Name = "titleLabel";
             this.titleLabel.Size = new System.Drawing.Size(176, 20);
             this.titleLabel.TabIndex = 0;
@@ -97,10 +97,10 @@ namespace NetSnifferApp
             // 
             // splitContainer1.Panel2
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.wanViewer1);
+            this.splitContainer1.Panel2.Controls.Add(this.wanViewer);
             this.splitContainer1.Panel2.Controls.Add(label2);
             this.splitContainer1.Size = new System.Drawing.Size(1795, 956);
-            this.splitContainer1.SplitterDistance = 485;
+            this.splitContainer1.SplitterDistance = 409;
             this.splitContainer1.TabIndex = 1;
             // 
             // lanViewer
@@ -108,20 +108,22 @@ namespace NetSnifferApp
             this.lanViewer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.lanViewer.IsLive = true;
             this.lanViewer.Location = new System.Drawing.Point(3, 34);
             this.lanViewer.Name = "lanViewer";
-            this.lanViewer.Size = new System.Drawing.Size(475, 915);
+            this.lanViewer.Size = new System.Drawing.Size(399, 915);
             this.lanViewer.TabIndex = 1;
             // 
-            // wanViewer1
+            // wanViewer
             // 
-            this.wanViewer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.wanViewer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.wanViewer1.Location = new System.Drawing.Point(4, 35);
-            this.wanViewer1.Name = "wanViewer1";
-            this.wanViewer1.Size = new System.Drawing.Size(1295, 914);
-            this.wanViewer1.TabIndex = 1;
+            this.wanViewer.IsLive = true;
+            this.wanViewer.Location = new System.Drawing.Point(4, 35);
+            this.wanViewer.Name = "wanViewer";
+            this.wanViewer.Size = new System.Drawing.Size(1371, 914);
+            this.wanViewer.TabIndex = 1;
             // 
             // GeneralTopologyForm
             // 
@@ -152,6 +154,6 @@ namespace NetSnifferApp
         private System.Windows.Forms.Label titleLabel;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private LanViewer lanViewer;
-        private WanViewer wanViewer1;
+        private WanViewer wanViewer;
     }
 }

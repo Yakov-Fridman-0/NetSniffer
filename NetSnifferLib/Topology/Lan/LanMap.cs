@@ -119,6 +119,16 @@ namespace NetSnifferLib.Topology
             };
         }
 
+        public Task<LanMapDiff> GetDiffAsync(LanMap previousMap)
+        {
+            return Task.Run(() => GetDiff(previousMap));
+        }
+
+        public Task UpdateAsync(LanMapDiff diff)
+        {
+            return Task.Run(() => Update(diff));
+        }
+
         public void Update(LanMapDiff diff)
         {
             foreach (var host in diff.HostsAdded)

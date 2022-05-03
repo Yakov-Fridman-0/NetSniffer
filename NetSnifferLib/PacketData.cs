@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -33,6 +34,10 @@ namespace NetSnifferLib
             { "udp", new[] { "srcport", "dstport" } },
             { "tcp", new[] { "srcport", "dstport" } }
         };
+
+
+        static readonly ConcurrentBag<Attack> allAttacks = new();
+        public static Attack[] AllAttacks => allAttacks.ToArray();
 
         internal static bool IsValidField(string protocol, string field)
         {
@@ -208,7 +213,6 @@ namespace NetSnifferLib
 
         public static PacketDataComparer IdComparer { get; } = new();
         
-
         public int PacketId { get; private init; }
 
         public Packet Packet { get; private init; }
@@ -261,11 +265,24 @@ namespace NetSnifferLib
         
         internal void AddAttack(Attack attack)
         {
+            allAttacks.Add(attack);
+
             _attackList.Add(attack);
+
+            AttackDetected.Invoke(PacketId, attack);
         }
 
-        public PacketDesciptionHandler DescriptionReady;
+        internal void RemoveAttack(Attack attack)
+        {
+            _attackList.Remove(attack);
 
-        public PacketAttackHandler AttackDetected;
+            AttackRuledOut.Invoke(PacketId, attack);
+        }
+
+        public event PacketDesciptionHandler DescriptionReady = delegate { };
+
+        public event PacketAttackHandler AttackDetected = delegate { };
+
+        public event PacketAttackHandler AttackRuledOut = delegate { };
     }
 }

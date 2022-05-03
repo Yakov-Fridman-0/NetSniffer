@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -22,14 +25,18 @@ namespace NetSnifferApp
         private void CancelButton_Click(object sender, EventArgs e)
         {
             filterTextBox.Clear();
-            FilterChanged.Invoke(this, new EventArgs());
         }
 
         private void FilterTextBox_TextChanged(object sender, EventArgs e)
         {
             Filter = filterTextBox.Text;
 
-            FilterChanged.Invoke(this, new EventArgs());
+            if (typingTimer.Enabled)
+            {
+                typingTimer.Stop();
+            }
+
+            typingTimer.Start();
         }
 
         bool _isValidFilter = false;
@@ -55,6 +62,12 @@ namespace NetSnifferApp
         bool IsBlank()
         {
             return string.IsNullOrWhiteSpace(Filter);
+        }
+
+        private void typingTimer_Tick(object sender, EventArgs e)
+        {
+            typingTimer.Stop();
+            FilterChanged.Invoke(this, new EventArgs());
         }
     }
 }

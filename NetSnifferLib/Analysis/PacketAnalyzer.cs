@@ -202,6 +202,11 @@ namespace NetSnifferLib.Analysis
             ((LiveSniffer)Sniffer).Ping(destination, 128);
         }
 
+        public Task TracertAsync(IPAddress destination)
+        {
+            return Task.Run(() => Tracert(destination));
+        }
+
         public void Tracert(IPAddress destination)
         {
             int maxHops = 30;

@@ -26,6 +26,8 @@ namespace NetSnifferApp
         int currentRow = 0;
         int currentColumn = 0;
 
+        public bool IsLive { get; set; }
+        
         public LanViewer()
         {
             InitializeComponent();
@@ -36,10 +38,12 @@ namespace NetSnifferApp
             LanHostControl control = null;
             hostsTableLayoutPanel.Invoke((MethodInvoker) delegate
             {
-                hostsTableLayoutPanel.SuspendLayout();
+                //hostsTableLayoutPanel.SuspendLayout();
                 control = new LanHostControl
                 {
-                    Host = host
+                    Host = host,
+
+                    IsLive = IsLive
                 };
             });
 
@@ -55,7 +59,7 @@ namespace NetSnifferApp
 
         public Task AddHostAsync(LanHost host)
         {
-            return Task.Run(() => AddHost( host));
+            return Task.Run(() => AddHost(host));
         }
         
         void PlaceHostContorl(LanHostControl control)
@@ -63,6 +67,7 @@ namespace NetSnifferApp
             control.Invoke(new MethodInvoker(
                 () =>
                 {
+                    hostsTableLayoutPanel.SuspendLayout();
                     hostsTableLayoutPanel.Controls.Add(control, currentColumn, currentRow);
                     control.Dock = DockStyle.Fill;
 

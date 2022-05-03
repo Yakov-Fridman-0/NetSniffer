@@ -53,7 +53,7 @@ namespace NetSnifferApp
             InitializeComponent();
         }
 
-        public event EventHandler TopologyUpdateRequested;
+        public event EventHandler TopologyUpdateRequested = delegate { };
 
         public void StartReuqestingUpdates()
         {
@@ -63,11 +63,15 @@ namespace NetSnifferApp
         public void StopRequestingUpdates()
         {
             updateTimer.Stop();
+            titleLabel.Text = "Capture Stopped";
+            titleLabel.BringToFront();
         }
 
         public async void UpdateTopology(LanMap lanMap, WanMap wanMap)
         {
-            var lanDiff = lanMap.GetDiff(LanMap);
+            updateTimer.Stop();
+
+            var lanDiff = await lanMap.GetDiffAsync(LanMap);
 
             foreach (var host in lanDiff.HostsAdded)
                 await lanViewer.AddHostAsync(host);
@@ -87,11 +91,11 @@ namespace NetSnifferApp
                     lanViewer.HideHostIPAddress(host);
             }
             
-            LanMap.Update(lanDiff);
+            await LanMap.UpdateAsync(lanDiff);
 
 
-            var wanDiff = wanMap.GetDiff(WanMap);
-            
+            var wanDiff = await wanMap.GetDiffAsync(WanMap);
+
             foreach (var wanHost in wanMap.HostsAsReadOnly)
             {
                 if (wanHost.IPAddress.Equals(System.Net.IPAddress.Any))
@@ -103,31 +107,43 @@ namespace NetSnifferApp
                 {
                     lanViewer.AssociateWanHostWithLanHost(lanHost, wanHost);
 
-                    if (wanViewer1.ContainsHost(wanHost))
-                        wanViewer1.RemoveHost(wanHost);
+                    if (wanViewer.ContainsHost(wanHost))
+                        wanViewer.RemoveHost(wanHost);
                 }
                 else
                 {
-                    if (!wanViewer1.ContainsHost(wanHost))
-                        wanViewer1.AddHost(wanHost);
+                    if (!wanViewer.ContainsHost(wanHost))
+                        await wanViewer.AddHostAsync(wanHost);
                 }
 
-                foreach (var otherHost in wanHost.ConnectedHosts)
+/*                foreach (var otherHost in wanHost.ConnectedHosts)
                 {
-                    wanViewer1.AddConnection(wanHost, otherHost);
-                }
+                    wanViewer.AddConnection(wanHost, otherHost);
+                }*/
             }
 
             foreach (var router in wanDiff.LanRouterAdded)
-                wanViewer1.AddLanRouter(router);
+                await wanViewer.AddLanRouterAsync(router);
+
+            foreach (var wanHost in wanMap.HostsAsReadOnly)
+            {
+                foreach (var otherHost in wanHost.ConnectedHosts)
+                {
+                    wanViewer.AddConnection(wanHost, otherHost);
+                }
+            }
+
+            wanViewer.ShowConnections();
 
             foreach (var router in wanDiff.WanRoutersAdded)
-                wanViewer1.MakeHostWanRouter(router);
+                wanViewer.MakeHostWanRouter(router);
 
             foreach (var server in wanDiff.DnsServersAdded)
-                wanViewer1.MakeHostServer(server);
+                wanViewer.MakeHostServer(server);
 
             WanMap.Update(wanDiff);
+
+            updateTimer.Start();
         }
 
         private void updateTimer_Tick(object sender, EventArgs e)
@@ -141,6 +157,9 @@ namespace NetSnifferApp
 
             Width = Screen.PrimaryScreen.WorkingArea.Width;
             Height = Screen.PrimaryScreen.WorkingArea.Height;
+
+            lanViewer.IsLive = IsLive;
+            wanViewer.IsLive = IsLive;
         }
     }
 }

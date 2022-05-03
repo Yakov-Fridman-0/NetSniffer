@@ -119,6 +119,9 @@ namespace NetSnifferApp
 
         private void ShowStatistics(GeneralStatistics statistics)
         {
+            SuspendLayout();
+            tableLayoutPanel1.SuspendLayout();
+
             tNumLbl.Text = string.Format(NumberFormat, statistics.TransmittedPackets.ToString());
             tBytesLbl.Text = string.Format(BytesFormat, statistics.TransmittedBytes.ToString());
 
@@ -136,6 +139,9 @@ namespace NetSnifferApp
 
             tcpNumLbl.Text = string.Format(NumberFormat, statistics.TcpPackets.ToString());
             tcpBytesLbl.Text = string.Format(BytesFormat, statistics.TcpPayloadBytes.ToString());
+
+            tableLayoutPanel1.ResumeLayout();
+            ResumeLayout();
         }
 
         private void refreshTimer_Tick(object sender, EventArgs e)
@@ -145,7 +151,10 @@ namespace NetSnifferApp
 
         private void zeroButton_Click(object sender, EventArgs e)
         {
+            updateTimer.Stop();
             baseStatistics = currentStatistics;
+            updateTimer.Start();
+
             baseTime = DateTime.Now;
 
             ShowStatistics(default);

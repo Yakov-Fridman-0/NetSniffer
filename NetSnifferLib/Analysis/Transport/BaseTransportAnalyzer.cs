@@ -42,10 +42,17 @@ namespace NetSnifferLib.Analysis.Transport
 
         protected abstract Datagram GetPayloadAndAnalyzer(T datagram, out IAnalyzer analyzer);
 
+        protected virtual void SpecificAnalysis(T datagram, NetworkContext context, int packetId)
+        {
+
+        }
+
         protected override TransportAnalysis AnalyzeDatagramCore(T datagram, NetworkContext context, int packetId)
         {
             SentPackets++;
             SentBytes += GetPayloadLength(datagram);
+
+            SpecificAnalysis(datagram, context, packetId);
 
             var analysis = new TransportAnalysis();
 

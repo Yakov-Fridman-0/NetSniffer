@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 
 using NetSnifferLib.General;
 using NetSnifferLib.Analysis;
@@ -19,38 +20,45 @@ namespace NetSnifferLib.StatefulAnalysis.Arp
 {
     static class ArpStatefulAnalyzer
     {
-        static int requestTimeout = 1000; // ms
+        //static int requestTimeout = 1000; // ms
 
         static public AdditionalInfoProvidedHandler TimeoutOccured { get; set; }
 
+        static ActionBlock<(ArpDatagram Datagram, int PacketId)> replyActionBlock = new(
+            new Action<(ArpDatagram Datagram, int PacketId)>( tuple => AnalyzeReplyCore(tuple.Datagram, tuple.PacketId)));
         static public AdditionalInfoProvidedHandler FoundReply { get; set; }
 
         static readonly List<ArpDatagram> AllDatagrams = new();
         static readonly ConcurrentDictionary<ArpDatagram, CancellationTokenSource> UnansweredRequestsTokenSources = new();
 
-        static void StartTimeoutTask(ArpDatagram request)
-        {
-            CancellationTokenSource source = new();
-            CancellationToken token = source.Token;
+        //static void StartTimeoutTask(ArpDatagram request)
+        //{
+        //    CancellationTokenSource source = new();
+        //    CancellationToken token = source.Token;
 
-            Task.Run(() =>
-            {
-                Task.Delay(requestTimeout, token);
+        //    Task.Run(() =>
+        //    {
+        //        Task.Delay(requestTimeout, token);
 
-                if (!token.IsCancellationRequested)
-                    TimeoutOccured?.Invoke(1); //TODO: finish
+        //        if (!token.IsCancellationRequested)
+        //            TimeoutOccured?.Invoke(1); //TODO: finish
 
-            }, token);
+        //    }, token);
 
-            UnansweredRequestsTokenSources.TryAdd(request, source);
-        }
+        //    UnansweredRequestsTokenSources.TryAdd(request, source);
+        //}
 
         static public void AnalyzeRequest(ArpDatagram request, int packetId)
         {
             AllDatagrams.Add(request);
         }
 
-        static public void AnalyzeReply(ArpDatagram reply, int packetId)
+        static public void AnalyzeReply(ArpDatagram reply, int pakcetId)
+        {
+            replyActionBlock.Post((reply, pakcetId));
+        }
+
+        static public void AnalyzeReplyCore(ArpDatagram reply, int packetId)
         {
             AllDatagrams.Add(reply);
 
@@ -81,7 +89,7 @@ namespace NetSnifferLib.StatefulAnalysis.Arp
                     var packetData = PacketData.GetPacketDataByPacketId(packetId);
 
                     var otherPacketId = otherHost.ArpTable.FindTransactionPacketId(targetIPAddress, senderPhysicalAddress);
-                    var otherPAcketData = PacketData.GetPacketDataByPacketId(otherPacketId);
+                    var otherPacketData = PacketData.GetPacketDataByPacketId(otherPacketId);
 
                     var attack = new Attack
                         (
@@ -92,10 +100,10 @@ namespace NetSnifferLib.StatefulAnalysis.Arp
                         );
 
                     packetData.AddAttack(attack);
-                    packetData.AttackDetected?.Invoke(packetId, attack);
+                    //packetData.AttackDetected?.Invoke(packetId, attack);
 
-                    otherPAcketData.AddAttack(attack);
-                    otherPAcketData.AttackDetected?.Invoke(otherPacketId, attack);
+                    otherPacketData.AddAttack(attack);
+                    //otherPacketData.AttackDetected?.Invoke(otherPacketId, attack);
                 }
             }
         }

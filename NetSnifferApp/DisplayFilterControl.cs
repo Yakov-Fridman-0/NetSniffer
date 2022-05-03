@@ -17,6 +17,7 @@ namespace NetSnifferApp
         static readonly Color invalidColor = Color.FromArgb(247, 95, 45); //Color.FromArgb(124, Color.Red);
 
         string _filter = string.Empty;
+        
         public string Filter 
         {
             get => _filter;
@@ -59,12 +60,24 @@ namespace NetSnifferApp
         {
             _filter = filterTextBox.Text;
 
-            FilterChanged?.Invoke(this, _filter);
+            if (typingTimer.Enabled)
+            {
+                typingTimer.Stop();
+            }
+
+            typingTimer.Start();
+            //FilterChanged?.Invoke(this, _filter);
         }
 
         bool IsBlank()
         {
             return string.IsNullOrWhiteSpace(Filter);
+        }
+
+        private void typingTimer_Tick(object sender, EventArgs e)
+        {
+            typingTimer.Stop();
+            FilterChanged.Invoke(this, _filter);
         }
     }
 }

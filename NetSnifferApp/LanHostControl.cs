@@ -20,6 +20,26 @@ namespace NetSnifferApp
     {
         bool _isIPAddressShown = false;
 
+        bool _isLive;
+
+        public bool IsLive
+        {
+            get => _isLive;
+            set
+            {
+                _isLive = value;
+
+                if (_isLive)
+                {
+
+                }
+                else
+                {
+
+                }
+            }
+        }
+
         public bool IsIPAddressShown
         {
             get => _isIPAddressShown;

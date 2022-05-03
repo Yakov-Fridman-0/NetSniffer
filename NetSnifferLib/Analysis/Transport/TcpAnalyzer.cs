@@ -15,6 +15,11 @@ namespace NetSnifferLib.Analysis.Transport
     {
         public override string Protocol => "TCP";
 
+        protected override void SpecificAnalysis(TcpDatagram datagram, NetworkContext context, int packetId)
+        {
+            TcpStatefulAnalyzer.Analyzer.AnalyzeDatagram(datagram, context, packetId);
+        }
+
         protected override string GetInfo(TcpDatagram datagram, NetworkContext context)
         {
             var portsInfo = $"{GetSourcePortCore(datagram)} → {GetDestinationPortCore(datagram)}";
@@ -45,8 +50,6 @@ namespace NetSnifferLib.Analysis.Transport
             }
 
             var optionsInfo = string.Join(" ", from kvp in options select $"{ kvp.Key}: {kvp.Value}");
-
-            TcpStatefulAnalyzer.AnalyzeDatagram(datagram, context);
 
             return string.Join(" ", new[] { portsInfo, flagsInfo, optionsInfo });
         }

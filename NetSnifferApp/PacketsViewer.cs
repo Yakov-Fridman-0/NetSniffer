@@ -42,7 +42,7 @@ namespace NetSnifferApp
             itemBuilder = new ActionBlock<Packet>(packet => AddItemCoreAsync(packet));
 
             #region Columns
-            packetsListView.Columns.Clear();
+/*            packetsListView.Columns.Clear();
 
             packetsListView.Columns.Add(new ColumnHeader() { Text = "Index", Width = -2 });
             packetsListView.Columns.Add(new ColumnHeader() { Text = "Time", Width = 100 });
@@ -50,7 +50,7 @@ namespace NetSnifferApp
             packetsListView.Columns.Add(new ColumnHeader() { Text = "Source", Width = 150 });
             packetsListView.Columns.Add(new ColumnHeader() { Text = "Destination", Width = 150 });
             packetsListView.Columns.Add(new ColumnHeader() { Text = "Length", Width = 150 });
-            packetsListView.Columns.Add(new ColumnHeader() { Text = "Info"});
+            packetsListView.Columns.Add(new ColumnHeader() { Text = "Info"});*/
 
             #endregion
 
@@ -172,10 +172,12 @@ namespace NetSnifferApp
 
             var matches = displayFilter.PacketMatches(packetData);
 
+            Color foreColor = Color.White;
+
             packetsListView.Invoke(new MethodInvoker(() =>
             {
-                item.BackColor = GetPacketColors(IdManager.GetPacket(pakcetId), out Color foreColor);
-                item.ForeColor = foreColor;
+                item.BackColor = (packetData.Attacks.Length == 0) ? GetPacketColors(IdManager.GetPacket(pakcetId), out foreColor) : Color.Red;
+                item.ForeColor = (packetData.Attacks.Length == 0) ? foreColor : Color.White;
                 subItems[1].Text = description.TimeStamp.ToString();
                 subItems[2].Text = description.Protocol;
                 subItems[3].Text = AddressFormat.ToString(description.Source);
@@ -215,6 +217,7 @@ namespace NetSnifferApp
                 else if (packet.Ethernet.IpV4.Protocol == IpV4Protocol.Tcp)
                 {
                     color = Color.ForestGreen;
+                    foreColor = Color.White;
                 }
             }
             else if (packet.Ethernet.EtherType == EthernetType.IpV6)
@@ -229,6 +232,7 @@ namespace NetSnifferApp
                 else if (packet.Ethernet.IpV4.Protocol == IpV4Protocol.Tcp)
                 {
                     color = Color.ForestGreen;
+                    foreColor = Color.White;
                 }
             }
             
@@ -322,38 +326,43 @@ namespace NetSnifferApp
             }
         }
 
+        Task UpdateVisiblePacketsAsync()
+        {
+            return Task.Run(() => UpdateVisiblePackets());
+        }
+
         void UpdateVisiblePackets()
         {
             lock (allPacketsData)
             {
-                packetsListView.BeginUpdate();
+                packetsListView.Invoke(new MethodInvoker(() => packetsListView.BeginUpdate()));
                 foreach (var (packetData, listViewItem) in allPacketsData)
                 {
                     if (displayFilter.PacketMatches(packetData))
                     {
                         if (listViewItem.ListView == null)
                         {
-                            packetsListView.Items.Add(listViewItem);
+                            packetsListView.Invoke(new MethodInvoker(() => packetsListView.Items.Add(listViewItem)));
                         }
                     }
                     else
                     {
                         if (listViewItem.ListView != null)
-                            packetsListView.Items.Remove(listViewItem);
+                            packetsListView.Invoke(new MethodInvoker(() => packetsListView.Items.Remove(listViewItem)));
                     }
                 }
-                packetsListView.EndUpdate();
+                packetsListView.Invoke(new MethodInvoker(() => packetsListView.EndUpdate()));
             }
         }
 
-        private void displayFilter1_FilterChanged(object sender, string e)
+        private async void displayFilter1_FilterChanged(object sender, string e)
         {
              displayFilterString = e;
 
             if (DisplayFilter.TryParse(displayFilterString, ref displayFilter))
             {
                 displayFilterControl.IsValidFilter = true;
-                UpdateVisiblePackets();
+                await UpdateVisiblePacketsAsync();
             }
             else
             {
@@ -364,6 +373,14 @@ namespace NetSnifferApp
         private void binaryDataTextBox_Resize(object sender, EventArgs e)
         {
             FillBinaryDataTextBox(binaryDataTextBox.Text);
+        }
+
+        int prevWidth = 0;
+
+        private void packetsListView_Resize(object sender, EventArgs e)
+        {
+            
+            info.Width = packetsListView.Width - packetsListView.Columns.Cast<ColumnHeader>().Aggregate(0, (sum, header) => sum + header.Width) + info.Width;
         }
     }
 }
