@@ -265,7 +265,8 @@ namespace NetSnifferLib
         
         internal void AddAttack(Attack attack)
         {
-            allAttacks.Add(attack);
+            if (!allAttacks.Contains(attack))
+                allAttacks.Add(attack);
 
             _attackList.Add(attack);
 

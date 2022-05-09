@@ -100,7 +100,7 @@ namespace NetSnifferApp
             this.splitContainer1.Panel2.Controls.Add(this.wanViewer);
             this.splitContainer1.Panel2.Controls.Add(label2);
             this.splitContainer1.Size = new System.Drawing.Size(1795, 956);
-            this.splitContainer1.SplitterDistance = 409;
+            this.splitContainer1.SplitterDistance = 478;
             this.splitContainer1.TabIndex = 1;
             // 
             // lanViewer
@@ -111,7 +111,7 @@ namespace NetSnifferApp
             this.lanViewer.IsLive = true;
             this.lanViewer.Location = new System.Drawing.Point(3, 34);
             this.lanViewer.Name = "lanViewer";
-            this.lanViewer.Size = new System.Drawing.Size(399, 915);
+            this.lanViewer.Size = new System.Drawing.Size(468, 915);
             this.lanViewer.TabIndex = 1;
             // 
             // wanViewer
@@ -122,7 +122,7 @@ namespace NetSnifferApp
             this.wanViewer.IsLive = true;
             this.wanViewer.Location = new System.Drawing.Point(4, 35);
             this.wanViewer.Name = "wanViewer";
-            this.wanViewer.Size = new System.Drawing.Size(1371, 914);
+            this.wanViewer.Size = new System.Drawing.Size(1302, 914);
             this.wanViewer.TabIndex = 1;
             // 
             // GeneralTopologyForm

@@ -74,7 +74,15 @@ namespace NetSnifferLib
             PacketAnalyzer.Analyzer.Sniffer = this;
 
             StartingTime = DateTime.Now;
-            communicator.ReceivePackets(MaxPacketNumber, packet => eventRaiser.Post(packet));
+            try
+            {
+                communicator.ReceivePackets(MaxPacketNumber, packet => eventRaiser.Post(packet));
+            }
+            catch (InvalidOperationException)
+            {
+
+            }
+
             StoppingTime = DateTime.Now;
 
             CaptureStopped.Invoke(this, new EventArgs());

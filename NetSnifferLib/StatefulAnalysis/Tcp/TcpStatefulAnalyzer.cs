@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Linq;
-using System.Threading;
+using System.Threading.Tasks;
 using NetSnifferLib.Analysis;
 using NetSnifferLib.Analysis.Network;
 using NetSnifferLib.StatefulAnalysis;
@@ -36,8 +36,12 @@ namespace NetSnifferLib.StatefulAnalysis.Tcp
         Dictionary<Attack, List<TcpConnection>> synFloods = new();
         Dictionary<TcpConnection, Attack> synFloodsByConncetion = new();
 
+        bool isDetectionRunning = false;
+
         void DetectSynFlood()
         {
+            isDetectionRunning = true;
+
             IEnumerable<TcpConnection> notInAttack;
             
             lock (allConnections)
@@ -102,6 +106,8 @@ namespace NetSnifferLib.StatefulAnalysis.Tcp
                     }
                 }
             }
+
+            isDetectionRunning = false;
         }
 
         int n = 0;
@@ -111,7 +117,9 @@ namespace NetSnifferLib.StatefulAnalysis.Tcp
             if (n == 100)
             {
                 n = 0;
-                DetectSynFlood();
+                
+                if (!isDetectionRunning)
+                    Task.Run(() => DetectSynFlood());
             }
 /*            if (!isAnalyzig)
             {
@@ -142,7 +150,8 @@ namespace NetSnifferLib.StatefulAnalysis.Tcp
                 connection.AnalyzeConnectorPacket(flags, sequenceNumber, acknowledgementNumber, payloadLength);
 
                 if (connection.Status == TcpConnectionStatus.Closed)
-                    allConnections.Remove(connection);
+                    lock (allConnections)
+                        allConnections.Remove(connection);
 
                 return;
             }
@@ -155,7 +164,8 @@ namespace NetSnifferLib.StatefulAnalysis.Tcp
 
                 if (connection.Status == TcpConnectionStatus.Closed)
                 {
-                    allConnections.Remove(connection);
+                    lock (allConnections) 
+                        allConnections.Remove(connection);
                     //connectionsPacketIds.Remove(connection);
                 }
 

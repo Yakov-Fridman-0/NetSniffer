@@ -5,8 +5,10 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Collections.Concurrent;
 
 using NetSnifferLib.Topology;
 
@@ -14,139 +16,169 @@ namespace NetSnifferApp
 {
     public partial class LanViewer : UserControl
     {
-        int numberOfHosts = 0;
-        readonly Dictionary<LanHost, LanHostControl> hostControls = new();
+        public bool IsFull => hostsCount == MAX_HOST_COUNT;
 
-        const int hostWidth = 128;
-        const int hostHeight = 143;
+        int hostsCount = 0;
 
-        int rows = 3;
-        int columns = 3;
+        const int MAX_HOST_COUNT = PANEL_NUM * HostViewer.MAX_HOST_COUNT;
 
-        int currentRow = 0;
-        int currentColumn = 0;
+        readonly ConcurrentDictionary<LanHost, HostViewer> hostViewersByHost = new();
 
         public bool IsLive { get; set; }
-        
+
         public LanViewer()
         {
             InitializeComponent();
+
+            InitPanelsAndHostViewers();
         }
+
+        const int PANEL_NUM = 25;
+        int panelInd = 0;
+
+        readonly Panel[] panels = new Panel[PANEL_NUM];
+        readonly HostViewer[] hostViewers = new HostViewer[PANEL_NUM];
+
+        void InitPanelsAndHostViewers()
+        {
+            IAsyncResult[] results = new IAsyncResult[PANEL_NUM];
+
+            if (!IsHandleCreated)
+                _ = Handle;
+
+            for (int i = 0; i < PANEL_NUM; i++) 
+            {
+                results[i] = BeginInvoke((Action<int>)CreatePanel, i);
+            }
+
+            //foreach (var result in results)
+            //WaitHandle.WaitAny(results.Select(result => result.AsyncWaitHandle).ToArray());
+
+            //panels[0].Visible = true;
+        }
+
+        void CreatePanel(int index)
+        {
+            Panel panel = new()
+            {
+                Dock = DockStyle.Fill,
+                Visible = index != 0
+            };
+
+            HostViewer hostViewer = new()
+            {
+                Dock = DockStyle.Fill,
+                Visible = true
+            };
+
+            hostViewers[index] = hostViewer;
+
+            Controls.Add(hostViewer);
+
+            panel.Controls.Add(hostViewer);
+
+            mainPanel.Controls.Add(panel);
+            panels[index] = panel;
+        }
+
+        int currentHostViewerIndex = 0;
 
         public void AddHost(LanHost host)
         {
-            LanHostControl control = null;
-            hostsTableLayoutPanel.Invoke((MethodInvoker) delegate
+            if (IsFull)
+                throw new InvalidOperationException($"LanViewer is full");
+
+            var viewer = hostViewers[currentHostViewerIndex];
+            hostViewersByHost.TryAdd(host, viewer);
+
+            viewer.AddHost(host);
+
+            if (Array.IndexOf(hostViewers, viewer) == panelInd)
             {
-                //hostsTableLayoutPanel.SuspendLayout();
-                control = new LanHostControl
-                {
-                    Host = host,
+                panels[panelInd].Invalidate();
+                viewer.Invalidate();
+                Invalidate();
 
-                    IsLive = IsLive
-                };
-            });
+                panels[panelInd].Visible = false;
+                panels[panelInd].Visible = true;
+            }
 
-            Invoke(new MethodInvoker(() => Controls.Add(control)));
+            Interlocked.Increment(ref hostsCount);
 
-            numberOfHosts++;
-            hostControls.Add(host, control);
-
-            //hostsTableLayoutPanel.SuspendLayout();
-            PlaceHostContorl(control);
-            //shostsTableLayoutPanel.ResumeLayout();
-        }
-
-        public Task AddHostAsync(LanHost host)
-        {
-            return Task.Run(() => AddHost(host));
-        }
-        
-        void PlaceHostContorl(LanHostControl control)
-        {
-            control.Invoke(new MethodInvoker(
-                () =>
-                {
-                    hostsTableLayoutPanel.SuspendLayout();
-                    hostsTableLayoutPanel.Controls.Add(control, currentColumn, currentRow);
-                    control.Dock = DockStyle.Fill;
-
-                    currentColumn++;
-
-                    if (currentColumn == columns)
-                    {
-                        currentColumn = 0;
-
-                        currentRow++;
-                        if (currentRow == rows)
-                        {
-                            hostsTableLayoutPanel.RowCount++;
-                        }
-                    }
-                    hostsTableLayoutPanel.ResumeLayout();
-                }));
+            if (viewer.IsFull)
+                Interlocked.Increment(ref currentHostViewerIndex);
         }
 
         public void RemoveHost(LanHost host)
         {
-
+            hostViewersByHost[host].RemoveHost(host);
         }
 
         public void AssociateWanHostWithLanHost(LanHost lanHost, WanHost wanHost)
         {
-            hostControls[lanHost].WanHost = wanHost;
+            hostViewersByHost[lanHost].AssociateWanHostWithLanHost(lanHost, wanHost);
         }
 
         public bool IsHostIPAddressShown(LanHost host)
         {
-            return hostControls[host].IsIPAddressShown;
+            return hostViewersByHost[host].IsHostIPAddressShown(host);
         }
 
         public void ShowHostIPAddress(LanHost host)
         {
-            hostControls[host].ShowIPAddress();
+            hostViewersByHost[host].ShowHostIPAddress(host);
         }
 
         public void HideHostIPAddress(LanHost host)
         {
-            hostControls[host].HideIPAddress();
+            hostViewersByHost[host].HideHostIPAddress(host);
         }
 
         public void MakeHostRouter(LanHost host)
         {
-            hostControls[host].BecomeRouter();
+            hostViewersByHost[host].MakeHostRouter(host);
         }
 
         public void MakeHostServer(LanHost host)
         {
-            hostControls[host].BecomeServer();
+            hostViewersByHost[host].MakeHostServer(host);
         }
 
-        //int width = Width - Padding.Left - Padding.Right;
+        private void prevButton_Click(object sender, EventArgs e)
+        {
+            MoveToPanel(panelInd - 1);
+            UpdateIndexLabel();
 
-        //hostsTableLayoutPanel.Width = width;
+            if (panelInd == 0)
+                prevButton.Enabled = false;
 
-        //int numberOfHostsPerRows = width / hostWidth;
+            if (!nextButton.Enabled)
+                nextButton.Enabled = true;
+        }
 
-        //if (numberOfHostsPerRows != columns)
-        //{
-        //    columns = numberOfHostsPerRows;
-        //    rows = numberOfHosts / numberOfHostsPerRows + 1;
+        private void nextButton_Click(object sender, EventArgs e)
+        {
+            MoveToPanel(panelInd + 1);
+            UpdateIndexLabel();
 
-        //    hostsTableLayoutPanel.Controls.Clear();
+            if (panelInd == PANEL_NUM - 1) 
+                nextButton.Enabled = false;
 
-        //    hostsTableLayoutPanel.Height = (hostHeight + 6) * rows;
-        //    hostsTableLayoutPanel.ColumnCount = columns;
-        //    hostsTableLayoutPanel.RowCount = rows;
+            if (!prevButton.Enabled)
+                prevButton.Enabled = true;
+        }
 
-        //    hostsTableLayoutPanel.SuspendLayout();
+        void MoveToPanel(int newPanelInd)
+        {
+            panels[panelInd].Visible = false;
+            panels[newPanelInd].Visible = true;
 
-        //    currentRow = 0;
-        //    currentColumn = 0;
-        //    foreach (var control in allHostControls.Values)
-        //        PlaceHostContorl(control);
+            panelInd = newPanelInd;
+        }
 
-        //    hostsTableLayoutPanel.ResumeLayout();
-        //}
+        void UpdateIndexLabel()
+        {
+            indLabel.Text = $"{panelInd + 1}/{PANEL_NUM}";
+        }
     }
 }

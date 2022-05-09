@@ -47,7 +47,6 @@ namespace NetSnifferApp
             }
         }
 
-
         public GeneralTopologyForm()
         {
             InitializeComponent();
@@ -74,7 +73,8 @@ namespace NetSnifferApp
             var lanDiff = await lanMap.GetDiffAsync(LanMap);
 
             foreach (var host in lanDiff.HostsAdded)
-                await lanViewer.AddHostAsync(host);
+                lanViewer.AddHost(host);
+
 
             foreach (var hosts in lanDiff.RoutersAdded)
                 lanViewer.MakeHostRouter(hosts);
@@ -90,7 +90,7 @@ namespace NetSnifferApp
                 if (host.IPAddress == System.Net.IPAddress.Any && lanViewer.IsHostIPAddressShown(host))
                     lanViewer.HideHostIPAddress(host);
             }
-            
+
             await LanMap.UpdateAsync(lanDiff);
 
 
@@ -146,9 +146,9 @@ namespace NetSnifferApp
             updateTimer.Start();
         }
 
-        private void updateTimer_Tick(object sender, EventArgs e)
+        void updateTimer_Tick(object sender, EventArgs e)
         {
-            TopologyUpdateRequested.Invoke(this, new EventArgs());
+            Task.Run(() => Invoke(new MethodInvoker(() => TopologyUpdateRequested.Invoke(this, new EventArgs()))));
         }
 
         private void GeneralTopologyForm_Load(object sender, EventArgs e)

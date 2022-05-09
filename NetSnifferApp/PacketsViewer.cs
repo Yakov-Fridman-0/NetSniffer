@@ -102,6 +102,9 @@ namespace NetSnifferApp
             //        packetsListView.Update();
             //    }));
 
+            if (packetsListView.Items.Count != 0)
+                packetsListView.BeginInvoke(new MethodInvoker(() => packetsListView.Items[^1].EnsureVisible()));
+
             packetData.Analyze();
         }
 
@@ -335,9 +338,24 @@ namespace NetSnifferApp
         {
             lock (allPacketsData)
             {
+                int i = 0;
+
                 packetsListView.Invoke(new MethodInvoker(() => packetsListView.BeginUpdate()));
                 foreach (var (packetData, listViewItem) in allPacketsData)
                 {
+                    i++;
+
+                    if (i == 50)
+                    {
+                        packetsListView.BeginInvoke((MethodInvoker)delegate
+                            {
+                                packetsListView.EndUpdate();
+                                packetsListView.BeginUpdate();
+                            });
+
+                        i = 0;
+                    }
+
                     if (displayFilter.PacketMatches(packetData))
                     {
                         if (listViewItem.ListView == null)

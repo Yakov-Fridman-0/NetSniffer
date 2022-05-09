@@ -59,7 +59,6 @@ namespace NetSnifferApp
             interfaceComboBox.Items.AddRange(items);
         }
 
-
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             if (isCaptureUnsaved)
@@ -326,15 +325,12 @@ namespace NetSnifferApp
             }
         }
 
-        private void generalTopologyToolStripMenuItem_Click(object sender, EventArgs e)
+        async private void generalTopologyToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (topologyForm != null)
-                return;
+            if (topologyForm == null)
+                topologyForm = new();
 
-            topologyForm = new GeneralTopologyForm
-            {
-                IsLive = isLiveCapture
-            };
+            topologyForm.IsLive = true;
 
             topologyForm.Show();
 
@@ -350,6 +346,21 @@ namespace NetSnifferApp
                 topologyForm.FormClosed += TopologyForm_FormClosed;
                 topologyForm.StartReuqestingUpdates();
             }
+        }
+
+        async void DoIt()
+        {
+            await Task.Run(() => CreateForm());
+        }
+
+        void CreateForm()
+        {
+            /*            topologyForm = new GeneralTopologyForm
+                        {
+                            IsLive = isLiveCapture
+                        };*/
+
+
         }
 
         private void TopologyForm_FormClosed(object sender, FormClosedEventArgs e)
@@ -540,6 +551,11 @@ namespace NetSnifferApp
         private void logToolStripMenuItem_Click(object sender, EventArgs e)
         {
             new AttackLogForm().Show();
+        }
+
+        private void ImprovedMainForm_Load(object sender, EventArgs e)
+        {
+            topologyForm = new();
         }
     }
 }

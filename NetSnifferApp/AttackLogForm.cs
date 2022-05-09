@@ -26,7 +26,7 @@ namespace NetSnifferApp
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            textBox1.Clear();
+            textBox1.Text = "";
 
             foreach (var attack in PacketData.AllAttacks)
             {

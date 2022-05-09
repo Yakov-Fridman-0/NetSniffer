@@ -54,7 +54,8 @@ namespace NetSnifferLib.Topology
 
                     AddHostInWan(otherIPAddress);
 
-                    routerDiscoveredByWanHosts.Add(new List<IPAddress>() { otherIPAddress }, physicalAddress);
+                    lock (routerDiscoveredByWanHosts)
+                        routerDiscoveredByWanHosts.Add(new List<IPAddress>() { otherIPAddress }, physicalAddress);
                 }
             }
             else
@@ -98,7 +99,8 @@ namespace NetSnifferLib.Topology
 
                     MakeHostRouter(physicalAddress);
 
-                    routerDiscoveredByWanHosts.Add(new List<IPAddress>() { ipAddress, otherIPAddress }, physicalAddress);
+                    lock (routerDiscoveredByWanHosts)
+                        routerDiscoveredByWanHosts.Add(new List<IPAddress>() { ipAddress, otherIPAddress }, physicalAddress);
                 }
             }
             else

@@ -47,6 +47,8 @@ namespace NetSnifferApp
             this.generalStatisticsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.topologyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.generalTopologyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.attackToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.logToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainPanel = new System.Windows.Forms.Panel();
             this.capturePanel = new System.Windows.Forms.Panel();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
@@ -62,8 +64,6 @@ namespace NetSnifferApp
             this.interfaceComboBox = new System.Windows.Forms.ComboBox();
             this.captureFilter = new NetSnifferApp.CaptureFilter();
             this.startButton = new System.Windows.Forms.Button();
-            this.attackToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.logToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             panel1 = new System.Windows.Forms.Panel();
             panel1.SuspendLayout();
             this.controlFlowLayoutPanel.SuspendLayout();
@@ -249,6 +249,21 @@ namespace NetSnifferApp
             this.generalTopologyToolStripMenuItem.Size = new System.Drawing.Size(210, 26);
             this.generalTopologyToolStripMenuItem.Text = "General Topology";
             this.generalTopologyToolStripMenuItem.Click += new System.EventHandler(this.generalTopologyToolStripMenuItem_Click);
+            // 
+            // attackToolStripMenuItem
+            // 
+            this.attackToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.logToolStripMenuItem});
+            this.attackToolStripMenuItem.Name = "attackToolStripMenuItem";
+            this.attackToolStripMenuItem.Size = new System.Drawing.Size(65, 24);
+            this.attackToolStripMenuItem.Text = "Attack";
+            // 
+            // logToolStripMenuItem
+            // 
+            this.logToolStripMenuItem.Name = "logToolStripMenuItem";
+            this.logToolStripMenuItem.Size = new System.Drawing.Size(117, 26);
+            this.logToolStripMenuItem.Text = "Log";
+            this.logToolStripMenuItem.Click += new System.EventHandler(this.logToolStripMenuItem_Click);
             // 
             // mainPanel
             // 
@@ -436,21 +451,6 @@ namespace NetSnifferApp
             this.startButton.UseVisualStyleBackColor = true;
             this.startButton.Click += new System.EventHandler(this.startButton_Click);
             // 
-            // attackToolStripMenuItem
-            // 
-            this.attackToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.logToolStripMenuItem});
-            this.attackToolStripMenuItem.Name = "attackToolStripMenuItem";
-            this.attackToolStripMenuItem.Size = new System.Drawing.Size(65, 24);
-            this.attackToolStripMenuItem.Text = "Attack";
-            // 
-            // logToolStripMenuItem
-            // 
-            this.logToolStripMenuItem.Name = "logToolStripMenuItem";
-            this.logToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
-            this.logToolStripMenuItem.Text = "Log";
-            this.logToolStripMenuItem.Click += new System.EventHandler(this.logToolStripMenuItem_Click);
-            // 
             // ImprovedMainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
@@ -463,6 +463,7 @@ namespace NetSnifferApp
             this.Name = "ImprovedMainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "NetSniffer";
+            this.Load += new System.EventHandler(this.ImprovedMainForm_Load);
             panel1.ResumeLayout(false);
             panel1.PerformLayout();
             this.controlFlowLayoutPanel.ResumeLayout(false);

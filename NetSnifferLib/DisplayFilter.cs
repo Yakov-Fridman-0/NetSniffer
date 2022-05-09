@@ -79,52 +79,77 @@ namespace NetSnifferLib
             // multi-coditioanl
             if (logicalOperatotrs.Any(@operator => filterString.Contains(@operator)))
             {
-                var match = Regex.Match(filterString, @"^(?<leftCondition>>\((?<c>)|[^()]+|\)(?<-c>))*(?(c)(?!))(?<operator>&&|\|\|)(?<rightCondition>>(?<c>)|[^()]+|\)(?<-c>))*(?(c)(?!))$", RegexOptions.None, TimeSpan.FromSeconds(3));
+                Match match;
 
-                string leftCondition, @operator, rightCondition;
-                if  (match.Success && match.Groups.Cast<Group>().Where(group => !group.Value.Equals("")).ToList().Count == 4)
+                string leftCondition = string.Empty, @operator = string.Empty, rightCondition = string.Empty;
+
+                if (!filterString.Contains("(", StringComparison.InvariantCulture) && !filterString.Contains(")", StringComparison.InvariantCulture))
                 {
+                    match = Regex.Match(filterString, @"^(?<leftCondition>)(?<operator>&&|\|\|)(?<rightCondition>)$");
+
+                    if (!match.Success)
+                        return false;
+
                     leftCondition = Clean(match.Groups["leftCondition"].Value);
                     @operator = match.Groups["operator"].Value;
                     rightCondition = Clean(match.Groups["rightCondition"].Value);
                 }
                 else
                 {
-                    match = Regex.Match(filterString, @"(?<condition>\((?>\((?<c>)|[^()]+|\)(?<-c>))*(?(c)(?!))\))", RegexOptions.None, TimeSpan.FromSeconds(0.5));
-
-                    if (!match.Success)
-                        return false;
-
-                    var leftConditionRaw = match.Groups["condition"].Value;
-                    leftCondition = Clean(UnfoldPatamthesis(leftConditionRaw));
-
-                    filterString = filterString.Remove(filterString.IndexOf(leftConditionRaw), leftConditionRaw.Length);
-
-                    var nextMatch = match.NextMatch();
-                    if (nextMatch.Success)
+                    try
                     {
-                        var rightConditionRaw = nextMatch.Captures[0].Value;
-                        rightCondition = UnfoldPatamthesis(Clean(rightConditionRaw));
+                        match = Regex.Match(filterString, @"^(?<leftCondition>>\((?<c>)|[^()]+|\)(?<-c>))*(?(c)(?!))(?<operator>&&|\|\|)(?<rightCondition>>(?<c>)|[^()]+|\)(?<-c>))*(?(c)(?!))$", RegexOptions.None, TimeSpan.FromSeconds(1));
+                    }
+                    catch (TimeoutException)
+                    {
+                        return false;
+                    }
 
-                        filterString = filterString.Remove(filterString.IndexOf(rightConditionRaw), rightConditionRaw.Length);
+                    if (match.Success && match.Groups.Cast<Group>().Where(group => !group.Value.Equals("")).ToList().Count == 4)
+                    {
+                        leftCondition = Clean(match.Groups["leftCondition"].Value);
+                        @operator = match.Groups["operator"].Value;
+                        rightCondition = Clean(match.Groups["rightCondition"].Value);
                     }
                     else
                     {
-                        match = Regex.Match(filterString.Trim('&', '|', ' '), @"(?<condition>(?>\((?<c>)|[^()]+|\)(?<-c>))*(?(c)(?!)))", RegexOptions.None, TimeSpan.FromSeconds(0.5));
+                        match = Regex.Match(filterString, @"(?<condition>\((?>\((?<c>)|[^()]+|\)(?<-c>))*(?(c)(?!))\))", RegexOptions.None, TimeSpan.FromSeconds(0.5));
 
                         if (!match.Success)
                             return false;
 
-                        rightCondition = match.Captures[0].Value;
+                        var leftConditionRaw = match.Groups["condition"].Value;
+                        leftCondition = Clean(UnfoldPatamthesis(leftConditionRaw));
 
-                        filterString = filterString.Remove(filterString.IndexOf(rightCondition), rightCondition.Length);
+                        filterString = filterString.Remove(filterString.IndexOf(leftConditionRaw), leftConditionRaw.Length);
+
+                        var nextMatch = match.NextMatch();
+                        if (nextMatch.Success)
+                        {
+                            var rightConditionRaw = nextMatch.Captures[0].Value;
+                            rightCondition = UnfoldPatamthesis(Clean(rightConditionRaw));
+
+                            filterString = filterString.Remove(filterString.IndexOf(rightConditionRaw), rightConditionRaw.Length);
+                        }
+                        else
+                        {
+                            match = Regex.Match(filterString.Trim('&', '|', ' '), @"(?<condition>(?>\((?<c>)|[^()]+|\)(?<-c>))*(?(c)(?!)))", RegexOptions.None, TimeSpan.FromSeconds(0.5));
+
+                            if (!match.Success)
+                                return false;
+
+                            rightCondition = match.Captures[0].Value;
+
+                            filterString = filterString.Remove(filterString.IndexOf(rightCondition), rightCondition.Length);
+                        }
+
+                        @operator = filterString.Trim();
+
+                        if (@operator is not "&&" and not "||")
+                            return false;
                     }
-
-                    @operator = filterString.Trim();
-
-                    if (@operator is not "&&" and not "||")
-                        return false;
                 }
+
 
                 PacketDataCondition condition1 = null, condition2 = null;
 

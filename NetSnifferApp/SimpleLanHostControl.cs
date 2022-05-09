@@ -16,8 +16,13 @@ using NetSnifferLib.Topology;
 
 namespace NetSnifferApp
 {
-    public partial class LanHostControl : UserControl, IHostControl
+    public partial class SimpleLanHostControl : UserControl
     {
+        public SimpleLanHostControl()
+        {
+            InitializeComponent();
+        }
+
         bool _isIPAddressShown = false;
 
         bool _isLive;
@@ -46,7 +51,7 @@ namespace NetSnifferApp
             set
             {
                 _isIPAddressShown = value;
-                
+
                 if (_isIPAddressShown)
                 {
                     copyIPAddressToolStripMenuItem.Visible = false;
@@ -59,7 +64,7 @@ namespace NetSnifferApp
                 }
             }
         }
-        
+
         LanHost _host = null;
 
         public LanHost Host
@@ -68,23 +73,19 @@ namespace NetSnifferApp
             set
             {
                 _host = value;
+                physicalAddressLabel.Text = AddressFormat.ToString(_host.PhysicalAddress);
 
-                if (_host != null)
+                if (_host.IPAddress != IPAddress.Any)
                 {
-                    physicalAddressLabel.Text = AddressFormat.ToString(_host.PhysicalAddress);
-
-                    if (_host.IPAddress != IPAddress.Any)
-                    {
-                        ShowIPAddress();
-                        _isIPAddressShown = true;
-                    }
+                    ShowIPAddress();
+                    _isIPAddressShown = true;
                 }
             }
         }
 
         WanHost _wanHost = null;
 
-        public WanHost WanHost 
+        public WanHost WanHost
         {
             get => _wanHost;
             set
@@ -106,34 +107,29 @@ namespace NetSnifferApp
 
         public bool IsServer { get; private set; } = false;
 
-        public LanHostControl()
-        {
-            InitializeComponent();
-        }
-
         public void BecomeRouter()
         {
             IsRouter = true;
 
-            if (IsServer)
+/*            if (IsServer)
                 BecomeRouterAndServer();
             else
-                pictureBox.Image = imageList.Images["Router"];
+                pictureBox.Image = imageList.Images["Router"];*/
         }
 
         public void BecomeServer()
         {
             IsServer = true;
 
-            if (IsRouter)
+/*            if (IsRouter)
                 BecomeRouterAndServer();
             else
-                pictureBox.Image = imageList.Images["Server"];
+                pictureBox.Image = imageList.Images["Server"];*/
         }
 
         protected void BecomeRouterAndServer()
         {
-            pictureBox.Image = imageList.Images["RouterAndServer"];
+/*            pictureBox.Image = imageList.Images["RouterAndServer"];*/
         }
 
         public void ShowIPAddress()
