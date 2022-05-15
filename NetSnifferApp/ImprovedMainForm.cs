@@ -14,6 +14,7 @@ using PcapDotNet.Packets;
 
 using NetSnifferLib;
 using NetSnifferLib.Analysis;
+using NetSnifferLib.Topology;
 
 namespace NetSnifferApp
 {
@@ -153,7 +154,7 @@ namespace NetSnifferApp
 
             if (topologyForm != null)
             {
-                topologyForm.UpdateTopology(
+                topologyForm.UpdateTopologyAsync(
                     PacketAnalyzer.Analyzer.GetLanMap(),
                     PacketAnalyzer.Analyzer.GetWanMap());
             }
@@ -336,7 +337,7 @@ namespace NetSnifferApp
 
             if (captureEnded)
             {
-                topologyForm.UpdateTopology(
+                await topologyForm.UpdateTopologyAsync(
                     PacketAnalyzer.Analyzer.GetLanMap(),
                     PacketAnalyzer.Analyzer.GetWanMap());
             }
@@ -368,11 +369,20 @@ namespace NetSnifferApp
             topologyForm = null;
         }
 
-        private void TopologyForm_TopologyUpdateRequested(object sender, EventArgs e)
+        //ActionBlock<(LanMap LanMap, WanMap WanMap)> lanUpdatedBlock;
+
+        async private void TopologyForm_TopologyUpdateRequested(object sender, EventArgs e)
         {
-            topologyForm.UpdateTopology(
-                PacketAnalyzer.Analyzer.GetLanMap(),
-                PacketAnalyzer.Analyzer.GetWanMap());
+            //if (lanUpdatedBlock == null)
+            //    lanUpdatedBlock = new (new Action<(LanMap LanMap, WanMap WanMap)>(
+            //        async ((LanMap LanMap, WanMap WanMap) tuple) =>
+            //    {
+            //        await topologyForm.UpdateTopologyAsync(tuple.LanMap, tuple.WanMap);
+            //    }));
+
+            //lanUpdatedBlock.Post((PacketAnalyzer.Analyzer.GetLanMap(), PacketAnalyzer.Analyzer.GetWanMap()));
+
+            await topologyForm.UpdateTopologyAsync(PacketAnalyzer.Analyzer.GetLanMap(), PacketAnalyzer.Analyzer.GetWanMap());
         }
 
         private void StatisticsForm_FormClosed(object sender, FormClosedEventArgs e)

@@ -33,7 +33,7 @@ namespace NetSnifferApp
             InitPanelsAndHostViewers();
         }
 
-        const int PANEL_NUM = 25;
+        const int PANEL_NUM = 40;
         int panelInd = 0;
 
         readonly Panel[] panels = new Panel[PANEL_NUM];

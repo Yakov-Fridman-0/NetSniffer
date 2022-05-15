@@ -66,7 +66,7 @@ namespace NetSnifferApp
             titleLabel.BringToFront();
         }
 
-        public async void UpdateTopology(LanMap lanMap, WanMap wanMap)
+        async public Task UpdateTopologyAsync(LanMap lanMap, WanMap wanMap)
         {
             updateTimer.Stop();
 
@@ -91,10 +91,12 @@ namespace NetSnifferApp
                     lanViewer.HideHostIPAddress(host);
             }
 
+            //LanMap.Update(lanDiff);
             await LanMap.UpdateAsync(lanDiff);
 
 
             var wanDiff = await wanMap.GetDiffAsync(WanMap);
+            //var wanDiff = wanMap.GetDiff(WanMap);
 
             foreach (var wanHost in wanMap.HostsAsReadOnly)
             {

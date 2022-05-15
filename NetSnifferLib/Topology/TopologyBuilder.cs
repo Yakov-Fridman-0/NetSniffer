@@ -154,7 +154,14 @@ namespace NetSnifferLib.Topology
             //}
 
 
-            PhysicalAddress physicalAddress = lanMapBuilder.LanMap.Hosts.Find(host => ipAddress.Equals(host.IPAddress)).PhysicalAddress;
+            LanHost host = lanMapBuilder.LanMap.Hosts.Find(host => ipAddress.Equals(host.IPAddress));
+
+            while (host == null)
+            {
+                host = lanMapBuilder.LanMap.Hosts.Find(host => ipAddress.Equals(host.IPAddress));
+            }
+
+            PhysicalAddress physicalAddress = host.PhysicalAddress;
             lanMapBuilder.MakeHostDhcpServer(physicalAddress);
         }
 

@@ -102,8 +102,8 @@ namespace NetSnifferApp
             //        packetsListView.Update();
             //    }));
 
-            if (packetsListView.Items.Count != 0)
-                packetsListView.BeginInvoke(new MethodInvoker(() => packetsListView.Items[^1].EnsureVisible()));
+            //if (packetsListView.Items.Count != 0)
+            //    packetsListView.BeginInvoke(new MethodInvoker(() => packetsListView.Items[^1].EnsureVisible()));
 
             packetData.Analyze();
         }
@@ -163,7 +163,13 @@ namespace NetSnifferApp
             return item;
         }
 
-        void FillPacketDescription(int pakcetId, PacketDescription description)
+
+        void FillPacketDescription1(int pakcetId, PacketDescription description)
+        {
+
+        }
+
+        async void FillPacketDescription(int pakcetId, PacketDescription description)
         {
             var packetData = PacketData.GetPacketDataByPacketId(pakcetId);
 
@@ -187,10 +193,17 @@ namespace NetSnifferApp
                 subItems[4].Text = AddressFormat.ToString(description.Destination);
                 subItems[5].Text = description.Length.ToString();
                 subItems[6].Text = description.Info;
-
-                if (matches && item.ListView == null)
-                    packetsListView.Items.Add(item);
             }));
+
+            IAsyncResult result = packetsListView.BeginInvoke((MethodInvoker)delegate
+            {
+                if (matches && item.ListView == null)
+                {
+                    //packetsListView.Items.Add(item);
+                }
+            });
+
+            await Task.Factory.FromAsync(result, new Action<IAsyncResult>(asyncResult => { }));
         }
 
         static Color GetPacketColors(Packet packet, out Color foreColor)
@@ -201,7 +214,7 @@ namespace NetSnifferApp
                 return Color.Gray;
 
             Color color = Color.White;
-
+             
             if (packet.Ethernet.EtherType == EthernetType.Arp)
             {
                 if (packet.Ethernet.Arp.Operation == ArpOperation.Request)
@@ -259,7 +272,7 @@ namespace NetSnifferApp
 
         private void packetsListView_SelectedIndexChanged(object sender, System.EventArgs e)
         {
-            if (packetsListView.SelectedItems.Count == 1)
+            if (packetsListView.SelectedIndices.Count == 1)
             {
                 var item = packetsListView.SelectedItems[0];
 

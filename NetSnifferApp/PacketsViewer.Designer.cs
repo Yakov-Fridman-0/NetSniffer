@@ -167,6 +167,7 @@ namespace NetSnifferApp
             this.packetsListView.HideSelection = false;
             this.packetsListView.Location = new System.Drawing.Point(0, 68);
             this.packetsListView.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.packetsListView.MultiSelect = false;
             this.packetsListView.Name = "packetsListView";
             this.packetsListView.ShowGroups = false;
             this.packetsListView.Size = new System.Drawing.Size(724, 336);
@@ -174,6 +175,7 @@ namespace NetSnifferApp
             this.packetsListView.TabIndex = 0;
             this.packetsListView.UseCompatibleStateImageBehavior = false;
             this.packetsListView.View = System.Windows.Forms.View.Details;
+            this.packetsListView.VirtualMode = true;
             this.packetsListView.SelectedIndexChanged += new System.EventHandler(this.packetsListView_SelectedIndexChanged);
             this.packetsListView.Resize += new System.EventHandler(this.packetsListView_Resize);
             // 
