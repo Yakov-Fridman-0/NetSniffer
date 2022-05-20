@@ -561,6 +561,8 @@ namespace NetSnifferApp
 
         void MarkAttack(int packetId, Attack attack)
         {
+            AttackAdded.Invoke(this, new EventArgs());
+
             /*            packetsListView.Invoke(new MethodInvoker(() =>
                         {
                             //cache = null;
@@ -671,8 +673,10 @@ namespace NetSnifferApp
             return Task.Run(() => UpdateVisiblePackets());
         }
 
-        object updateSync = new object();
-        private object fillPacketSync= new object ();
+        readonly object updateSync = new();
+        readonly object fillPacketSync= new();
+
+        public event EventHandler AttackAdded = delegate { };
 
         void UpdateVisiblePackets()
         {

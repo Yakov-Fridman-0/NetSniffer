@@ -39,7 +39,6 @@ namespace ArpTableWinFormsApp.ArpTable
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
-
             var addressForm = new AddressForm();
             if (addressForm.ShowDialog() != DialogResult.OK) return;
 

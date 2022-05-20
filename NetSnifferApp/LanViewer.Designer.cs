@@ -42,8 +42,9 @@ namespace NetSnifferApp
             this.prevButton.BackColor = System.Drawing.Color.White;
             this.prevButton.BackgroundImage = global::NetSnifferApp.Properties.Resources.left_arrow;
             this.prevButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
+            this.prevButton.Enabled = false;
             this.prevButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.prevButton.Location = new System.Drawing.Point(15, 300);
+            this.prevButton.Location = new System.Drawing.Point(15, 292);
             this.prevButton.Name = "prevButton";
             this.prevButton.Size = new System.Drawing.Size(76, 36);
             this.prevButton.TabIndex = 1;

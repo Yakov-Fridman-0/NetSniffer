@@ -148,18 +148,7 @@ namespace NetSnifferApp
 
         private void OfflineSniffer_CaptureStopped(object sender, EventArgs e)
         {
-            isCapturing = false;
-            captureEnded = true;
 
-            if (statisticsForm != null)
-                statisticsForm.UpdateStatistics(PacketAnalyzer.Analyzer.GetGeneralStatistics());
-
-            if (topologyForm != null)
-            {
-                topologyForm.UpdateTopology(
-                    PacketAnalyzer.Analyzer.GetLanMap(),
-                    PacketAnalyzer.Analyzer.GetWanMap());
-            }
         }
 
         void StartLiveCapture()
@@ -188,17 +177,7 @@ namespace NetSnifferApp
 
         private void Sniffer_PacketLimitReached(object sender, EventArgs e)
         {
-            isCapturing = false;
 
-            Invoke(new MethodInvoker(() =>
-            {
-                moreInfoLabel.Text = "Packet limit reached";
-                moreInfoLabel.Visible = true;
-
-                stopButton.Text = "Stopped";
-                stopButton.Enabled = false;
-            }
-            ));
         }
 
         private void Sniffer_PacketReceived(object sender, Packet e)
@@ -560,9 +539,16 @@ namespace NetSnifferApp
             numberOfPackets = (int)packetNumberUpDown.Value;
         }
 
-        private void logToolStripMenuItem_Click(object sender, EventArgs e)
+        AttackLogForm attackLogForm;
+
+        private void LogToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            new AttackLogForm().Show();
+            attackLogForm = new();
+            attackLogForm.FormClosed += delegate { attackLogForm = null; };
+
+            attackToolStripMenuItem.Image = null;
+
+            attackLogForm.Show();
         }
 
         private void ImprovedMainForm_Load(object sender, EventArgs e)
@@ -572,7 +558,7 @@ namespace NetSnifferApp
 
         private void ArpTableToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var form = new ArpTableForm();
+            var form = new ArpTableSimple();
             form.Show();
         }
 
@@ -586,6 +572,12 @@ namespace NetSnifferApp
         {
             var form = new IpConfigSimple();
             form.Show();
+        }
+
+        private void PacketViewer_AttackAdded(object sender, EventArgs e)
+        {
+            if (attackLogForm == null)
+                attackToolStripMenuItem.Image = imageList1.Images[0];
         }
     }
 }

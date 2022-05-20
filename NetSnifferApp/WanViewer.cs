@@ -212,17 +212,24 @@ namespace NetSnifferApp
                 connections.Add((host1, host2));  
         }
 
+        int numbersOfDrawings = 0;
+
         public void ShowConnections()
         {
             var connected = connections.SelectMany(hostPair => new WanHost[] { hostPair.Item1, hostPair.Item2 }).Distinct().Count();
             if (connected > orderedHosts.Count)
             {
-                foreach (var router in lanRouters)
+                if (PacketAnalyzer.Analyzer.topologyBuilder.wanMapBuilder.CompletedTracerts.Count > numbersOfDrawings)
                 {
-                    //if (AllConnectedHostsAndChildren(router, null).Exists(host => !orderedHosts.Contains(host)))
-                    //{
+                    foreach (var router in lanRouters)
+                    {
+                        //if (AllConnectedHostsAndChildren(router, null).Exists(host => !orderedHosts.Contains(host)))
+                        //{
                         OrderConnectedHosts(router);
-                    //}
+                        //}
+                    }
+
+                    numbersOfDrawings++;
                 }
             }
 

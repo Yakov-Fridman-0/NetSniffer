@@ -174,7 +174,6 @@ namespace NetSnifferApp
             };
 
             form.Show();
-            form.StartRefreshing();
         }
     }
 }

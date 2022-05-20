@@ -37,6 +37,20 @@ namespace NetSnifferApp
             streamsListView.Sorting = SortOrder.Ascending;
         }
 
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+
+            StartRefreshing();
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+
+            StopRefreshing();
+        }
+
         public void StartRefreshing()
         {
             refreshTimer.Start();
@@ -188,10 +202,10 @@ namespace NetSnifferApp
             }
         }
 
-        async private void refreshTimer_Tick(object sender, EventArgs e)
+        private void refreshTimer_Tick(object sender, EventArgs e)
         {
             refreshTimer.Stop();
-            await RefreshConnectionsAsync();
+            RefreshConnections();
             refreshTimer.Start();
         }
     }

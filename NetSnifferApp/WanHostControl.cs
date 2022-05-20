@@ -164,9 +164,9 @@ namespace NetSnifferApp
             Invalidate();
         }
 
-        async private void tracertToolStripMenuItem_Click(object sender, EventArgs e)
+        private void TracertToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            await PacketAnalyzer.Analyzer.TracertAsync(_host.IPAddress);
+            PacketAnalyzer.Analyzer.TracertAsync(_host.IPAddress);
         }
 
         private void showTCPConnectionsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -177,7 +177,7 @@ namespace NetSnifferApp
             };
 
             form.Show();
-            form.StartRefreshing();
+            //form.StartRefreshing();
         }
 
         private void copyIPAddressToolStripMenuItem_Click(object sender, EventArgs e)

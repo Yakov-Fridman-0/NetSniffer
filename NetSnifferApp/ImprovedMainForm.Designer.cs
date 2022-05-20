@@ -29,7 +29,9 @@ namespace NetSnifferApp
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.Windows.Forms.Panel panel1;
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ImprovedMainForm));
             this.moreInfoLabel = new System.Windows.Forms.Label();
             this.interfaceNameTextBox = new System.Windows.Forms.TextBox();
             this.interfaceTitleLabel = new System.Windows.Forms.Label();
@@ -49,6 +51,10 @@ namespace NetSnifferApp
             this.generalTopologyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.attackToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.logToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.utilitisToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.arpTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.routingTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ipconfigToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainPanel = new System.Windows.Forms.Panel();
             this.capturePanel = new System.Windows.Forms.Panel();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
@@ -64,10 +70,7 @@ namespace NetSnifferApp
             this.interfaceComboBox = new System.Windows.Forms.ComboBox();
             this.captureFilter = new NetSnifferApp.CaptureFilter();
             this.startButton = new System.Windows.Forms.Button();
-            this.utilitisToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.arpTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.routingTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.ipconfigToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             panel1 = new System.Windows.Forms.Panel();
             panel1.SuspendLayout();
             this.controlFlowLayoutPanel.SuspendLayout();
@@ -260,15 +263,46 @@ namespace NetSnifferApp
             this.attackToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.logToolStripMenuItem});
             this.attackToolStripMenuItem.Name = "attackToolStripMenuItem";
-            this.attackToolStripMenuItem.Size = new System.Drawing.Size(65, 24);
-            this.attackToolStripMenuItem.Text = "Attack";
+            this.attackToolStripMenuItem.Size = new System.Drawing.Size(71, 24);
+            this.attackToolStripMenuItem.Text = "Attacks";
             // 
             // logToolStripMenuItem
             // 
             this.logToolStripMenuItem.Name = "logToolStripMenuItem";
             this.logToolStripMenuItem.Size = new System.Drawing.Size(117, 26);
             this.logToolStripMenuItem.Text = "Log";
-            this.logToolStripMenuItem.Click += new System.EventHandler(this.logToolStripMenuItem_Click);
+            this.logToolStripMenuItem.Click += new System.EventHandler(this.LogToolStripMenuItem_Click);
+            // 
+            // utilitisToolStripMenuItem
+            // 
+            this.utilitisToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.arpTableToolStripMenuItem,
+            this.routingTableToolStripMenuItem,
+            this.ipconfigToolStripMenuItem});
+            this.utilitisToolStripMenuItem.Name = "utilitisToolStripMenuItem";
+            this.utilitisToolStripMenuItem.Size = new System.Drawing.Size(65, 24);
+            this.utilitisToolStripMenuItem.Text = "Utilitis";
+            // 
+            // arpTableToolStripMenuItem
+            // 
+            this.arpTableToolStripMenuItem.Name = "arpTableToolStripMenuItem";
+            this.arpTableToolStripMenuItem.Size = new System.Drawing.Size(205, 26);
+            this.arpTableToolStripMenuItem.Text = "CAM Table";
+            this.arpTableToolStripMenuItem.Click += new System.EventHandler(this.ArpTableToolStripMenuItem_Click);
+            // 
+            // routingTableToolStripMenuItem
+            // 
+            this.routingTableToolStripMenuItem.Name = "routingTableToolStripMenuItem";
+            this.routingTableToolStripMenuItem.Size = new System.Drawing.Size(205, 26);
+            this.routingTableToolStripMenuItem.Text = "Routing Table";
+            this.routingTableToolStripMenuItem.Click += new System.EventHandler(this.RoutingTableToolStripMenuItem_Click);
+            // 
+            // ipconfigToolStripMenuItem
+            // 
+            this.ipconfigToolStripMenuItem.Name = "ipconfigToolStripMenuItem";
+            this.ipconfigToolStripMenuItem.Size = new System.Drawing.Size(205, 26);
+            this.ipconfigToolStripMenuItem.Text = "IP Configurations";
+            this.ipconfigToolStripMenuItem.Click += new System.EventHandler(this.IpconfigToolStripMenuItem_Click);
             // 
             // mainPanel
             // 
@@ -326,6 +360,7 @@ namespace NetSnifferApp
             this.packetViewer.Name = "packetViewer";
             this.packetViewer.Size = new System.Drawing.Size(1010, 758);
             this.packetViewer.TabIndex = 0;
+            this.packetViewer.AttackAdded += new System.EventHandler(this.PacketViewer_AttackAdded);
             // 
             // startPanel
             // 
@@ -456,36 +491,12 @@ namespace NetSnifferApp
             this.startButton.UseVisualStyleBackColor = true;
             this.startButton.Click += new System.EventHandler(this.startButton_Click);
             // 
-            // utilitisToolStripMenuItem
+            // imageList1
             // 
-            this.utilitisToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.arpTableToolStripMenuItem,
-            this.routingTableToolStripMenuItem,
-            this.ipconfigToolStripMenuItem});
-            this.utilitisToolStripMenuItem.Name = "utilitisToolStripMenuItem";
-            this.utilitisToolStripMenuItem.Size = new System.Drawing.Size(65, 24);
-            this.utilitisToolStripMenuItem.Text = "Utilitis";
-            // 
-            // arpTableToolStripMenuItem
-            // 
-            this.arpTableToolStripMenuItem.Name = "arpTableToolStripMenuItem";
-            this.arpTableToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
-            this.arpTableToolStripMenuItem.Text = "CAM Table";
-            this.arpTableToolStripMenuItem.Click += new System.EventHandler(this.ArpTableToolStripMenuItem_Click);
-            // 
-            // routingTableToolStripMenuItem
-            // 
-            this.routingTableToolStripMenuItem.Name = "routingTableToolStripMenuItem";
-            this.routingTableToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
-            this.routingTableToolStripMenuItem.Text = "Routing Table";
-            this.routingTableToolStripMenuItem.Click += new System.EventHandler(this.RoutingTableToolStripMenuItem_Click);
-            // 
-            // ipconfigToolStripMenuItem
-            // 
-            this.ipconfigToolStripMenuItem.Name = "ipconfigToolStripMenuItem";
-            this.ipconfigToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
-            this.ipconfigToolStripMenuItem.Text = "IP Configurations";
-            this.ipconfigToolStripMenuItem.Click += new System.EventHandler(this.IpconfigToolStripMenuItem_Click);
+            this.imageList1.ColorDepth = System.Windows.Forms.ColorDepth.Depth8Bit;
+            this.imageList1.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageList1.ImageStream")));
+            this.imageList1.TransparentColor = System.Drawing.Color.Transparent;
+            this.imageList1.Images.SetKeyName(0, "explamation_mark.jpg");
             // 
             // ImprovedMainForm
             // 
@@ -557,5 +568,6 @@ namespace NetSnifferApp
         private System.Windows.Forms.ToolStripMenuItem arpTableToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem routingTableToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem ipconfigToolStripMenuItem;
+        private System.Windows.Forms.ImageList imageList1;
     }
 }

@@ -144,28 +144,36 @@ namespace NetSnifferApp
             hostViewersByHost[host].MakeHostServer(host);
         }
 
+        readonly object panelLock = new();
+
         private void prevButton_Click(object sender, EventArgs e)
         {
-            if (panelInd == 0)
-                prevButton.Enabled = false;
+            lock (panelLock)
+            {
+                if (panelInd == 0)
+                    prevButton.Enabled = false;
 
-            if (!nextButton.Enabled)
-                nextButton.Enabled = true;
+                if (!nextButton.Enabled)
+                    nextButton.Enabled = true;
 
-            MoveToPanel(panelInd - 1);
-            UpdateIndexLabel();
+                MoveToPanel(panelInd - 1);
+                UpdateIndexLabel();
+            }
         }
 
         private void nextButton_Click(object sender, EventArgs e)
         {
-            if (panelInd == PANEL_NUM - 1) 
-                nextButton.Enabled = false;
+            lock (panelLock)
+            {
+                if (panelInd == PANEL_NUM - 1)
+                    nextButton.Enabled = false;
 
-            if (!prevButton.Enabled)
-                prevButton.Enabled = true;
+                if (!prevButton.Enabled)
+                    prevButton.Enabled = true;
 
-            MoveToPanel(panelInd + 1);
-            UpdateIndexLabel();
+                MoveToPanel(panelInd + 1);
+                UpdateIndexLabel();
+            }
         }
 
         void MoveToPanel(int newPanelInd)

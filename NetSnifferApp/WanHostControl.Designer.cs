@@ -68,7 +68,7 @@ namespace NetSnifferApp
             this.tracertToolStripMenuItem.Name = "tracertToolStripMenuItem";
             this.tracertToolStripMenuItem.Size = new System.Drawing.Size(233, 24);
             this.tracertToolStripMenuItem.Text = "tracert";
-            this.tracertToolStripMenuItem.Click += new System.EventHandler(this.tracertToolStripMenuItem_Click);
+            this.tracertToolStripMenuItem.Click += new System.EventHandler(this.TracertToolStripMenuItem_Click);
             // 
             // showTCPConnectionsToolStripMenuItem
             // 

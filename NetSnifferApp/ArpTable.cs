@@ -247,15 +247,15 @@ namespace ArpTable
 
         public static void AddEntryToArpCache(IPAddress ipAddress, PhysicalAddress physicalAddress, out string message, out string error)
         {
-            Execute($"arp", $"-s {ipAddress} {physicalAddress}", out message, out error);
+            string physicalAddressString = physicalAddress.ToString();
+            string formatedphysicalAddressString = string.Join("-", Enumerable.Range(0, physicalAddressString.Length / 2).Select(i => physicalAddressString.Substring(i * 2, 2)));
 
+            Execute($"arp", $"-s {ipAddress} {formatedphysicalAddressString}", out message, out error);
         }
 
         public static void DeleteEntireArpCache(IPAddress ipAddress, out string message, out string error)
         {
             Execute($"arp", $"-d {ipAddress}", out message, out error);
-
-
         }
     }
 
