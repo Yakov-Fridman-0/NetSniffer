@@ -3,15 +3,18 @@ using System.Net;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Collections.ObjectModel;
 using System.Threading;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace NetSnifferLib.Topology
 {
-    class WanMapBuilder
+    public class WanMapBuilder
     {
-        List<WanHost> hosts = new();
+        public List<List<WanHost>> CompletedTracerts { get; } = new();
+
+        readonly List<WanHost> hosts = new();
 
         readonly ConcurrentBag<WanHost> dnsServers = new();
 
@@ -63,8 +66,10 @@ namespace NetSnifferLib.Topology
             return dnsServers.Any((dnsServer) => ipAddress.Equals(dnsServer.IPAddress));
         }
 
-        public void IntegrateTracertResults(TracertResults tracertResults)
+        internal void IntegrateTracertResults(TracertResults tracertResults)
         {
+            var hosts = new List<WanHost>();
+
             var addresses = tracertResults.ToList();
             int n = addresses.Count;
 
@@ -89,6 +94,8 @@ namespace NetSnifferLib.Topology
                         currHost = GetHost(currAddr);
 
                     }
+
+                    hosts.Add(currHost);
 
                     switch (i)
                     {
@@ -123,7 +130,16 @@ namespace NetSnifferLib.Topology
                             nextHost.ConnectedHosts.Add(currHost);
                     }
                 }
+                else
+                {
+                    hosts.Add(null);
+                }
             }
+
+            if (tracertResults.Successfull)
+                hosts.Add(GetHost(tracertResults.Destination));
+
+            CompletedTracerts.Add(hosts);
         }
 
         internal List<WanHost> GetOriginalWanHosts()

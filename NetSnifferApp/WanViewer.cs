@@ -5,10 +5,12 @@ using System.Data;
 using System.Drawing;
 using System.Net;
 using System.Linq;
+using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+using NetSnifferLib.Analysis;
 using NetSnifferLib.Topology;
 
 namespace NetSnifferApp
@@ -28,6 +30,8 @@ namespace NetSnifferApp
 
         int centerX;
         int centerY;
+
+        int maxIterations = 50;
 
         public bool IsLive { get; set; } = false;
 
@@ -63,6 +67,17 @@ namespace NetSnifferApp
         public bool ContainsHost(WanHost host)
         {
             return hostControls.ContainsKey(host);
+        }
+
+        static List<WanHost> AllConnectedHostsAndChildren(WanHost host, WanHost hostToExculde)
+        {
+            var directConnections = new List<WanHost>(host.ConnectedHosts);
+            directConnections.Remove(hostToExculde);
+
+            if (directConnections.Count == 0)
+                return new List<WanHost>();
+            else
+                return directConnections.SelectMany(otherHost => AllConnectedHostsAndChildren(otherHost, host)).ToList();
         }
 
         public void AddHost(WanHost host)
@@ -129,6 +144,8 @@ namespace NetSnifferApp
             PlaceLanRouter(control);
 
             //OrderConnectedHosts(host);
+
+            control.BecomeLanRouter();
         }
 
         public Task AddLanRouterAsync(WanHost host)
@@ -139,6 +156,7 @@ namespace NetSnifferApp
         public void MakeHostWanRouter(WanHost host)
         {
             hostControls[host].BecomeRouter();
+            hostControls[host].BecomeWanRouter();
         }
 
         public void MakeHostServer(WanHost host)
@@ -156,10 +174,14 @@ namespace NetSnifferApp
             var location = GetRandomLocationForHost(control);
             var borderLocation = location + control.Size;
 
-            control.Invoke( new MethodInvoker(() => control.Location = location));
+            control.Invoke(new MethodInvoker(() => control.Location = location));
 
-            while (location.X < 0 || borderLocation.X > Width || location.Y < 0 || borderLocation.Y > Height || GetShadowedControls(control).Count > 0)
+            int iterations = 0;
+
+            while (iterations < maxIterations && (location.X < 0 || borderLocation.X > Width || location.Y < 0 || borderLocation.Y > Height || GetShadowedControls(control).Count > 0))
             {
+                iterations++;
+
                 location = GetRandomLocationForHost(control);
                 borderLocation = location + control.Size;
 
@@ -192,9 +214,16 @@ namespace NetSnifferApp
 
         public void ShowConnections()
         {
-            foreach (var router in lanRouters)
+            var connected = connections.SelectMany(hostPair => new WanHost[] { hostPair.Item1, hostPair.Item2 }).Distinct().Count();
+            if (connected > orderedHosts.Count)
             {
-                OrderConnectedHosts(router);
+                foreach (var router in lanRouters)
+                {
+                    //if (AllConnectedHostsAndChildren(router, null).Exists(host => !orderedHosts.Contains(host)))
+                    //{
+                        OrderConnectedHosts(router);
+                    //}
+                }
             }
 
             Invalidate();
@@ -380,23 +409,69 @@ namespace NetSnifferApp
             if (!orderedHosts.Contains(host))
             {
                 Invoke(new MethodInvoker(() => control.Location = newLocation));
-                orderedHosts.Add(host);
+                
+                lock (orderedHosts)
+                    orderedHosts.Add(host);
             }
 
             var connectedHosts = new List<WanHost>(control.Host.ConnectedHosts);
             connectedHosts.Remove(prevHost);
 
             if (connectedHosts.Count == 0)
-                return;
-
-            var nextHost = connectedHosts[0];
-            BuildChain(hostControls[nextHost], baseAngle, newLocation, host);
-
-            foreach (var (otherHost, index) in connectedHosts.Skip(1).Select((host, i) => (host, i)))
             {
-                var sign = (index % 2 - 0.5) * 2;
-                var newAngle = baseAngle + sign * (angleDiff * index / 2);
-                BuildChain(hostControls[otherHost], newAngle, newLocation, host);
+                var tracert = PacketAnalyzer.Analyzer.topologyBuilder.wanMapBuilder.CompletedTracerts.
+                        FirstOrDefault(aTracert => aTracert.Exists(aHost => ReferenceEquals(aHost, host)));
+
+                if (tracert == null)
+                    return;
+
+                var copy = new List<WanHost>(tracert);
+
+                copy.Reverse();
+
+                copy = copy.SkipWhile(new Func<WanHost, bool>(host => host == null)).ToList();
+                copy.Reverse();
+
+                var startingIndex = copy.IndexOf(host);
+
+                if (startingIndex == copy.Count - 1)
+                    return;
+
+                var nextHosts = copy.Skip(startingIndex + 1);
+
+                if (!nextHosts.Any())
+                    return;
+
+                foreach (var aNextHost in nextHosts)
+                {
+                    if (aNextHost == null)
+                    {
+                        nextLocationX = (int)(nextLocationX + radious * Math.Cos(baseAngle));
+                        nextLocationY = (int)(nextLocationY + radious * Math.Sin(baseAngle));
+
+                        newLocation = new Point(nextLocationX, nextLocationY);
+                    }
+                    else
+                    {
+                        BuildChain(hostControls[aNextHost], baseAngle, newLocation, null);
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                //var nextHost = connectedHosts[0];
+                //BuildChain(hostControls[nextHost], baseAngle, newLocation, host);
+
+                foreach (var (otherHost, index) in connectedHosts.Select((host, i) => (host, i)))
+                {
+                    //if (AllConnectedHostsAndChildren(otherHost, host).Exists(host => !orderedHosts.Contains(host)))
+                    //{
+                        var sign = (index % 2 - 0.5) * 2;
+                        var newAngle = baseAngle + sign * (angleDiff * ((index + 1) / 2));
+                        BuildChain(hostControls[otherHost], newAngle, newLocation, host);
+                    //}
+                }
             }
         }
 

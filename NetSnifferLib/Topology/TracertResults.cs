@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace NetSnifferLib.Topology
 {
-    class TracertResults
+    public class TracertResults
     {   
         public IPAddress Source { get; set; }
 

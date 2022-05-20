@@ -64,6 +64,10 @@ namespace NetSnifferApp
             this.interfaceComboBox = new System.Windows.Forms.ComboBox();
             this.captureFilter = new NetSnifferApp.CaptureFilter();
             this.startButton = new System.Windows.Forms.Button();
+            this.utilitisToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.arpTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.routingTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ipconfigToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             panel1 = new System.Windows.Forms.Panel();
             panel1.SuspendLayout();
             this.controlFlowLayoutPanel.SuspendLayout();
@@ -177,7 +181,8 @@ namespace NetSnifferApp
             this.openToolStripMenuItem,
             this.statisticsToolStripMenuItem,
             this.topologyToolStripMenuItem,
-            this.attackToolStripMenuItem});
+            this.attackToolStripMenuItem,
+            this.utilitisToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Padding = new System.Windows.Forms.Padding(7, 3, 0, 3);
@@ -451,6 +456,37 @@ namespace NetSnifferApp
             this.startButton.UseVisualStyleBackColor = true;
             this.startButton.Click += new System.EventHandler(this.startButton_Click);
             // 
+            // utilitisToolStripMenuItem
+            // 
+            this.utilitisToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.arpTableToolStripMenuItem,
+            this.routingTableToolStripMenuItem,
+            this.ipconfigToolStripMenuItem});
+            this.utilitisToolStripMenuItem.Name = "utilitisToolStripMenuItem";
+            this.utilitisToolStripMenuItem.Size = new System.Drawing.Size(65, 24);
+            this.utilitisToolStripMenuItem.Text = "Utilitis";
+            // 
+            // arpTableToolStripMenuItem
+            // 
+            this.arpTableToolStripMenuItem.Name = "arpTableToolStripMenuItem";
+            this.arpTableToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.arpTableToolStripMenuItem.Text = "CAM Table";
+            this.arpTableToolStripMenuItem.Click += new System.EventHandler(this.ArpTableToolStripMenuItem_Click);
+            // 
+            // routingTableToolStripMenuItem
+            // 
+            this.routingTableToolStripMenuItem.Name = "routingTableToolStripMenuItem";
+            this.routingTableToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.routingTableToolStripMenuItem.Text = "Routing Table";
+            this.routingTableToolStripMenuItem.Click += new System.EventHandler(this.RoutingTableToolStripMenuItem_Click);
+            // 
+            // ipconfigToolStripMenuItem
+            // 
+            this.ipconfigToolStripMenuItem.Name = "ipconfigToolStripMenuItem";
+            this.ipconfigToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.ipconfigToolStripMenuItem.Text = "IP Configurations";
+            this.ipconfigToolStripMenuItem.Click += new System.EventHandler(this.IpconfigToolStripMenuItem_Click);
+            // 
             // ImprovedMainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
@@ -517,5 +553,9 @@ namespace NetSnifferApp
         private System.Windows.Forms.Label captureFilterTitleLabel;
         private System.Windows.Forms.ToolStripMenuItem attackToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem logToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem utilitisToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem arpTableToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem routingTableToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem ipconfigToolStripMenuItem;
     }
 }

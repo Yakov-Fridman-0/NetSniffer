@@ -146,26 +146,26 @@ namespace NetSnifferApp
 
         private void prevButton_Click(object sender, EventArgs e)
         {
-            MoveToPanel(panelInd - 1);
-            UpdateIndexLabel();
-
             if (panelInd == 0)
                 prevButton.Enabled = false;
 
             if (!nextButton.Enabled)
                 nextButton.Enabled = true;
+
+            MoveToPanel(panelInd - 1);
+            UpdateIndexLabel();
         }
 
         private void nextButton_Click(object sender, EventArgs e)
         {
-            MoveToPanel(panelInd + 1);
-            UpdateIndexLabel();
-
             if (panelInd == PANEL_NUM - 1) 
                 nextButton.Enabled = false;
 
             if (!prevButton.Enabled)
                 prevButton.Enabled = true;
+
+            MoveToPanel(panelInd + 1);
+            UpdateIndexLabel();
         }
 
         void MoveToPanel(int newPanelInd)

@@ -16,6 +16,8 @@ using NetSnifferLib;
 using NetSnifferLib.Analysis;
 using NetSnifferLib.Topology;
 
+using ArpTableWinFormsApp.ArpTable;
+
 namespace NetSnifferApp
 {
     public partial class ImprovedMainForm : Form
@@ -48,7 +50,7 @@ namespace NetSnifferApp
         {
             InitializeComponent();
 
-            addPacketActionBlock = new ActionBlock<Packet>(new Action<Packet>(packet => packetViewer.Add(packet)));
+            addPacketActionBlock = new ActionBlock<Packet>(new Action<Packet>(packet => packetViewer.AddPacket(packet)));
         }
 
         protected override void OnLoad(EventArgs e)
@@ -154,7 +156,7 @@ namespace NetSnifferApp
 
             if (topologyForm != null)
             {
-                topologyForm.UpdateTopologyAsync(
+                topologyForm.UpdateTopology(
                     PacketAnalyzer.Analyzer.GetLanMap(),
                     PacketAnalyzer.Analyzer.GetWanMap());
             }
@@ -326,7 +328,7 @@ namespace NetSnifferApp
             }
         }
 
-        async private void generalTopologyToolStripMenuItem_Click(object sender, EventArgs e)
+        private void generalTopologyToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (topologyForm == null)
                 topologyForm = new();
@@ -337,7 +339,7 @@ namespace NetSnifferApp
 
             if (captureEnded)
             {
-                await topologyForm.UpdateTopologyAsync(
+                topologyForm.UpdateTopology(
                     PacketAnalyzer.Analyzer.GetLanMap(),
                     PacketAnalyzer.Analyzer.GetWanMap());
             }
@@ -371,7 +373,7 @@ namespace NetSnifferApp
 
         //ActionBlock<(LanMap LanMap, WanMap WanMap)> lanUpdatedBlock;
 
-        async private void TopologyForm_TopologyUpdateRequested(object sender, EventArgs e)
+        private void TopologyForm_TopologyUpdateRequested(object sender, EventArgs e)
         {
             //if (lanUpdatedBlock == null)
             //    lanUpdatedBlock = new (new Action<(LanMap LanMap, WanMap WanMap)>(
@@ -382,7 +384,7 @@ namespace NetSnifferApp
 
             //lanUpdatedBlock.Post((PacketAnalyzer.Analyzer.GetLanMap(), PacketAnalyzer.Analyzer.GetWanMap()));
 
-            await topologyForm.UpdateTopologyAsync(PacketAnalyzer.Analyzer.GetLanMap(), PacketAnalyzer.Analyzer.GetWanMap());
+            topologyForm.UpdateTopology(PacketAnalyzer.Analyzer.GetLanMap(), PacketAnalyzer.Analyzer.GetWanMap());
         }
 
         private void StatisticsForm_FormClosed(object sender, FormClosedEventArgs e)
@@ -566,6 +568,24 @@ namespace NetSnifferApp
         private void ImprovedMainForm_Load(object sender, EventArgs e)
         {
             topologyForm = new();
+        }
+
+        private void ArpTableToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var form = new ArpTableForm();
+            form.Show();
+        }
+
+        private void RoutingTableToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var form = new RouteTabeSimple();
+            form.Show();
+        }
+
+        private void IpconfigToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var form = new IpConfigSimple();
+            form.Show();
         }
     }
 }

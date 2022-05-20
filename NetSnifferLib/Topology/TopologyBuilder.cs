@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 
 namespace NetSnifferLib.Topology
 {
-    class TopologyBuilder
+    public class TopologyBuilder
     {
         readonly LanMapBuilder lanMapBuilder = new();
-        readonly WanMapBuilder wanMapBuilder = new();
+        public readonly WanMapBuilder wanMapBuilder = new();
 
         private readonly Dictionary<List<IPAddress>, PhysicalAddress> routerDiscoveredByWanHosts = new();
 

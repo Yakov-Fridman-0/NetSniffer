@@ -4,7 +4,7 @@ using NetSnifferLib.General;
 
 namespace NetSnifferLib
 {
-    public readonly struct PacketDescription
+    public class PacketDescription
     {
         public DateTime TimeStamp { get; init; }
 
@@ -17,6 +17,11 @@ namespace NetSnifferLib
         public int Length { get; init; }
 
         public string Info { get; init; }
+
+        public PacketDescription()
+        {
+
+        }
 
         public PacketDescription(DateTime timestamp, string protocol, IAddress source, IAddress destination, int length, string info)
         {

@@ -93,7 +93,7 @@ namespace NetSnifferApp
             this.binaryDataTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.binaryDataTextBox.Size = new System.Drawing.Size(703, 92);
             this.binaryDataTextBox.TabIndex = 1;
-            this.binaryDataTextBox.Resize += new System.EventHandler(this.binaryDataTextBox_Resize);
+            this.binaryDataTextBox.Resize += new System.EventHandler(this.BinaryDataTextBox_Resize);
             // 
             // label1
             // 
@@ -138,7 +138,7 @@ namespace NetSnifferApp
             this.attacksComboBox.Name = "attacksComboBox";
             this.attacksComboBox.Size = new System.Drawing.Size(151, 28);
             this.attacksComboBox.TabIndex = 1;
-            this.attacksComboBox.SelectedIndexChanged += new System.EventHandler(this.attacksComboBox_SelectedIndexChanged);
+            this.attacksComboBox.SelectedIndexChanged += new System.EventHandler(this.AttacksComboBox_SelectedIndexChanged);
             // 
             // label2
             // 
@@ -176,8 +176,8 @@ namespace NetSnifferApp
             this.packetsListView.UseCompatibleStateImageBehavior = false;
             this.packetsListView.View = System.Windows.Forms.View.Details;
             this.packetsListView.VirtualMode = true;
-            this.packetsListView.SelectedIndexChanged += new System.EventHandler(this.packetsListView_SelectedIndexChanged);
-            this.packetsListView.Resize += new System.EventHandler(this.packetsListView_Resize);
+            this.packetsListView.SelectedIndexChanged += new System.EventHandler(this.PacketsListView_SelectedIndexChanged);
+            this.packetsListView.Resize += new System.EventHandler(this.PacketsListView_Resize);
             // 
             // Index
             // 
@@ -255,7 +255,7 @@ namespace NetSnifferApp
             this.displayFilterControl.Name = "displayFilterControl";
             this.displayFilterControl.Size = new System.Drawing.Size(561, 49);
             this.displayFilterControl.TabIndex = 1;
-            this.displayFilterControl.FilterChanged += new System.EventHandler<string>(this.displayFilter1_FilterChanged);
+            this.displayFilterControl.FilterChanged += new System.EventHandler<string>(this.DisplayFilter1_FilterChanged);
             // 
             // PacketViewer
             // 

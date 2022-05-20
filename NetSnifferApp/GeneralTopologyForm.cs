@@ -66,6 +66,8 @@ namespace NetSnifferApp
             titleLabel.BringToFront();
         }
 
+        object updateTopologyLock = new();
+
         async public Task UpdateTopologyAsync(LanMap lanMap, WanMap wanMap)
         {
             updateTimer.Stop();
@@ -118,10 +120,10 @@ namespace NetSnifferApp
                         await wanViewer.AddHostAsync(wanHost);
                 }
 
-/*                foreach (var otherHost in wanHost.ConnectedHosts)
-                {
-                    wanViewer.AddConnection(wanHost, otherHost);
-                }*/
+                /*                foreach (var otherHost in wanHost.ConnectedHosts)
+                            {
+                                wanViewer.AddConnection(wanHost, otherHost);
+                            }*/
             }
 
             foreach (var router in wanDiff.LanRouterAdded)
@@ -148,7 +150,94 @@ namespace NetSnifferApp
             updateTimer.Start();
         }
 
-        void updateTimer_Tick(object sender, EventArgs e)
+        readonly object updateLock = new();
+
+        public void UpdateTopology(LanMap lanMap, WanMap wanMap)
+        {
+            updateTimer.Stop();
+
+            lock (updateLock)
+            {
+                var lanDiff = lanMap.GetDiff(LanMap);
+
+                foreach (var host in lanDiff.HostsAdded)
+                    lanViewer.AddHost(host);
+
+
+                foreach (var hosts in lanDiff.RoutersAdded)
+                    lanViewer.MakeHostRouter(hosts);
+
+                foreach (var server in lanDiff.DhcpServersAdded)
+                    lanViewer.MakeHostServer(server);
+
+                foreach (var host in LanMap.ReadOnlyHosts)
+                {
+                    if (host.IPAddress != System.Net.IPAddress.Any && !lanViewer.IsHostIPAddressShown(host))
+                        lanViewer.ShowHostIPAddress(host);
+
+                    if (host.IPAddress == System.Net.IPAddress.Any && lanViewer.IsHostIPAddressShown(host))
+                        lanViewer.HideHostIPAddress(host);
+                }
+
+                //LanMap.Update(lanDiff);
+                LanMap.Update(lanDiff);
+
+
+                var wanDiff = wanMap.GetDiff(WanMap);
+                //var wanDiff = wanMap.GetDiff(WanMap);
+
+                foreach (var wanHost in wanMap.HostsAsReadOnly)
+                {
+                    if (wanHost.IPAddress.Equals(System.Net.IPAddress.Any))
+                        continue;
+
+                    var lanHost = LanMap.GetHostByIPAddress(wanHost.IPAddress);
+
+                    if (lanHost != null)
+                    {
+                        lanViewer.AssociateWanHostWithLanHost(lanHost, wanHost);
+
+                        if (wanViewer.ContainsHost(wanHost))
+                            wanViewer.RemoveHost(wanHost);
+                    }
+                    else
+                    {
+                        if (!wanViewer.ContainsHost(wanHost))
+                            wanViewer.AddHost(wanHost);
+                    }
+
+                    /*                foreach (var otherHost in wanHost.ConnectedHosts)
+                                {
+                                    wanViewer.AddConnection(wanHost, otherHost);
+                                }*/
+                }
+
+                foreach (var router in wanDiff.LanRouterAdded)
+                    wanViewer.AddLanRouter(router);
+
+                foreach (var wanHost in wanMap.HostsAsReadOnly)
+                {
+                    foreach (var otherHost in wanHost.ConnectedHosts)
+                    {
+                        wanViewer.AddConnection(wanHost, otherHost);
+                    }
+                }
+
+                wanViewer.ShowConnections();
+
+                foreach (var router in wanDiff.WanRoutersAdded)
+                    wanViewer.MakeHostWanRouter(router);
+
+                foreach (var server in wanDiff.DnsServersAdded)
+                    wanViewer.MakeHostServer(server);
+
+                WanMap.Update(wanDiff);
+
+                updateTimer.Start();
+            }
+        }
+
+        void UpdateTimer_Tick(object sender, EventArgs e)
         {
             Task.Run(() => Invoke(new MethodInvoker(() => TopologyUpdateRequested.Invoke(this, new EventArgs()))));
         }

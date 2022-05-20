@@ -37,6 +37,7 @@ namespace NetSnifferLib
 
 
         static readonly ConcurrentBag<Attack> allAttacks = new();
+
         public static Attack[] AllAttacks => allAttacks.ToArray();
 
         internal static bool IsValidField(string protocol, string field)
@@ -255,14 +256,37 @@ namespace NetSnifferLib
                 allPacketDatas.Add(packetId, this);
         }
 
-        public async void Analyze()
+        private PacketData(int packetId)
         {
-            if (PacketAnalyzer.Analyzer.IsEthernet(Packet))
-                DescriptionReady.Invoke(PacketId, await PacketAnalyzer.Analyzer.AnalyzePacketAsync(Packet, PacketId));
-            else
-                DescriptionReady.Invoke(PacketId, new PacketDescription(Packet.Timestamp, "N/A", null, null, Packet.Length, "N/A"));
+            PacketId = packetId;
         }
-        
+
+        //Used for searching
+        public static PacketData CreatePacketDataWithId(int id)
+        {
+            return new PacketData(id);
+        }
+
+        public async Task AnalyzeAsync()
+        {
+            PacketDescription description;
+
+            if (PacketAnalyzer.Analyzer.IsEthernet(Packet))
+            {
+                description = await PacketAnalyzer.Analyzer.AnalyzePacketAsync(Packet, PacketId);
+            }
+            else
+            {
+                description = new PacketDescription(Packet.Timestamp, "N/A", null, null, Packet.Length, "N/A");
+            }
+
+            Description = description;
+
+            DescriptionReady.Invoke(PacketId, description);
+        }
+
+        public PacketDescription Description { get; private set; } = null;
+
         internal void AddAttack(Attack attack)
         {
             if (!allAttacks.Contains(attack))

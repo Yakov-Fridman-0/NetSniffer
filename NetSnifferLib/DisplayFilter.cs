@@ -248,6 +248,9 @@ namespace NetSnifferLib
 
         static string UnfoldPatamthesis(string text)
         {
+            if (text.Length == 0)
+                return text;
+
             if (text[0] == '(' && text[^1] == ')')
             {
                 text = text[1..^1];

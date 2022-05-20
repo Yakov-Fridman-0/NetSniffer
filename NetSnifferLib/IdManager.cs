@@ -39,7 +39,7 @@ namespace NetSnifferLib
 
         public static Packet GetPacket(int id)
         {
-            return packetsById[id];
+            return packetsById[id]; //TODO: bugs 
         }
 
         public static DateTime GetPacketTimestamp(int id)

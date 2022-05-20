@@ -8,6 +8,7 @@ using NetSnifferLib.Analysis.Network;
 using NetSnifferLib.StatefulAnalysis;
 using NetSnifferLib.General;
 using NetSnifferLib.Topology;
+using System.Threading.Tasks.Dataflow;
 
 using PcapDotNet.Packets.Transport;
 
@@ -32,25 +33,20 @@ namespace NetSnifferLib.StatefulAnalysis.Tcp
         int synFloodSynCount = 10;
 
         int timeBetweenSeperateSynFloods = 10000;
-
-        Dictionary<Attack, List<TcpConnection>> synFloods = new();
-        Dictionary<TcpConnection, Attack> synFloodsByConncetion = new();
-
-        bool isDetectionRunning = false;
+        readonly Dictionary<Attack, List<TcpConnection>> synFloods = new();
+        readonly Dictionary<TcpConnection, Attack> synFloodsByConncetion = new();
 
         void DetectSynFlood()
         {
-            isDetectionRunning = true;
-
             IEnumerable<TcpConnection> notInAttack;
             
             lock (allConnections)
-                notInAttack = allConnections.Where(connection => !synFloodsByConncetion.ContainsKey(connection));
+                notInAttack = allConnections.Where(connection => !synFloodsByConncetion.ContainsKey(connection)).ToList();
 
-            var onlySynConnections = notInAttack.Where(connection => connection.Status == TcpConnectionStatus.Syn);
-            var timedOut = onlySynConnections.Where(connection => (IdManager.GetPacketTimestamp(connectionsPacketIds[connection][0]) - DateTime.Now).Milliseconds > synTimeout);
+            var onlySynConnections = notInAttack.Where(connection => connection.Status == TcpConnectionStatus.Syn).ToList();
+            var timedOut = onlySynConnections.Where(connection => (IdManager.GetPacketTimestamp(connectionsPacketIds[connection][0]) - DateTime.Now).Milliseconds > synTimeout).ToList();
 
-            var onlySynConnectionsByHost = onlySynConnections.GroupBy(connection => connection.ListenerEndPoint.Address);
+            var onlySynConnectionsByHost = onlySynConnections.GroupBy(connection => connection.ListenerEndPoint.Address).ToList();
 
 
             foreach (var group in onlySynConnectionsByHost)     
@@ -106,8 +102,13 @@ namespace NetSnifferLib.StatefulAnalysis.Tcp
                     }
                 }
             }
+        }
 
-            isDetectionRunning = false;
+        readonly ActionBlock<int> detectSynFloodActionBlock;
+        
+        public TcpStatefulAnalyzer()
+        {
+            detectSynFloodActionBlock = new(value => DetectSynFlood());
         }
 
         int n = 0;
@@ -116,10 +117,11 @@ namespace NetSnifferLib.StatefulAnalysis.Tcp
             n++;
             if (n == 100)
             {
-                n = 0;
-                
-                if (!isDetectionRunning)
-                    Task.Run(() => DetectSynFlood());
+                if (detectSynFloodActionBlock.InputCount == 0)
+                {
+                    detectSynFloodActionBlock.Post(n);
+                    n = 0;
+                }
             }
 /*            if (!isAnalyzig)
             {

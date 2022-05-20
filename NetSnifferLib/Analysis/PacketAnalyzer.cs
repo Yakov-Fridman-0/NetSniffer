@@ -23,7 +23,7 @@ namespace NetSnifferLib.Analysis
             Analyzer = new();
         }
 
-        readonly TopologyBuilder topologyBuilder = new();
+        public readonly TopologyBuilder topologyBuilder = new();
 
         readonly Dictionary<TracertResults, bool> tracertResults = new();
 

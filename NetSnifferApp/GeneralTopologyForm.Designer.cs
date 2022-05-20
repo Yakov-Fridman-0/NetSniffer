@@ -68,7 +68,7 @@ namespace NetSnifferApp
             // updateTimer
             // 
             this.updateTimer.Interval = 500;
-            this.updateTimer.Tick += new System.EventHandler(this.updateTimer_Tick);
+            this.updateTimer.Tick += new System.EventHandler(this.UpdateTimer_Tick);
             // 
             // titleLabel
             // 
