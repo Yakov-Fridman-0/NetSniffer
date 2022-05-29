@@ -299,7 +299,7 @@ namespace NetSnifferLib
 
             try
             {
-                if (PacketAnalyzer.Analyzer.IsEthernet(Packet))
+                if (PacketAnalyzer.IsEthernet(Packet))
                 {
                     description = PacketAnalyzer.Analyzer.AnalyzePacket(Packet, PacketId);
                 }

@@ -77,7 +77,9 @@ namespace NetSnifferApp
         }
 
         Color regularColor = Color.FromKnownColor(KnownColor.Control);
-        Color markedColor = Color.Yellow;
+        Color selectedColor = Color.Yellow;
+
+        bool tracert = false;
 
         public bool IsRouter { get; private set; } = false;
 
@@ -88,19 +90,23 @@ namespace NetSnifferApp
             InitializeComponent();
         }
 
+        public event EventHandler SelectionStateChangedByUser = delegate { };
+
         public bool Marked { get; private set; } = false;
 
-        public void Mark()
+        public bool IsSelected { get; private set; } = false;
+
+        public void MarkSelection()
         {
-            Marked = true;
-            markToolStripMenuItem.Text = "Unmark";
-            BackColor = markedColor;
+            IsSelected = true;
+            selectToolStripMenuItem.Text = "Unselect";
+            BackColor = selectedColor;
         }
 
-        public void UnMark()
+        public void UnMarkSelection()
         {
-            Marked = false;
-            markToolStripMenuItem.Text = "Mark";
+            IsSelected = false;
+            selectToolStripMenuItem.Text = "Select";
             BackColor = regularColor;
         }
 
@@ -123,10 +129,10 @@ namespace NetSnifferApp
             IsLanRouter = true;
 
             regularColor = Color.DarkBlue;
-            markedColor = Color.DarkOrange;
+            selectedColor = Color.DarkOrange;
 
             if (Marked)
-                BackColor = markedColor;
+                BackColor = selectedColor;
             else
                 BackColor = regularColor;
         }
@@ -136,10 +142,10 @@ namespace NetSnifferApp
             IsLanRouter = false;
 
             regularColor = Color.RoyalBlue;
-            markedColor = Color.Orange;
+            selectedColor = Color.Orange;
 
             if (Marked)
-                BackColor = markedColor;
+                BackColor = selectedColor;
             else
                 BackColor = regularColor;
         }
@@ -166,10 +172,28 @@ namespace NetSnifferApp
 
         private void TracertToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            regularColor = Color.DeepSkyBlue;
+            selectedColor = Color.Salmon;
+
+            BackColor = IsSelected ? selectedColor : regularColor;
+
             PacketAnalyzer.Analyzer.TracertAsync(_host.IPAddress);
+            PacketAnalyzer.Analyzer.TracertCompleted += Analyzer_TracertCompleted;
         }
 
-        private void showTCPConnectionsToolStripMenuItem_Click(object sender, EventArgs e)
+        public event EventHandler TracertCompleted = delegate { };
+
+        private void Analyzer_TracertCompleted(object sender, System.Net.IPAddress e)
+        {
+            if (Host.IPAddress.Equals(e))
+            {
+                PacketAnalyzer.Analyzer.TracertCompleted -= Analyzer_TracertCompleted;
+
+                TracertCompleted.Invoke(this, new EventArgs());
+            }
+        }
+
+        private void ShowTCPConnectionsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var form = new TcpStreamsForm()
             {
@@ -180,20 +204,22 @@ namespace NetSnifferApp
             //form.StartRefreshing();
         }
 
-        private void copyIPAddressToolStripMenuItem_Click(object sender, EventArgs e)
+        private void CopyIPAddressToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Clipboard.SetText(_host.IPAddress.ToString());
         }
 
-        private void markToolStripMenuItem_Click(object sender, EventArgs e)
+        private void SelectToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Marked)
+            if (IsSelected)
             {
-                UnMark();
+                UnMarkSelection();
+                SelectionStateChangedByUser.Invoke(this, new EventArgs());
             }
             else
             {
-                Mark();
+                MarkSelection();
+                SelectionStateChangedByUser.Invoke(this, new EventArgs());
             }
         }
 

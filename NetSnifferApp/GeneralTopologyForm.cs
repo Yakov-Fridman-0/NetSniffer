@@ -218,7 +218,7 @@ namespace NetSnifferApp
                 }
             }
 
-            wanViewer.ShowConnections();
+            //wanViewer.ShowConnections();
 
             foreach (var router in wanDiff.WanRoutersAdded)
                 wanViewer.MakeHostWanRouter(router);
@@ -260,12 +260,10 @@ namespace NetSnifferApp
                         lanViewer.HideHostIPAddress(host);
                 }
 
-                //LanMap.Update(lanDiff);
                 LanMap.Update(lanDiff);
 
 
                 var wanDiff = wanMap.GetDiff(WanMap);
-                //var wanDiff = wanMap.GetDiff(WanMap);
 
                 foreach (var wanHost in wanMap.HostsAsReadOnly)
                 {
@@ -286,11 +284,6 @@ namespace NetSnifferApp
                         if (!wanViewer.ContainsHost(wanHost))
                             wanViewer.AddHost(wanHost);
                     }
-
-                    /*                foreach (var otherHost in wanHost.ConnectedHosts)
-                                {
-                                    wanViewer.AddConnection(wanHost, otherHost);
-                                }*/
                 }
 
                 foreach (var router in wanDiff.LanRouterAdded)
@@ -304,13 +297,13 @@ namespace NetSnifferApp
                     }
                 }
 
-                wanViewer.ShowConnections();
-
                 foreach (var router in wanDiff.WanRoutersAdded)
                     wanViewer.MakeHostWanRouter(router);
 
                 foreach (var server in wanDiff.DnsServersAdded)
                     wanViewer.MakeHostServer(server);
+
+                wanViewer.ShowNewTracert();
 
                 WanMap.Update(wanDiff);
 

@@ -114,7 +114,7 @@ namespace NetSnifferLib.Analysis
 
         public int TransmittedBytes { get; private set; } = 0;
 
-        public bool IsEthernet(Packet packet) => packet.DataLink.Kind == DataLinkKind.Ethernet;
+        public static bool IsEthernet(Packet packet) => packet.DataLink.Kind == DataLinkKind.Ethernet;
 
         public PacketDescription AnalyzePacket(Packet packet, int packetId)
         {
@@ -210,6 +210,8 @@ namespace NetSnifferLib.Analysis
             return Task.Run(() => Tracert(destination));
         }
 
+        public event EventHandler<IPAddress> TracertCompleted = delegate { };
+
         public void Tracert(IPAddress destination)
         {
             int maxHops = 30;
@@ -232,14 +234,18 @@ namespace NetSnifferLib.Analysis
                     case IPStatus.Success:
                         results.IsComplete = true;
                         results.Successfull = true;
+
                         topologyBuilder.IntegrateTracertResults(results);
+                        TracertCompleted.Invoke(this, destination);
                         return;
                 }
             }
 
             results.IsComplete = true;
             results.Successfull = false;
+
             topologyBuilder.IntegrateTracertResults(results);
+            TracertCompleted.Invoke(this, destination);
         }
 
         public LanMap GetLanMap()

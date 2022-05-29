@@ -11,6 +11,11 @@ namespace NetSnifferApp
     {
         public WanHost Host { get; init; }
 
+
+        static readonly WanHostItem _empty = new(null);
+
+        public static WanHostItem Empty => _empty;
+
         public WanHostItem(WanHost host)
         {
             Host = host;
@@ -18,7 +23,7 @@ namespace NetSnifferApp
 
         public override string ToString()
         {
-            return Host.ToString();
+            return (this != Empty) ? Host.ToString() : "(none)";
         }
     }
 }

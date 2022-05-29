@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
@@ -28,22 +29,21 @@ namespace NetSnifferApp
 
         readonly List<(WanHost, WanHost)> connections = new();
 
+        readonly Dictionary<WanHost, bool> hasForwardMissingConnection = new();
+
         int centerX;
         int centerY;
 
-        int maxIterations = 50;
+        const int maxIterations = 50;
 
         public bool IsLive { get; set; } = false;
 
         const double angleDiff = Math.PI / 3;
         const int radious = 50;
 
-        const int minRadious = 100;
-        const int maxRadious = 700;
-
-        //readonly Dictionary<WanHostControl, double> angle = new();
-
         readonly Random random = new(10);
+
+        WanHostControl selectedHostControl = null;
 
         public WanViewer()
         {
@@ -51,6 +51,18 @@ namespace NetSnifferApp
 
             centerX = Width / 2;
             centerY = Height/ 2;
+
+            hostsComboBox.Items.Add(WanHostItem.Empty);
+        }
+
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+
+            foreach (var host in PacketAnalyzer.Analyzer.topologyBuilder.wanMapBuilder.CompletedTracerts.Keys) 
+            {
+                pendingTracerts.Enqueue(host);
+            }
         }
 
         public void Clear()
@@ -62,11 +74,12 @@ namespace NetSnifferApp
                     Controls.Remove(control);
                 }
 
+                connections.Clear();
                 hostControls.Clear();
             }
         }
 
-        private void label1_Paint(object sender, PaintEventArgs e)
+        private void Label1_Paint(object sender, PaintEventArgs e)
         {
             ControlPaint.DrawBorder(
                 e.Graphics, label1.DisplayRectangle, 
@@ -106,19 +119,100 @@ namespace NetSnifferApp
                 Height = 52
             };
 
+            control.TracertCompleted += Control_TracertCompleted;
+            control.SelectionStateChangedByUser += WanHostControl_SelectionStateChangedByUser;
+
             var item = new WanHostItem(host);
 
             //TODO: fix error, handle required
             Invoke(new MethodInvoker(() =>
             { 
                 Controls.Add(control);
-                comboBox1.Items.Add(item);
+                hostsComboBox.Items.Add(item);
             }));
 
             hostControls.Add(host, control);
             hostItems.Add(host, item);
 
             PlaceHost(control);
+        }
+
+        readonly Dictionary<WanHostControl, double> angleOfHostControl = new();
+        readonly Dictionary<WanHostControl, WanHostControl> prevControlOfHostControl = new();
+
+        readonly ConcurrentQueue<WanHost> pendingTracerts = new();
+
+        private void Control_TracertCompleted(object sender, EventArgs e)
+        {
+            var senderControl = (WanHostControl)sender;
+            
+            senderControl.TracertCompleted -= Control_TracertCompleted;
+
+            pendingTracerts.Enqueue(senderControl.Host);
+        }
+
+        public void ShowNewTracert()
+        {
+            if (pendingTracerts.TryDequeue(out WanHost host))
+                ShowTracert(hostControls[host]);
+        }
+
+        void ShowTracert(WanHostControl senderControl)
+        {
+            List<WanHost> hops = PacketAnalyzer.Analyzer.topologyBuilder.wanMapBuilder.CompletedTracerts[senderControl.Host];
+
+            var index = hops.FindIndex(host => !orderedHosts.Contains(host));
+
+            if (index == -1)
+                return;
+
+            var prevIndex = index - 1;
+
+            if (prevIndex == -1)
+            {
+                var copy = new List<WanHost>(hops);
+                copy.RemoveAt(0);
+
+                var host = copy[0];
+                var control = hostControls[host];
+
+                var angle = Math.Atan2(control.Location.Y - centerY, control.Location.X - centerX);
+
+                var prevLocation = new Point((int)(control.Location.X - radious * Math.Cos(angle)), (int)(control.Location.Y - radious * Math.Sin(angle)));
+
+                BuildChainFromTracert(hops, control, angle, prevLocation, null);
+            }
+            else
+            {
+                var control = hostControls[hops[index]];
+                var prevControl = hostControls[hops[prevIndex]];
+
+                BuildChainFromTracert(hops, control, angleOfHostControl[control], prevControl.Location, prevControl?.Host);
+            }
+        }
+
+
+        private void WanHostControl_SelectionStateChangedByUser(object sender, EventArgs e)
+        {
+            var control = (WanHostControl)sender;
+
+            if (selectedHostControl != null)
+                selectedHostControl.UnMarkSelection();
+
+            if (control.IsSelected)
+            {
+                selectedHostControl = control;
+                control.MarkSelection();
+
+                hostsComboBox.SelectedIndex = hostsComboBox.Items.Cast<WanHostItem>().ToList().FindIndex(1, item => item.Host.Equals(control.Host));
+            }
+            else
+            {
+                selectedHostControl.UnMarkSelection();
+                selectedHostControl = null;
+
+                hostsComboBox.SelectedIndex = 0;
+            }
         }
 
         public Task AddHostAsync(WanHost host)
@@ -134,14 +228,13 @@ namespace NetSnifferApp
                 Controls.Remove(control);
 
                 hostItems.Remove(host, out WanHostItem item);
-                comboBox1.Items.Remove(item);
+                hostsComboBox.Items.Remove(item);
             }
         }
 
         public void AddLanRouter(WanHost host)
         {
             routers.Add(host);
-            hostControls.Remove(host);
 
             lanRouters.Add(host);
 
@@ -150,14 +243,20 @@ namespace NetSnifferApp
                 Host = host
             };
 
+            var isServer = hostControls.GetValueOrDefault(host)?.IsServer ?? false;
+
+            hostControls[host] = control;
+
             control.BecomeRouter();
-            hostControls.Add(host, control);
+            if (isServer)
+                control.BecomeServer();
+
+            control.TracertCompleted += Control_TracertCompleted;
+            control.SelectionStateChangedByUser += WanHostControl_SelectionStateChangedByUser;
 
             Invoke(new MethodInvoker(() => Controls.Add(control)));
 
             PlaceLanRouter(control);
-
-            //OrderConnectedHosts(host);
 
             control.BecomeLanRouter();
         }
@@ -209,17 +308,6 @@ namespace NetSnifferApp
             Invalidate();
         }
 
-
-        double GetRandomAngle()
-        {
-            return random.NextDouble() * Math.Tau;
-        }
-
-        double GetRandomRadious()
-        {
-            return minRadious + random.NextDouble() * (maxRadious - minRadious);
-        }
-
         public void AddConnection(WanHost host1, WanHost host2)
         {
             if (!connections.Contains((host1, host2)))
@@ -228,43 +316,24 @@ namespace NetSnifferApp
 
         int numbersOfDrawings = 0;
 
-        public void ShowConnections()
-        {
-            var connected = connections.SelectMany(hostPair => new WanHost[] { hostPair.Item1, hostPair.Item2 }).Distinct().Count();
-            if (connected > orderedHosts.Count)
-            {
-                if (PacketAnalyzer.Analyzer.topologyBuilder.wanMapBuilder.CompletedTracerts.Count > numbersOfDrawings)
-                {
-                    foreach (var router in lanRouters)
-                    {
-                        //if (AllConnectedHostsAndChildren(router, null).Exists(host => !orderedHosts.Contains(host)))
-                        //{
-                        OrderConnectedHosts(router);
-                        //}
-                    }
+        //public void ShowConnections()
+        //{
+        //    var connected = connections.SelectMany(hostPair => new WanHost[] { hostPair.Item1, hostPair.Item2 }).Distinct().Count();
+        //    if (connected > orderedHosts.Count)
+        //    {
+        //        if (PacketAnalyzer.Analyzer.topologyBuilder.wanMapBuilder.CompletedTracerts.Count > numbersOfDrawings)
+        //        {
+        //            foreach (var router in lanRouters)
+        //            {
+        //                OrderConnectedHosts(router);
+        //            }
 
-                    numbersOfDrawings++;
-                }
-            }
+        //            numbersOfDrawings++;
+        //        }
+        //    }
 
-            Invalidate();
-        }
-
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            base.OnPaint(e);
-
-            var graphics = e.Graphics;
-            var pen = new Pen(Color.Black);
-
-            foreach (var (host1, host2) in connections)
-            {
-                var point1 = hostControls[host1].Location;
-                var point2 = hostControls[host2].Location;
-
-                graphics.DrawLine(pen, point1, point2);
-            }
-        }
+        //    Invalidate();
+        //}
 
         List<WanHostControl> GetShadowedControls(WanHostControl control)
         {
@@ -281,29 +350,6 @@ namespace NetSnifferApp
 
         Point GetRandomLocationForHost(WanHostControl control)
         {
-            //var angle = GetRandomAngle();
-            //var radious = GetRandomRadious();
-
-            //var xFromCenter = (int)(radious * Math.Cos(angle) * Height / Width);
-            //var yFromCenter = (int)(radious * Math.Sin(angle) * 0.7);
-
-            //var quater = random.NextDouble();
-
-            //int randomX = 0, randomY = 0;
-
-            //switch (quater)
-            //{
-            //    case > 0.75:
-            //        break;
-            //    case > 0.5:
-            //        break;
-            //    case > 0.25:
-            //        break;
-            //    default:
-            //        break;
-            //}
-            //return new Point(centerX + xFromCenter - control.CenterX, centerY + yFromCenter - control.CenterY);
-
             var randomXDis = random.Next(200, 650);
             var randomYDis = random.Next(100, 400);
 
@@ -330,29 +376,6 @@ namespace NetSnifferApp
 
         Point GetRandomLocationForLanRouter(WanHostControl control)
         {
-            //var angle = GetRandomAngle();
-            //var radious = GetRandomRadious();
-
-            //var xFromCenter = (int)(radious * Math.Cos(angle) * Height / Width);
-            //var yFromCenter = (int)(radious * Math.Sin(angle) * 0.7);
-
-            //var quater = random.NextDouble();
-
-            //int randomX = 0, randomY = 0;
-
-            //switch (quater)
-            //{
-            //    case > 0.75:
-            //        break;
-            //    case > 0.5:
-            //        break;
-            //    case > 0.25:
-            //        break;
-            //    default:
-            //        break;
-            //}
-            //return new Point(centerX + xFromCenter - control.CenterX, centerY + yFromCenter - control.CenterY);
-
             var randomXDis = random.Next(40, 60);
             var randomYDis = random.Next(40, 60);
 
@@ -387,20 +410,7 @@ namespace NetSnifferApp
             ResumeLayout();
         }
 
-        void OrderConnectedHosts(WanHost router)
-        {
-            var control = hostControls[router];
-            var angle = Math.Atan2(control.Location.Y - centerY, control.Location.X - centerX);
-
-            var prevLocation = new Point((int)(control.Location.X - radious * Math.Cos(angle)), (int)(control.Location.Y - radious * Math.Sin(angle)));
-            
-            if (!orderedHosts.Contains(router))
-                orderedHosts.Add(router);
-
-            BuildChain(control, angle, prevLocation, null);
-        }
-
-        void BuildChain(WanHostControl control, double baseAngle, Point baseLocation, WanHost prevHost)
+        void BuildChainFromTracert(List<WanHost> tracert, WanHostControl control, double baseAngle, Point baseLocation, WanHost prevHost)
         {
             var nextLocationX = (int)(baseLocation.X + radious * Math.Cos(baseAngle));
             var nextLocationY = (int)(baseLocation.Y + radious * Math.Sin(baseAngle));
@@ -412,7 +422,7 @@ namespace NetSnifferApp
             if (!orderedHosts.Contains(host))
             {
                 Invoke(new MethodInvoker(() => control.Location = newLocation));
-                
+
                 lock (orderedHosts)
                     orderedHosts.Add(host);
             }
@@ -422,12 +432,6 @@ namespace NetSnifferApp
 
             if (connectedHosts.Count == 0)
             {
-                var tracert = PacketAnalyzer.Analyzer.topologyBuilder.wanMapBuilder.CompletedTracerts.
-                        FirstOrDefault(aTracert => aTracert.Exists(aHost => ReferenceEquals(aHost, host)));
-
-                if (tracert == null)
-                    return;
-
                 var copy = new List<WanHost>(tracert);
 
                 copy.Reverse();
@@ -449,6 +453,7 @@ namespace NetSnifferApp
                 {
                     if (aNextHost == null)
                     {
+                        hasForwardMissingConnection[host] = true;
                         nextLocationX = (int)(nextLocationX + radious * Math.Cos(baseAngle));
                         nextLocationY = (int)(nextLocationY + radious * Math.Sin(baseAngle));
 
@@ -456,25 +461,30 @@ namespace NetSnifferApp
                     }
                     else
                     {
-                        BuildChain(hostControls[aNextHost], baseAngle, newLocation, null);
+                        var nextControl = hostControls[aNextHost];
+
+                        angleOfHostControl.Add(nextControl, baseAngle);
+
+                        BuildChainFromTracert(tracert, nextControl, baseAngle, newLocation, null);
                         return;
                     }
                 }
             }
             else
             {
-                //var nextHost = connectedHosts[0];
-                //BuildChain(hostControls[nextHost], baseAngle, newLocation, host);
+                var nextHostIndex = connectedHosts.FindIndex(host => tracert.Contains(host));
+                var nextHost = connectedHosts[nextHostIndex];
 
-                foreach (var (otherHost, index) in connectedHosts.Select((host, i) => (host, i)))
-                {
-                    //if (AllConnectedHostsAndChildren(otherHost, host).Exists(host => !orderedHosts.Contains(host)))
-                    //{
-                        var sign = (index % 2 - 0.5) * 2;
-                        var newAngle = baseAngle + sign * (angleDiff * ((index + 1) / 2));
-                        BuildChain(hostControls[otherHost], newAngle, newLocation, host);
-                    //}
-                }
+                var completeIndex = nextHostIndex + (hasForwardMissingConnection.GetValueOrDefault(host, false) ? 1 : 0);
+                var sign = (completeIndex % 2 - 0.5) * 2;
+                var newAngle = baseAngle + sign * (angleDiff * ((completeIndex + 1) / 2));
+
+                var nextControl = hostControls[nextHost];
+
+                if (!angleOfHostControl.ContainsKey(nextControl))
+                    angleOfHostControl.Add(nextControl, newAngle);
+
+                BuildChainFromTracert(tracert, nextControl, newAngle, newLocation, host);
             }
         }
 
@@ -485,42 +495,25 @@ namespace NetSnifferApp
 
             label1.Location = new Point(centerX - label1.Width / 2, centerY - label1.Height / 2);
         }
-
-        WanHostControl markedHost = null;
-
-/*        private void searchTextBox_TextChanged(object sender, EventArgs e)
+        
+        private void ComboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            var text = searchTextBox.Text;
+            var item = (WanHostItem)hostsComboBox.SelectedItem;
 
-            if (Regex.IsMatch(text, @"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$"))
+            if (hostsComboBox.SelectedIndex == 0)
             {
-                var address = IPAddress.Parse(text);
-                var host = hostControls.FirstOrDefault(kvp => kvp.Key.IPAddress.Equals(address)).Value;
-                
-                if (host != null)
-                {
-                    host.Mark();
-                    markedHost = host;
-                }
+                if (selectedHostControl != null)
+                    selectedHostControl.UnMarkSelection();
+
+                selectedHostControl = null;
             }
-            else
+            else if (item != null)
             {
-                if (markedHost != null)
-                    markedHost.UnMark();
-            }
-        }*/
+                if (selectedHostControl != null)
+                    selectedHostControl.UnMarkSelection();
 
-        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            var item = (WanHostItem)(comboBox1.SelectedItem);
-
-            if (item != null)
-            {
-                if (markedHost?.Marked ?? false)
-                    markedHost.UnMark();
-
-                markedHost = hostControls[item.Host];
-                markedHost.Mark();
+                selectedHostControl = hostControls[item.Host];
+                selectedHostControl.MarkSelection();
             }
         }
     }

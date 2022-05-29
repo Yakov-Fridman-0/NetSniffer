@@ -33,16 +33,15 @@ namespace NetSnifferApp
             System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(WanHostControl));
             this.tracertToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.showTCPConnectionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.copyIPAddressToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.markToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+            this.selectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pictureBox = new System.Windows.Forms.PictureBox();
             this.imageList = new System.Windows.Forms.ImageList(this.components);
             this.addressToolTip = new System.Windows.Forms.ToolTip(this.components);
-            this.keepIPAddressShownToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             contextMenuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
@@ -58,38 +57,52 @@ namespace NetSnifferApp
             this.toolStripSeparator2,
             this.copyIPAddressToolStripMenuItem,
             this.toolStripSeparator3,
-            this.markToolStripMenuItem,
-            this.keepIPAddressShownToolStripMenuItem});
+            this.selectToolStripMenuItem});
             contextMenuStrip1.Name = "contextMenuStrip1";
-            contextMenuStrip1.Size = new System.Drawing.Size(234, 170);
+            contextMenuStrip1.Size = new System.Drawing.Size(226, 146);
             // 
             // tracertToolStripMenuItem
             // 
             this.tracertToolStripMenuItem.Name = "tracertToolStripMenuItem";
-            this.tracertToolStripMenuItem.Size = new System.Drawing.Size(233, 24);
+            this.tracertToolStripMenuItem.Size = new System.Drawing.Size(225, 24);
             this.tracertToolStripMenuItem.Text = "tracert";
             this.tracertToolStripMenuItem.Click += new System.EventHandler(this.TracertToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(222, 6);
             // 
             // showTCPConnectionsToolStripMenuItem
             // 
             this.showTCPConnectionsToolStripMenuItem.Name = "showTCPConnectionsToolStripMenuItem";
-            this.showTCPConnectionsToolStripMenuItem.Size = new System.Drawing.Size(233, 24);
+            this.showTCPConnectionsToolStripMenuItem.Size = new System.Drawing.Size(225, 24);
             this.showTCPConnectionsToolStripMenuItem.Text = "Show TCP connections";
-            this.showTCPConnectionsToolStripMenuItem.Click += new System.EventHandler(this.showTCPConnectionsToolStripMenuItem_Click);
+            this.showTCPConnectionsToolStripMenuItem.Click += new System.EventHandler(this.ShowTCPConnectionsToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(222, 6);
             // 
             // copyIPAddressToolStripMenuItem
             // 
             this.copyIPAddressToolStripMenuItem.Name = "copyIPAddressToolStripMenuItem";
-            this.copyIPAddressToolStripMenuItem.Size = new System.Drawing.Size(233, 24);
+            this.copyIPAddressToolStripMenuItem.Size = new System.Drawing.Size(225, 24);
             this.copyIPAddressToolStripMenuItem.Text = "Copy IP Address";
-            this.copyIPAddressToolStripMenuItem.Click += new System.EventHandler(this.copyIPAddressToolStripMenuItem_Click);
+            this.copyIPAddressToolStripMenuItem.Click += new System.EventHandler(this.CopyIPAddressToolStripMenuItem_Click);
             // 
-            // markToolStripMenuItem
+            // toolStripSeparator3
             // 
-            this.markToolStripMenuItem.Name = "markToolStripMenuItem";
-            this.markToolStripMenuItem.Size = new System.Drawing.Size(233, 24);
-            this.markToolStripMenuItem.Text = "Mark";
-            this.markToolStripMenuItem.Click += new System.EventHandler(this.markToolStripMenuItem_Click);
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            this.toolStripSeparator3.Size = new System.Drawing.Size(222, 6);
+            // 
+            // selectToolStripMenuItem
+            // 
+            this.selectToolStripMenuItem.Name = "selectToolStripMenuItem";
+            this.selectToolStripMenuItem.Size = new System.Drawing.Size(225, 24);
+            this.selectToolStripMenuItem.Text = "Select";
+            this.selectToolStripMenuItem.Click += new System.EventHandler(this.SelectToolStripMenuItem_Click);
             // 
             // pictureBox
             // 
@@ -110,29 +123,6 @@ namespace NetSnifferApp
             this.imageList.Images.SetKeyName(1, "Router");
             this.imageList.Images.SetKeyName(2, "Server");
             this.imageList.Images.SetKeyName(3, "RouterAndServer");
-            // 
-            // keepIPAddressShownToolStripMenuItem
-            // 
-            this.keepIPAddressShownToolStripMenuItem.Name = "keepIPAddressShownToolStripMenuItem";
-            this.keepIPAddressShownToolStripMenuItem.Size = new System.Drawing.Size(233, 24);
-            this.keepIPAddressShownToolStripMenuItem.Text = "Keep IP Address Shown";
-            this.keepIPAddressShownToolStripMenuItem.Visible = false;
-            this.keepIPAddressShownToolStripMenuItem.Click += new System.EventHandler(this.keepIPAddressShownToolStripMenuItem_Click);
-            // 
-            // toolStripSeparator1
-            // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(230, 6);
-            // 
-            // toolStripSeparator2
-            // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(230, 6);
-            // 
-            // toolStripSeparator3
-            // 
-            this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(230, 6);
             // 
             // WanHostControl
             // 
@@ -158,10 +148,9 @@ namespace NetSnifferApp
         private System.Windows.Forms.ToolStripMenuItem showTCPConnectionsToolStripMenuItem;
         private System.Windows.Forms.ToolTip addressToolTip;
         private System.Windows.Forms.ToolStripMenuItem copyIPAddressToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem markToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem selectToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
-        private System.Windows.Forms.ToolStripMenuItem keepIPAddressShownToolStripMenuItem;
     }
 }

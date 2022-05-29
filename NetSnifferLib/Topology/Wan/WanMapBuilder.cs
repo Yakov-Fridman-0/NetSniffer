@@ -12,7 +12,7 @@ namespace NetSnifferLib.Topology
 {
     public class WanMapBuilder
     {
-        public List<List<WanHost>> CompletedTracerts { get; } = new();
+        public Dictionary<WanHost, List<WanHost>> CompletedTracerts { get; } = new();
 
         readonly List<WanHost> hosts = new();
 
@@ -139,7 +139,9 @@ namespace NetSnifferLib.Topology
             if (tracertResults.Successfull)
                 hosts.Add(GetHost(tracertResults.Destination));
 
-            CompletedTracerts.Add(hosts);
+
+            if (!CompletedTracerts.ContainsKey(GetHost(tracertResults.Destination)))
+                CompletedTracerts.Add(GetHost(tracertResults.Destination), hosts);
         }
 
         internal List<WanHost> GetOriginalWanHosts()
