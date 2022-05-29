@@ -164,6 +164,32 @@ namespace NetSnifferApp
             isLiveCapture = true;
             isCaptureUnsaved = true;
 
+            if (statisticsForm != null)
+            {
+                if(!statisticsForm.IsLive)
+                {
+                    statisticsForm.IsLive = true;
+                }
+
+                if (!statisticsForm.CaptureStarted)
+                {
+                    statisticsForm.CaptureStarted = true;
+                }
+            }
+
+            if (topologyForm != null)
+            {
+                if (!topologyForm.IsLive)
+                {
+                    topologyForm.IsLive = true;
+                }
+
+                if (!topologyForm.CaptureStarted)
+                {
+                    topologyForm.CaptureStarted = true;
+                }
+            }
+
             var args = new LiveSnifferArgs()
             {
                 CaptureFilter = captureFilterString,

@@ -36,7 +36,7 @@ namespace NetSnifferLib.Analysis.Application
             foreach(DnsQueryResourceRecord queryResourceRecord in datagram.Queries)
             {
                 sb.AppendFormat(" {0}", ConvertToString(queryResourceRecord.DnsType));
-                sb.AppendFormat(" {0}", queryResourceRecord.DomainName);
+                sb.AppendFormat(" {0}", queryResourceRecord.DomainName.ToString());
             }
 
             if (isResponse)
@@ -44,7 +44,7 @@ namespace NetSnifferLib.Analysis.Application
                 foreach (DnsDataResourceRecord dataResourceRecord in datagram.Answers)
                 {
                     sb.AppendFormat(" {0}", ConvertToString(dataResourceRecord.DnsType));
-                    sb.AppendFormat(" {0}", dataResourceRecord.ToString()); //TODO: Find
+                    sb.AppendFormat(" {0}", dataResourceRecord.DomainName.ToString()); //TODO: Find
                 }
             }
 

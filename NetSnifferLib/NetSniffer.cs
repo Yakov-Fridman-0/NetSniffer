@@ -104,6 +104,7 @@ namespace NetSnifferLib
                     communicator.Dispose();
                 }
             }
+
             CaptureStopped.Invoke(this, new EventArgs());
         }
 

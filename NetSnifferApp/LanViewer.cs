@@ -41,10 +41,13 @@ namespace NetSnifferApp
 
         public void Clear()
         {
-            foreach (var hostViewer in hostViewersByHost.Values)
+            foreach (var hostViewer in hostViewers)
             {
                 hostViewer.Clear();
             }
+
+            hostsCount = 0;
+            currentHostViewerIndex = 0;
 
             hostViewersByHost.Clear();
         }

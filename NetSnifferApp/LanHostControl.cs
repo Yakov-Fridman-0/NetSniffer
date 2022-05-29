@@ -79,6 +79,16 @@ namespace NetSnifferApp
                         _isIPAddressShown = true;
                     }
                 }
+                else
+                {
+                    _wanHost = null;
+
+                    IsRouter = false;
+                    IsServer = false;
+
+                    IsIPAddressShown = false;
+                }
+                    
             }
         }
 

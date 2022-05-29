@@ -140,8 +140,6 @@ namespace NetSnifferApp
             wanViewer.Clear();
         }
 
-        object updateTopologyLock = new();
-
         private void CenterTitleLabel()
         {
             var y = titleLabel.Location.Y;

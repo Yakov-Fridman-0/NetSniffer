@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Threading.Tasks.Dataflow;
 using System.Windows.Forms;
 using System.Drawing;
@@ -42,6 +43,7 @@ namespace NetSnifferApp
             }
         }
 
+        //System.Threading.Timer timer;
         readonly SortedDictionary<int, ListViewItem> allListViewItems = new();
 
         string displayFilterString = string.Empty;
@@ -66,6 +68,16 @@ namespace NetSnifferApp
 
             packetsListView.ListViewItemSorter = new ListViewItemComparer();
             packetsListView.Sorting = SortOrder.Ascending;
+
+           
+        }
+
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+
+            timer1.Start();
+            //timer = new(AddPendingPackets, null, 0, 500);
         }
 
         public IEnumerable<Packet> GetSelectedPackets()
@@ -90,7 +102,11 @@ namespace NetSnifferApp
             //}));
 
             lock(allListViewItems)
-                allListViewItems.Add(packetData.PacketId, item);
+            {
+                if (!allListViewItems.ContainsKey(packetData.PacketId))
+                    allListViewItems.Add(packetData.PacketId, item);
+            }
+                
 
             if (packetData.Description == null)
                 packetData.DescriptionReady += FillPacketDescription;
@@ -98,12 +114,16 @@ namespace NetSnifferApp
                 FillPacketDescription(packetData.PacketId, packetData.Description);
         }
 
+        bool cleared = false;
+
         public void Clear()
         {
             lock (allListViewItems)
             {
                 allListViewItems.Clear();
             }
+
+            cleared = true;
 
             if (packetsListView.InvokeRequired)
             {
@@ -127,6 +147,8 @@ namespace NetSnifferApp
 
         public void AddPacket(PacketData packetData)
         {
+            cleared = false;
+
             AddPacketDataCore(packetData);
             //itemCreatorActionBlock.Post(packetData);
         }
@@ -156,6 +178,9 @@ namespace NetSnifferApp
 
         void FillPacketDescription(int packetId, PacketDescription description)
         {
+            if (cleared)
+                return;
+
             var packetData = PacketData.GetPacketDataByPacketId(packetId);
 
             ListViewItem item;
@@ -165,56 +190,55 @@ namespace NetSnifferApp
 
             bool matches;
 
-            lock (fillPacketSync)
+            bool hasAttacks = packetData.Attacks.Length != 0;
+
+            matches = displayFilter.PacketMatches(packetData);
+
+            if (hasAttacks)
             {
-                IsFillingPacket = true;
-                bool hasAttacks = packetData.Attacks.Length != 0;
-
-                matches = displayFilter.PacketMatches(packetData);
-
-                bool invokeRequired = packetsListView.InvokeRequired;
-
-                if (hasAttacks)
+                packetsListView.BeginInvoke(new MethodInvoker(
+                delegate
                 {
-                    packetsListView.Invoke(new MethodInvoker(
-                    delegate
-                    {
+                    //lock (fillPacketSync)
                         MarkItemAsAttack(item);
-                    }
-                    ));
- 
                 }
-                else
-                {
-                    GetPacketColors(packetData, out Color foreColor, out Color backColor);
+                ));
 
-                    packetsListView.Invoke(new MethodInvoker(
-                    delegate
-                    {
-                        SetItemColors(item, foreColor, backColor);
-                    }
-                    ));
-                }
-
-                packetsListView.Invoke(new MethodInvoker(() =>
-                {
-                    UpdateItem(item, description);
-                }));
-
-                //IsFillingPacket = false;
             }
+            else
+            {
+                GetPacketColors(packetData, out Color foreColor, out Color backColor);
+
+                packetsListView.BeginInvoke(new MethodInvoker(
+                delegate
+                {
+                    //lock (fillPacketSync)
+                        SetItemColors(item, foreColor, backColor);
+                }
+                ));
+            }
+
+            packetsListView.BeginInvoke(new MethodInvoker(() =>
+            {
+                //lock (fillPacketSync)
+                    UpdateItem(item, description);
+            }));
 
             if (matches)
             {
-                lock (updateSync)
+                packetsListView.BeginInvoke(new MethodInvoker(() =>
                 {
-                    packetsListView.Invoke(new MethodInvoker(() =>
-                    {
-                        packetsListView.Items.Add(item);
-                    }));
-                }
+                    //lock (updateSync)
+                    //{
+                    if (item.ListView == null)
+                        pendingListViewItems.Add(item);
+                            //packetsListView.Items.Add(item);
+                    //}
+                }));
             }
         }
+
+        readonly HashSet<ListViewItem> pendingListViewItems = new();
 
         static void SetItemColors(ListViewItem item, Color foreColor, Color backColor)
         {
@@ -367,17 +391,17 @@ namespace NetSnifferApp
             lock (allListViewItems)
                 item = allListViewItems[packetId];
 
-            if (packetsListView.InvokeRequired)
-            {
+           //if (packetsListView.InvokeRequired)
+           //{
                 packetsListView.Invoke(new MethodInvoker(() =>
                 {
                     MarkItemAsAttack(item);
                 }));
-            }
-            else
-            {
-                MarkItemAsAttack(item);
-            }
+            //}
+            //else
+            //{
+            //    MarkItemAsAttack(item);
+            //}
         }
 
         static void MarkItemAsAttack(ListViewItem item)
@@ -465,14 +489,23 @@ namespace NetSnifferApp
 
         void UpdateVisiblePackets()
         {
+            ListViewItem[] itemsToShow;
+
+            lock (allListViewItems)
+                itemsToShow = allListViewItems.Values.Where(item => displayFilter.PacketMatches((PacketData)item.Tag)).ToArray();
+
+            pendingListViewItems.Clear();
+
             lock (updateSync)
             {
-                packetsListView.Items.Clear();
                 packetsListView.BeginUpdate();
-
-                packetsListView.Items.AddRange(allListViewItems.Values.Where(item => displayFilter.PacketMatches((PacketData)item.Tag)).ToArray());
-
+                packetsListView.Items.Clear();
                 packetsListView.EndUpdate();
+
+                //packetsListView.Items.AddRange(itemsToShow);
+
+                foreach (var item in itemsToShow)
+                    pendingListViewItems.Add(item);
             }
         }
 
@@ -499,6 +532,17 @@ namespace NetSnifferApp
         private void PacketsListView_Resize(object sender, EventArgs e)
         {
             info.Width = packetsListView.Width - packetsListView.Columns.Cast<ColumnHeader>().Aggregate(0, (sum, header) => sum + header.Width) + info.Width;
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            lock (updateSync)
+            {
+                var notShown = pendingListViewItems.Except(packetsListView.Items.Cast<ListViewItem>());
+                packetsListView.Items.AddRange(notShown.ToArray());
+
+                pendingListViewItems.Clear();
+            }
         }
     }
 }

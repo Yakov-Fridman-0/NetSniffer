@@ -29,6 +29,7 @@ namespace NetSnifferApp
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.tabControl = new System.Windows.Forms.TabControl();
             this.packetPage = new System.Windows.Forms.TabPage();
             this.binaryDataTextBox = new System.Windows.Forms.TextBox();
@@ -48,6 +49,7 @@ namespace NetSnifferApp
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.label3 = new System.Windows.Forms.Label();
             this.displayFilterControl = new NetSnifferApp.DisplayFilterControl();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.tabControl.SuspendLayout();
             this.packetPage.SuspendLayout();
             this.attackPage.SuspendLayout();
@@ -257,6 +259,11 @@ namespace NetSnifferApp
             this.displayFilterControl.TabIndex = 1;
             this.displayFilterControl.FilterChanged += new System.EventHandler<string>(this.DisplayFilter_FilterChanged);
             // 
+            // timer1
+            // 
+            this.timer1.Interval = 500;
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            // 
             // PacketViewer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
@@ -300,5 +307,6 @@ namespace NetSnifferApp
         private System.Windows.Forms.SplitContainer splitContainer1;
         private DisplayFilterControl displayFilterControl;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Timer timer1;
     }
 }

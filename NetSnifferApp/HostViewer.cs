@@ -41,14 +41,35 @@ namespace NetSnifferApp
 
         public void Clear()
         {
-            foreach (var control in controls)
+            tableLayoutPanel.SuspendLayout();
+
+            //for (int i = 0; i < ROWS; i++)
+            //{
+            //    for (int j=0; j < COLUMNS; j++)
+            //    {
+            //        lock (controls)
+            //        {
+            //            if (controlsByHost.Values.Contains(controls[i, j]))
+            //            {
+            //                controls[i, j].Host = null;
+            //            }
+            //        }
+            //    }
+            //}
+
+            foreach (var control in controlsByHost.Values)
             {
-                Controls.Remove(control);
+                control.Host = null;
+                control.Visible = false;
             }
 
-            controlsByHost.Clear();
+            hostsCount = 0;
+            currentColumn = 0;
+            currentRow = 0;
 
-            InitHostControls();
+            tableLayoutPanel.ResumeLayout();
+
+            controlsByHost.Clear();
         }
 
         void InitHostControls()

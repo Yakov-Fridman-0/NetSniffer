@@ -48,12 +48,12 @@ namespace NetSnifferLib
             }
         }
 
-
+        
         public static void CancelAllAnalysis()
         {
             foreach (var packetData in allPacketDatas.Values)
             {
-                if (!packetData.task.IsCompleted)
+                if (packetData.task != null && !packetData.task.IsCompleted)
                 {
                     packetData.CancelAnalysis();
                 }
@@ -295,20 +295,29 @@ namespace NetSnifferLib
 
         public void Analyze()
         {
-            PacketDescription description;
+            PacketDescription description = null;
 
-            if (PacketAnalyzer.Analyzer.IsEthernet(Packet))
+            try
             {
-                description = PacketAnalyzer.Analyzer.AnalyzePacket(Packet, PacketId);
+                if (PacketAnalyzer.Analyzer.IsEthernet(Packet))
+                {
+                    description = PacketAnalyzer.Analyzer.AnalyzePacket(Packet, PacketId);
+                }
+                else
+                {
+                    description = new PacketDescription(Packet.Timestamp, "N/A", null, null, Packet.Length, "N/A");
+                }
             }
-            else
+            catch (KeyNotFoundException)
             {
-                description = new PacketDescription(Packet.Timestamp, "N/A", null, null, Packet.Length, "N/A");
+
             }
+            finally
+            {
+                Description = description;
 
-            Description = description;
-
-            DescriptionReady.Invoke(PacketId, description);
+                DescriptionReady.Invoke(PacketId, description);
+            }
         }
 
 
