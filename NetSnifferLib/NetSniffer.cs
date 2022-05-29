@@ -6,6 +6,7 @@ using System.Threading.Tasks.Dataflow;
 using PcapDotNet.Core;
 using PcapDotNet.Packets;
 using NetSnifferLib.Analysis;
+using System.Threading;
 
 namespace NetSnifferLib
 {
@@ -30,11 +31,13 @@ namespace NetSnifferLib
 
         protected Task _snifferTask;
 
-        public event EventHandler<Packet> PacketReceived = delegate { };
+        public event EventHandler<PacketData> PacketReceived = delegate { };
 
         public event EventHandler PacketLimitReached = delegate { };
 
         public event EventHandler CaptureStopped = delegate { };
+
+        public ManualResetEvent SniffingStarted { get; } = new(false);
 
         public void SaveCapture(string fileName, string displayFilterString)
         {
@@ -56,11 +59,16 @@ namespace NetSnifferLib
             eventRaiser = new ActionBlock<Packet>(packet =>
             {
                 allPackets.Add(packet);
+
                 packetsNum++;
-                PacketReceived.Invoke(this, packet);
+
+                var packetData = PacketData.Create(packet);
+                PacketReceived.Invoke(this, packetData);
 
                 if (packetsNum == MaxPacketNumber)
                     PacketLimitReached.Invoke(this, EventArgs.Empty);
+
+                packetData.AnalyzeAsync();
             }
             );
         }
@@ -74,9 +82,12 @@ namespace NetSnifferLib
             PacketAnalyzer.Analyzer.Sniffer = this;
 
             StartingTime = DateTime.Now;
+            
+            SniffingStarted.Set();
+
             try
             {
-                communicator.ReceivePackets(MaxPacketNumber, packet => eventRaiser.Post(packet));
+                communicator.ReceivePackets(MaxPacketNumber, OnPacketReceived);
             }
             catch (InvalidOperationException)
             {
@@ -85,7 +96,23 @@ namespace NetSnifferLib
 
             StoppingTime = DateTime.Now;
 
+            lock (disposeLock)
+            {
+                if (!disposed)
+                {
+                    disposed = true;
+                    communicator.Dispose();
+                }
+            }
             CaptureStopped.Invoke(this, new EventArgs());
+        }
+
+        bool disposed = false;
+        readonly object disposeLock = new();
+
+        void OnPacketReceived(Packet packet)
+        {
+            eventRaiser.Post(packet);
         }
 
         public Task StartAsync()
@@ -96,10 +123,24 @@ namespace NetSnifferLib
         public void Stop()
         {
             var communicator_ = communicator;
-            communicator_.Break();
-            communicator_.Dispose();
+
+            if (communicator_ != null)
+            {
+                communicator_.Break();
+
+                lock (disposeLock)
+                {
+                    if (!disposed)
+                    {
+                        disposed = true;
+                        communicator_.Dispose();
+                    }
+                }
+            }
 
             communicator = null;
+
+            PacketData.CancelAllAnalysis();
         }
 
         protected abstract PacketDevice GetPacketDevice();

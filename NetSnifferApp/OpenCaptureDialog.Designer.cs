@@ -91,7 +91,7 @@ namespace NetSnifferApp
             this.captureFilter.Name = "captureFilter";
             this.captureFilter.Size = new System.Drawing.Size(422, 49);
             this.captureFilter.TabIndex = 4;
-            this.captureFilter.FilterChanged += new System.EventHandler(this.captureFilter_FilterChanged);
+            this.captureFilter.FilterChanged += new System.EventHandler(this.CaptureFilter_FilterChanged);
             // 
             // packetNumberUpDown
             // 
@@ -110,7 +110,7 @@ namespace NetSnifferApp
             this.packetNumberUpDown.Name = "packetNumberUpDown";
             this.packetNumberUpDown.Size = new System.Drawing.Size(137, 27);
             this.packetNumberUpDown.TabIndex = 5;
-            this.packetNumberUpDown.ValueChanged += new System.EventHandler(this.packetNumberUpDown_ValueChanged);
+            this.packetNumberUpDown.ValueChanged += new System.EventHandler(this.PacketNumberUpDown_ValueChanged);
             // 
             // okButton
             // 
@@ -122,7 +122,7 @@ namespace NetSnifferApp
             this.okButton.TabIndex = 6;
             this.okButton.Text = "OK";
             this.okButton.UseVisualStyleBackColor = true;
-            this.okButton.Click += new System.EventHandler(this.openButton_Click);
+            this.okButton.Click += new System.EventHandler(this.OpenButton_Click);
             // 
             // button2
             // 
@@ -133,7 +133,7 @@ namespace NetSnifferApp
             this.button2.TabIndex = 7;
             this.button2.Text = "Cancel";
             this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.cancelButton_Click);
+            this.button2.Click += new System.EventHandler(this.CancelButton_Click);
             // 
             // flowLayoutPanel
             // 
@@ -154,7 +154,7 @@ namespace NetSnifferApp
             this.chooseFileButton.TabIndex = 9;
             this.chooseFileButton.Text = "Choose File";
             this.chooseFileButton.UseVisualStyleBackColor = true;
-            this.chooseFileButton.Click += new System.EventHandler(this.chooseFileButton_Click);
+            this.chooseFileButton.Click += new System.EventHandler(this.ChooseFileButton_Click);
             // 
             // OpenCaptureDialog
             // 

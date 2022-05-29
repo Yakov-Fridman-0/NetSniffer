@@ -39,6 +39,16 @@ namespace NetSnifferApp
         readonly Panel[] panels = new Panel[PANEL_NUM];
         readonly HostViewer[] hostViewers = new HostViewer[PANEL_NUM];
 
+        public void Clear()
+        {
+            foreach (var hostViewer in hostViewersByHost.Values)
+            {
+                hostViewer.Clear();
+            }
+
+            hostViewersByHost.Clear();
+        }
+
         void InitPanelsAndHostViewers()
         {
             IAsyncResult[] results = new IAsyncResult[PANEL_NUM];
@@ -146,11 +156,11 @@ namespace NetSnifferApp
 
         readonly object panelLock = new();
 
-        private void prevButton_Click(object sender, EventArgs e)
+        private void PrevButton_Click(object sender, EventArgs e)
         {
             lock (panelLock)
             {
-                if (panelInd == 0)
+                if (panelInd == 1)
                     prevButton.Enabled = false;
 
                 if (!nextButton.Enabled)
@@ -161,11 +171,11 @@ namespace NetSnifferApp
             }
         }
 
-        private void nextButton_Click(object sender, EventArgs e)
+        private void NextButton_Click(object sender, EventArgs e)
         {
             lock (panelLock)
             {
-                if (panelInd == PANEL_NUM - 1)
+                if (panelInd == PANEL_NUM - 2)
                     nextButton.Enabled = false;
 
                 if (!prevButton.Enabled)

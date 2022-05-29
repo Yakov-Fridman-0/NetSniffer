@@ -255,7 +255,7 @@ namespace NetSnifferApp
             this.displayFilterControl.Name = "displayFilterControl";
             this.displayFilterControl.Size = new System.Drawing.Size(561, 49);
             this.displayFilterControl.TabIndex = 1;
-            this.displayFilterControl.FilterChanged += new System.EventHandler<string>(this.DisplayFilter1_FilterChanged);
+            this.displayFilterControl.FilterChanged += new System.EventHandler<string>(this.DisplayFilter_FilterChanged);
             // 
             // PacketViewer
             // 

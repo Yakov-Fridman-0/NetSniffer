@@ -14,15 +14,8 @@ namespace NetSnifferLib
     public static class IdManager
     {
         static int nextPacketId = -1;
-        static int nextMessageId = -1;
 
         static readonly ConcurrentDictionary<int, Packet> packetsById = new();
-        static readonly ConcurrentDictionary<int, Message> messagesById = new();
-
-/*        public static int GetNewMessageId(Message message)
-        {
-            return Interlocked.Increment(ref nextMessageId);
-        }*/
 
         public static int GetNewPacketId(Packet packet)
         {
@@ -31,11 +24,6 @@ namespace NetSnifferLib
 
             return newId;
         }
-
-/*        public static Message GetMessag(int id)
-        {
-            return messagesById[id];
-        }*/
 
         public static Packet GetPacket(int id)
         {
@@ -61,10 +49,8 @@ namespace NetSnifferLib
         public static void Reset()
         {
             Interlocked.Exchange(ref nextPacketId, -1);
-            Interlocked.Exchange(ref nextMessageId, -1);
 
             packetsById.Clear();
-            messagesById.Clear();
         }
     }
 }

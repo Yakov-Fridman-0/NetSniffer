@@ -22,6 +22,11 @@ namespace NetSnifferLib.StatefulAnalysis.Tcp
 
         readonly Dictionary<TcpConnection, List<int>> connectionsPacketIds = new();
 
+        public static void Reset()
+        {
+            Analyzer = new();
+        }
+
         //bool isAnalyzig = false;
 
         //Timer synFloodTimer;
@@ -61,7 +66,7 @@ namespace NetSnifferLib.StatefulAnalysis.Tcp
                     if ((lastPacketTime - firstPacketTime).Milliseconds < timeBetweenSeperateSynFloods)
                     {
                         var synFlood = new Attack(
-                             name: "Syn Flood",
+                             name: "Syn Flood (TCP)",
                              packetIds: group.Select(connection => connectionsPacketIds[connection][0]).ToArray(),
                              attackers: group.Select(connection => new IpAddressContainer(connection.ConnectorEndPoint.Address)).ToArray(),
                              targets: new[] { new IpAddressContainer(group.Key) });

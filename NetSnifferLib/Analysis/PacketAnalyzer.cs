@@ -12,6 +12,8 @@ using NetSnifferLib.General;
 using NetSnifferLib.Topology;
 using NetSnifferLib.Statistics;
 
+using NetSnifferLib.StatefulAnalysis.Tcp;
+
 namespace NetSnifferLib.Analysis
 {
     public class PacketAnalyzer
@@ -21,6 +23,7 @@ namespace NetSnifferLib.Analysis
         public static void CreateNewAnalyzer()
         {
             Analyzer = new();
+            TcpStatefulAnalyzer.Analyzer = new();
         }
 
         public readonly TopologyBuilder topologyBuilder = new();

@@ -39,6 +39,18 @@ namespace NetSnifferApp
             PlaceHostControls();
         }
 
+        public void Clear()
+        {
+            foreach (var control in controls)
+            {
+                Controls.Remove(control);
+            }
+
+            controlsByHost.Clear();
+
+            InitHostControls();
+        }
+
         void InitHostControls()
         {
             for (int row = 0; row < ROWS; row++) 

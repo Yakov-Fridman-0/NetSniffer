@@ -58,7 +58,6 @@ namespace NetSnifferLib
                 return false;
             }
         }
-
         static string Clean(string filter)
         {
             filter = filter.Trim().ToLower();
@@ -72,7 +71,6 @@ namespace NetSnifferLib
             { "==", VariableEquals },
             { "!=", VariableNotEquals }
         };
-
 
         static bool TryGetCondition(string filterString, ref PacketDataCondition condition)
         {

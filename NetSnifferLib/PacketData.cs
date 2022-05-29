@@ -7,6 +7,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 
 using PcapDotNet.Packets;
 using PcapDotNet.Packets.Ethernet;
@@ -32,13 +33,41 @@ namespace NetSnifferLib
             { "arp", new[] { "dst", "src" } },
             { "ip", new[] { "src", "dst" } },
             { "udp", new[] { "srcport", "dstport" } },
-            { "tcp", new[] { "srcport", "dstport" } }
+            { "tcp", new[] { "srcport", "dstport" } },
+            { "dns", Array.Empty<string>() }
         };
 
+        static readonly List<Attack> allAttacks = new();
 
-        static readonly ConcurrentBag<Attack> allAttacks = new();
+        public static bool AreAllPacketsAnalyzed
+        {
+            get
+            {
+                lock (allPacketDatas)
+                    return allPacketDatas.Values.All(packetData => packetData.Description != null);
+            }
+        }
 
-        public static Attack[] AllAttacks => allAttacks.ToArray();
+
+        public static void CancelAllAnalysis()
+        {
+            foreach (var packetData in allPacketDatas.Values)
+            {
+                if (!packetData.task.IsCompleted)
+                {
+                    packetData.CancelAnalysis();
+                }
+            }
+        }
+
+        public static Attack[] AllAttacks
+        {
+            get
+            {
+                lock (allAttacks) 
+                    return allAttacks.ToArray();
+            }
+        }
 
         internal static bool IsValidField(string protocol, string field)
         {
@@ -224,6 +253,8 @@ namespace NetSnifferLib
 
         readonly SortedDictionary<string, Datagram> _protocols = new();
 
+        public string[] Protocols => _protocols.Keys.ToArray();
+
         public Datagram this[string protocol]
         {
             get
@@ -245,9 +276,8 @@ namespace NetSnifferLib
         {
             _protocols.Add(ProtocolNameComparer.Simplify(protocol), datagram);
         }
-
         
-        public PacketData(int packetId, Packet packet)
+        private PacketData(int packetId, Packet packet)
         {
             PacketId = packetId;
             Packet = packet;
@@ -256,24 +286,20 @@ namespace NetSnifferLib
                 allPacketDatas.Add(packetId, this);
         }
 
-        private PacketData(int packetId)
+        public static PacketData Create(Packet packet)
         {
-            PacketId = packetId;
+            int id = IdManager.GetNewPacketId(packet);
+
+            return new PacketData(id, packet);
         }
 
-        //Used for searching
-        public static PacketData CreatePacketDataWithId(int id)
-        {
-            return new PacketData(id);
-        }
-
-        public async Task AnalyzeAsync()
+        public void Analyze()
         {
             PacketDescription description;
 
             if (PacketAnalyzer.Analyzer.IsEthernet(Packet))
             {
-                description = await PacketAnalyzer.Analyzer.AnalyzePacketAsync(Packet, PacketId);
+                description = PacketAnalyzer.Analyzer.AnalyzePacket(Packet, PacketId);
             }
             else
             {
@@ -285,14 +311,32 @@ namespace NetSnifferLib
             DescriptionReady.Invoke(PacketId, description);
         }
 
+
+        public void CancelAnalysis()
+        {
+            tokenSource.Cancel();
+        }
+
+        Task task = null;
+        readonly CancellationTokenSource tokenSource = new();
+
+        public void AnalyzeAsync()
+        {
+            task = Task.Run(() => Analyze(), tokenSource.Token);
+        }
+
         public PacketDescription Description { get; private set; } = null;
 
         internal void AddAttack(Attack attack)
         {
-            if (!allAttacks.Contains(attack))
-                allAttacks.Add(attack);
+            lock (allAttacks)
+            {
+                if (!allAttacks.Contains(attack))
+                    allAttacks.Add(attack);
+            }
 
-            _attackList.Add(attack);
+            lock (_attackList)
+                _attackList.Add(attack);
 
             AttackDetected.Invoke(PacketId, attack);
         }

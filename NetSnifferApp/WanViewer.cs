@@ -41,7 +41,7 @@ namespace NetSnifferApp
         const int minRadious = 100;
         const int maxRadious = 700;
 
-        readonly Dictionary<WanHostControl, double> angle = new();
+        //readonly Dictionary<WanHostControl, double> angle = new();
 
         readonly Random random = new(10);
 
@@ -51,6 +51,19 @@ namespace NetSnifferApp
 
             centerX = Width / 2;
             centerY = Height/ 2;
+        }
+
+        public void Clear()
+        {
+            lock (hostControls)
+            {
+                foreach (var control in hostControls.Values)
+                {
+                    Controls.Remove(control);
+                }
+
+                hostControls.Clear();
+            }
         }
 
         private void label1_Paint(object sender, PaintEventArgs e)
@@ -95,6 +108,7 @@ namespace NetSnifferApp
 
             var item = new WanHostItem(host);
 
+            //TODO: fix error, handle required
             Invoke(new MethodInvoker(() =>
             { 
                 Controls.Add(control);
@@ -254,24 +268,6 @@ namespace NetSnifferApp
 
         List<WanHostControl> GetShadowedControls(WanHostControl control)
         {
-            /*            var borderLocation = location + control.Size;
-
-                        return hostControls.Values.Where(otherControl =>
-                        {
-                            if (otherControl == control)
-                                return false;
-
-                            var otherLocation = otherControl.Location;
-                            var otherBordeLocation = otherLocation + otherControl.Size;
-
-                            return 
-                            (otherBordeLocation.X > borderLocation.X && otherLocation.X - location.X < control.Width) || 
-                            (borderLocation.X > otherBordeLocation.X && location.X - otherLocation.X < otherControl.Width) ||
-                            (otherBordeLocation.Y > borderLocation.Y && otherLocation.Y - location.Y < control.Height) || 
-                            (borderLocation.Y > otherBordeLocation.Y && location.Y - otherLocation.Y < otherControl.Height);
-                        }).ToList();*/
-
-
             List<WanHostControl> controls = new();
 
             foreach (var otherControl in hostControls.Values)

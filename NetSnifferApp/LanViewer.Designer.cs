@@ -49,7 +49,7 @@ namespace NetSnifferApp
             this.prevButton.Size = new System.Drawing.Size(76, 36);
             this.prevButton.TabIndex = 1;
             this.prevButton.UseVisualStyleBackColor = false;
-            this.prevButton.Click += new System.EventHandler(this.prevButton_Click);
+            this.prevButton.Click += new System.EventHandler(this.PrevButton_Click);
             // 
             // nextButton
             // 
@@ -64,7 +64,7 @@ namespace NetSnifferApp
             this.nextButton.Size = new System.Drawing.Size(76, 36);
             this.nextButton.TabIndex = 2;
             this.nextButton.UseVisualStyleBackColor = false;
-            this.nextButton.Click += new System.EventHandler(this.nextButton_Click);
+            this.nextButton.Click += new System.EventHandler(this.NextButton_Click);
             // 
             // indLabel
             // 
@@ -74,7 +74,7 @@ namespace NetSnifferApp
             this.indLabel.Name = "indLabel";
             this.indLabel.Size = new System.Drawing.Size(43, 20);
             this.indLabel.TabIndex = 3;
-            this.indLabel.Text = " 1/25";
+            this.indLabel.Text = " 1/40";
             this.indLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // mainPanel

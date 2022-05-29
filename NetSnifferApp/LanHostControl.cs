@@ -93,11 +93,11 @@ namespace NetSnifferApp
 
                 if (_wanHost != null)
                 {
-
+                    showTCPConnectionsToolStripMenuItem.Visible = true;
                 }
                 else
                 {
-
+                    showTCPConnectionsToolStripMenuItem.Visible = false;
                 }
             }
         }
@@ -142,8 +142,6 @@ namespace NetSnifferApp
 
             ipAddressLabel.Visible = true;
             ipAddressLabel.Text = AddressFormat.ToString(_host.IPAddress);
-
-            showTCPConnectionsToolStripMenuItem.Visible = true;
 
             copyIPAddressToolStripMenuItem.Visible = true;
         }

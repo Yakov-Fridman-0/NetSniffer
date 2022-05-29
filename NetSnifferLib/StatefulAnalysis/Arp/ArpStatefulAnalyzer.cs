@@ -58,7 +58,7 @@ namespace NetSnifferLib.StatefulAnalysis.Arp
             replyActionBlock.Post((reply, pakcetId));
         }
 
-        static public void AnalyzeReplyCore(ArpDatagram reply, int packetId)
+        public static void AnalyzeReplyCore(ArpDatagram reply, int packetId)
         {
             AllDatagrams.Add(reply);
 
@@ -93,7 +93,7 @@ namespace NetSnifferLib.StatefulAnalysis.Arp
 
                     var attack = new Attack
                         (
-                        "ARP Man-in-the-Middle",
+                        "Man-in-the-Middle (ARP)",
                         new[] { otherPacketId, packetId },
                         new[] { new PhysicalAddressContainer(senderPhysicalAddress) },
                         new[] { new IpAddressContainer(targetHost.IPAddress), new IpAddressContainer(otherHost.IPAddress) }

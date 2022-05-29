@@ -360,7 +360,7 @@ namespace NetSnifferApp
             // 
             // updateTimer
             // 
-            this.updateTimer.Tick += new System.EventHandler(this.refreshTimer_Tick);
+            this.updateTimer.Tick += new System.EventHandler(this.RefreshTimer_Tick);
             // 
             // zeroButton
             // 
@@ -372,7 +372,7 @@ namespace NetSnifferApp
             this.zeroButton.TabIndex = 26;
             this.zeroButton.Text = "Zero";
             this.zeroButton.UseVisualStyleBackColor = true;
-            this.zeroButton.Click += new System.EventHandler(this.zeroButton_Click);
+            this.zeroButton.Click += new System.EventHandler(this.ZeroButton_Click);
             // 
             // elapsedTimeTitleLabel
             // 
@@ -385,7 +385,7 @@ namespace NetSnifferApp
             // 
             // elapsedTimeTimer
             // 
-            this.elapsedTimeTimer.Tick += new System.EventHandler(this.elapsedTimeTimer_Tick);
+            this.elapsedTimeTimer.Tick += new System.EventHandler(this.ElapsedTimeTimer_Tick);
             // 
             // timeLabel
             // 
@@ -406,7 +406,7 @@ namespace NetSnifferApp
             this.freezeButtom.TabIndex = 29;
             this.freezeButtom.Text = "Zreeze";
             this.freezeButtom.UseVisualStyleBackColor = true;
-            this.freezeButtom.Click += new System.EventHandler(this.freezeButtom_Click);
+            this.freezeButtom.Click += new System.EventHandler(this.FreezeButtom_Click);
             // 
             // titleLabel
             // 

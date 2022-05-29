@@ -1,7 +1,7 @@
 ﻿
 namespace NetSnifferApp
 {
-    partial class SaveCaptureDialog
+    partial class SavePrivateCaptureDialog
     {
         /// <summary>
         /// Required designer variable.
@@ -29,18 +29,26 @@ namespace NetSnifferApp
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.FlowLayoutPanel flowLayoutPanel;
             System.Windows.Forms.Label label2;
+            System.Windows.Forms.FlowLayoutPanel flowLayoutPanel;
             this.okButton = new System.Windows.Forms.Button();
             this.cancelButton = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
-            this.fileNameTextBox = new System.Windows.Forms.TextBox();
             this.displayFilterContorl = new NetSnifferApp.DisplayFilterControl();
-            this.chooseFileButton = new System.Windows.Forms.Button();
-            flowLayoutPanel = new System.Windows.Forms.FlowLayoutPanel();
+            this.fileNameTextBox = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
             label2 = new System.Windows.Forms.Label();
+            flowLayoutPanel = new System.Windows.Forms.FlowLayoutPanel();
             flowLayoutPanel.SuspendLayout();
             this.SuspendLayout();
+            // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Location = new System.Drawing.Point(51, 66);
+            label2.Name = "label2";
+            label2.Size = new System.Drawing.Size(35, 20);
+            label2.TabIndex = 17;
+            label2.Text = "File:";
             // 
             // flowLayoutPanel
             // 
@@ -50,7 +58,7 @@ namespace NetSnifferApp
             flowLayoutPanel.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             flowLayoutPanel.Name = "flowLayoutPanel";
             flowLayoutPanel.Size = new System.Drawing.Size(192, 47);
-            flowLayoutPanel.TabIndex = 9;
+            flowLayoutPanel.TabIndex = 15;
             // 
             // okButton
             // 
@@ -75,33 +83,6 @@ namespace NetSnifferApp
             this.cancelButton.UseVisualStyleBackColor = true;
             this.cancelButton.Click += new System.EventHandler(this.CancelButton_Click);
             // 
-            // label2
-            // 
-            label2.AutoSize = true;
-            label2.Location = new System.Drawing.Point(51, 66);
-            label2.Name = "label2";
-            label2.Size = new System.Drawing.Size(35, 20);
-            label2.TabIndex = 11;
-            label2.Text = "File:";
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(51, 124);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(98, 20);
-            this.label1.TabIndex = 10;
-            this.label1.Text = "Display Filter:";
-            // 
-            // fileNameTextBox
-            // 
-            this.fileNameTextBox.Location = new System.Drawing.Point(145, 63);
-            this.fileNameTextBox.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.fileNameTextBox.Name = "fileNameTextBox";
-            this.fileNameTextBox.ReadOnly = true;
-            this.fileNameTextBox.Size = new System.Drawing.Size(305, 27);
-            this.fileNameTextBox.TabIndex = 12;
-            // 
             // displayFilterContorl
             // 
             this.displayFilterContorl.Filter = "";
@@ -112,35 +93,41 @@ namespace NetSnifferApp
             this.displayFilterContorl.MinimumSize = new System.Drawing.Size(0, 49);
             this.displayFilterContorl.Name = "displayFilterContorl";
             this.displayFilterContorl.Size = new System.Drawing.Size(323, 49);
-            this.displayFilterContorl.TabIndex = 14;
-            this.displayFilterContorl.FilterChanged += new System.EventHandler<string>(this.displayFilterContorl_FilterChanged);
+            this.displayFilterContorl.TabIndex = 20;
+            this.displayFilterContorl.FilterChanged += new System.EventHandler<string>(this.DisplayFilterContorl_FilterChanged);
             // 
-            // chooseFileButton
+            // fileNameTextBox
             // 
-            this.chooseFileButton.Location = new System.Drawing.Point(466, 61);
-            this.chooseFileButton.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.chooseFileButton.Name = "chooseFileButton";
-            this.chooseFileButton.Size = new System.Drawing.Size(101, 31);
-            this.chooseFileButton.TabIndex = 13;
-            this.chooseFileButton.Text = "Choose File";
-            this.chooseFileButton.UseVisualStyleBackColor = true;
-            this.chooseFileButton.Click += new System.EventHandler(this.ChooseFileButton_Click);
+            this.fileNameTextBox.Location = new System.Drawing.Point(156, 63);
+            this.fileNameTextBox.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.fileNameTextBox.Name = "fileNameTextBox";
+            this.fileNameTextBox.Size = new System.Drawing.Size(323, 27);
+            this.fileNameTextBox.TabIndex = 18;
+            this.fileNameTextBox.TextChanged += new System.EventHandler(this.fileNameTextBox_TextChanged);
             // 
-            // SaveCaptureDialog
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(51, 124);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(98, 20);
+            this.label1.TabIndex = 16;
+            this.label1.Text = "Display Filter:";
+            // 
+            // SavePrivateCaptureDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(618, 332);
             this.Controls.Add(this.displayFilterContorl);
-            this.Controls.Add(this.chooseFileButton);
             this.Controls.Add(this.fileNameTextBox);
             this.Controls.Add(label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(flowLayoutPanel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
-            this.Name = "SaveCaptureDialog";
-            this.Text = "Save Capture";
+            this.MinimizeBox = false;
+            this.Name = "SavePrivateCaptureDialog";
+            this.Text = "Save Private Capture";
             flowLayoutPanel.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -149,12 +136,10 @@ namespace NetSnifferApp
 
         #endregion
 
-        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel;
+        private DisplayFilterControl displayFilterContorl;
+        private System.Windows.Forms.TextBox fileNameTextBox;
+        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button okButton;
         private System.Windows.Forms.Button cancelButton;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.TextBox fileNameTextBox;
-        private DisplayFilterControl displayFilterContorl;
-        private System.Windows.Forms.Button chooseFileButton;
     }
 }

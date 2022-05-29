@@ -12,9 +12,9 @@ using NetSnifferLib;
 
 namespace NetSnifferApp
 {
-    public partial class SaveCaptureDialog : Form
+    public partial class SavePrivateCaptureDialog : Form
     {
-        public string FileName { get; private set; }
+        public string PrivateFileName { get; private set; }
 
         public string DispalyFilterString { get; private set; } = string.Empty;
 
@@ -23,7 +23,7 @@ namespace NetSnifferApp
 
         bool saveFile = false;
 
-        public SaveCaptureDialog()
+        public SavePrivateCaptureDialog()
         {
             InitializeComponent();
         }
@@ -33,7 +33,7 @@ namespace NetSnifferApp
             if (saveFile)
             {
                 DialogResult = DialogResult.OK;
-            } 
+            }
             else
             {
                 DialogResult = DialogResult.Cancel;
@@ -53,28 +53,7 @@ namespace NetSnifferApp
             Close();
         }
 
-        private void ChooseFileButton_Click(object sender, EventArgs e)
-        {
-            var saveFileDialog = new SaveFileDialog()
-            {
-                FileName = "Select a file",
-                Filter = "Pcap files (*.pcap)|*.pcap",
-                Title = "Save pcap file",
-            };
-
-            var result = saveFileDialog.ShowDialog();
-            if (result != DialogResult.OK)
-                return;
-
-            FileName = saveFileDialog.FileName;
-
-            fileNameTextBox.Text = FileName;
-
-            isFileChosen = true;
-            okButton.Enabled = isValidFilter;
-        }
-
-        private void displayFilterContorl_FilterChanged(object sender, string e)
+        private void DisplayFilterContorl_FilterChanged(object sender, string e)
         {
             DisplayFilter displayFilter = null;
 
@@ -90,6 +69,21 @@ namespace NetSnifferApp
             {
                 displayFilterContorl.IsValidFilter = false;
                 okButton.Enabled = false;
+            }
+        }
+
+        private void fileNameTextBox_TextChanged(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(fileNameTextBox.Text))
+            {
+                isFileChosen = false;
+                okButton.Enabled = false;
+            }
+            else
+            {
+                isFileChosen = true;
+                PrivateFileName = fileNameTextBox.Text;
+                okButton.Enabled = isValidFilter;
             }
         }
     }

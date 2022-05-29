@@ -21,7 +21,6 @@ namespace NetSnifferApp
 
 
         bool _isLive = true;
-
         public bool IsLive 
         {
             get => _isLive;
@@ -42,8 +41,9 @@ namespace NetSnifferApp
                 else
                 {
 
-                    titleLabel.Visible = true;
                     titleLabel.Text = "Statistics of dump file";
+                    titleLabel.Visible = true;
+                    CenterTitleLabel();
 
                     freezeButtom.Visible = false;
 
@@ -53,6 +53,55 @@ namespace NetSnifferApp
                 }
             }
         }
+
+
+        bool _captureStarted = false;
+        public bool CaptureStarted
+        {
+            get => _captureStarted;
+            set
+            {
+                _captureStarted = value;
+
+                if (_captureStarted)
+                {
+                    titleLabel.Visible = false;
+                }
+                else
+                {
+                    titleLabel.Text = "Waiting for capture to start";
+                    titleLabel.Visible = true;
+                    CenterTitleLabel();
+                }
+            }
+        }
+
+
+        bool _captureStopped = false;
+        public bool CaptureStopped
+        {
+            get => _captureStopped;
+            set
+            {
+                _captureStopped = value;
+
+                if (_captureStopped)
+                {
+                    titleLabel.Text = "Capture Stopped";
+                    titleLabel.Visible = true;
+                    CenterTitleLabel();
+
+                    freezeButtom.Enabled = false;
+                    zeroButton.Enabled = false;
+                    ShowElapsedTime(DateTime.Now - baseTime);
+                }
+                else
+                {
+                    titleLabel.Visible = false;
+                }
+            }
+        }
+
 
         public GeneralStatisticsForm()
         {
@@ -68,6 +117,15 @@ namespace NetSnifferApp
             currentStatistics = newStatistics;
 
             ShowStatistics(newStatistics - baseStatistics);
+        }
+
+        private void CenterTitleLabel()
+        {
+            var y = titleLabel.Location.Y;
+
+            int newX = (ClientRectangle.Width - titleLabel.Width) / 2;
+
+            titleLabel.Location = new System.Drawing.Point(newX, y);
         }
 
         public void StartRequestingUpdates()
@@ -87,22 +145,12 @@ namespace NetSnifferApp
 
         public void StopRequestingUpdates()
         {
-            //if (_isLive)
-            //{
             titleLabel.Text = "Capture stopped";
             titleLabel.Visible = true;
-
-            freezeButtom.Enabled = false;
-            zeroButton.Enabled = false;
+            CenterTitleLabel();
 
             elapsedTimeTimer.Stop();
             updateTimer.Stop();
-            //}
-            //else
-            //{
-            //    //timeLabel.Text = string.Format(SecondsFormat, (DateTime.Now - startingTime).TotalSeconds);
-            //    ShowStatistics(currentStatistics);
-            //}
         }
 
         public void Clear()
@@ -144,12 +192,12 @@ namespace NetSnifferApp
             ResumeLayout();
         }
 
-        private void refreshTimer_Tick(object sender, EventArgs e)
+        private void RefreshTimer_Tick(object sender, EventArgs e)
         {
             StatisticsUpdateRequested?.Invoke(this, EventArgs.Empty);
         }
 
-        private void zeroButton_Click(object sender, EventArgs e)
+        private void ZeroButton_Click(object sender, EventArgs e)
         {
             updateTimer.Stop();
             baseStatistics = currentStatistics;
@@ -183,12 +231,17 @@ namespace NetSnifferApp
             }
         }
 
-        private void elapsedTimeTimer_Tick(object sender, EventArgs e)
+        private void ElapsedTimeTimer_Tick(object sender, EventArgs e)
         {
-            timeLabel.Text = string.Format(SecondsFormat, (DateTime.Now - baseTime).TotalSeconds);
+            ShowElapsedTime(DateTime.Now - baseTime);
         }
 
-        private void freezeButtom_Click(object sender, EventArgs e)
+        void ShowElapsedTime(TimeSpan timeSpan)
+        {
+            timeLabel.Text = string.Format(SecondsFormat, timeSpan.TotalSeconds);
+        }
+
+        private void FreezeButtom_Click(object sender, EventArgs e)
         {
             if (frozen)
             {

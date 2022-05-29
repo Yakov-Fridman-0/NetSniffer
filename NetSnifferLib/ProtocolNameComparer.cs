@@ -37,7 +37,7 @@ namespace NetSnifferLib
         public static bool IsValidProtocol(string protocol)
         {
             var simplified = Simplify(protocol);
-            return protocol is not "dns" and not "dhcp" and not "http" && layers.ContainsKey(simplified);
+            return protocol is not "http" && layers.ContainsKey(simplified);
         }
 
         public int Compare(string x, string y)

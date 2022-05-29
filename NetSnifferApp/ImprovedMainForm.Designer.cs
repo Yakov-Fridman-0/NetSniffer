@@ -43,15 +43,19 @@ namespace NetSnifferApp
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.openFSFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openPrivateFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newCaptureToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveFSFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.savePrivateFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statisticsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.generalStatisticsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.topologyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.generalTopologyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.attackToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.logToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.utilitisToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.utilitiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.arpTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.routingTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ipconfigToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -71,6 +75,10 @@ namespace NetSnifferApp
             this.captureFilter = new NetSnifferApp.CaptureFilter();
             this.startButton = new System.Windows.Forms.Button();
             this.imageList1 = new System.Windows.Forms.ImageList(this.components);
+            this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
+            this.panel3 = new System.Windows.Forms.Panel();
+            this.usernameLabel = new System.Windows.Forms.Label();
+            this.linkLabel1 = new System.Windows.Forms.LinkLabel();
             panel1 = new System.Windows.Forms.Panel();
             panel1.SuspendLayout();
             this.controlFlowLayoutPanel.SuspendLayout();
@@ -81,6 +89,8 @@ namespace NetSnifferApp
             this.panel2.SuspendLayout();
             this.startPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.packetNumberUpDown)).BeginInit();
+            this.tableLayoutPanel2.SuspendLayout();
+            this.panel3.SuspendLayout();
             this.SuspendLayout();
             // 
             // panel1
@@ -95,7 +105,7 @@ namespace NetSnifferApp
             panel1.Location = new System.Drawing.Point(3, 4);
             panel1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             panel1.Name = "panel1";
-            panel1.Size = new System.Drawing.Size(1010, 78);
+            panel1.Size = new System.Drawing.Size(1004, 81);
             panel1.TabIndex = 0;
             // 
             // moreInfoLabel
@@ -148,7 +158,7 @@ namespace NetSnifferApp
             this.controlFlowLayoutPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.controlFlowLayoutPanel.Controls.Add(this.stopButton);
             this.controlFlowLayoutPanel.Controls.Add(this.restartButton);
-            this.controlFlowLayoutPanel.Location = new System.Drawing.Point(794, 16);
+            this.controlFlowLayoutPanel.Location = new System.Drawing.Point(788, 16);
             this.controlFlowLayoutPanel.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.controlFlowLayoutPanel.Name = "controlFlowLayoutPanel";
             this.controlFlowLayoutPanel.Size = new System.Drawing.Size(187, 43);
@@ -164,7 +174,7 @@ namespace NetSnifferApp
             this.stopButton.TabIndex = 1;
             this.stopButton.Text = "Stop";
             this.stopButton.UseVisualStyleBackColor = true;
-            this.stopButton.Click += new System.EventHandler(this.stopButton_Click);
+            this.stopButton.Click += new System.EventHandler(this.StopButton_Click);
             // 
             // restartButton
             // 
@@ -175,7 +185,7 @@ namespace NetSnifferApp
             this.restartButton.TabIndex = 4;
             this.restartButton.Text = "Restart";
             this.restartButton.UseVisualStyleBackColor = true;
-            this.restartButton.Click += new System.EventHandler(this.restartButton_Click);
+            this.restartButton.Click += new System.EventHandler(this.RestartButton_Click);
             // 
             // menuStrip1
             // 
@@ -185,7 +195,7 @@ namespace NetSnifferApp
             this.statisticsToolStripMenuItem,
             this.topologyToolStripMenuItem,
             this.attackToolStripMenuItem,
-            this.utilitisToolStripMenuItem});
+            this.utilitiesToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Padding = new System.Windows.Forms.Padding(7, 3, 0, 3);
@@ -205,32 +215,66 @@ namespace NetSnifferApp
             // 
             // openToolStripMenuItem1
             // 
+            this.openToolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.openFSFileToolStripMenuItem,
+            this.openPrivateFileToolStripMenuItem});
             this.openToolStripMenuItem1.Name = "openToolStripMenuItem1";
-            this.openToolStripMenuItem1.Size = new System.Drawing.Size(178, 26);
+            this.openToolStripMenuItem1.Size = new System.Drawing.Size(224, 26);
             this.openToolStripMenuItem1.Text = "Open";
-            this.openToolStripMenuItem1.Click += new System.EventHandler(this.openToolStripMenuItem1_Click);
+            // 
+            // openFSFileToolStripMenuItem
+            // 
+            this.openFSFileToolStripMenuItem.Name = "openFSFileToolStripMenuItem";
+            this.openFSFileToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.openFSFileToolStripMenuItem.Text = "Open FS File ";
+            this.openFSFileToolStripMenuItem.Click += new System.EventHandler(this.OpenFSFileToolStripMenuItem_Click);
+            // 
+            // openPrivateFileToolStripMenuItem
+            // 
+            this.openPrivateFileToolStripMenuItem.Enabled = false;
+            this.openPrivateFileToolStripMenuItem.Name = "openPrivateFileToolStripMenuItem";
+            this.openPrivateFileToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.openPrivateFileToolStripMenuItem.Text = "Open Private File";
+            this.openPrivateFileToolStripMenuItem.Click += new System.EventHandler(this.OpenPrivateFileToolStripMenuItem_Click);
             // 
             // newCaptureToolStripMenuItem
             // 
             this.newCaptureToolStripMenuItem.Enabled = false;
             this.newCaptureToolStripMenuItem.Name = "newCaptureToolStripMenuItem";
-            this.newCaptureToolStripMenuItem.Size = new System.Drawing.Size(178, 26);
+            this.newCaptureToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
             this.newCaptureToolStripMenuItem.Text = "New Capture";
-            this.newCaptureToolStripMenuItem.Click += new System.EventHandler(this.newCaptureToolStripMenuItem_Click);
+            this.newCaptureToolStripMenuItem.Click += new System.EventHandler(this.NewCaptureToolStripMenuItem_Click);
             // 
             // saveAsToolStripMenuItem
             // 
+            this.saveAsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.saveFSFileToolStripMenuItem,
+            this.savePrivateFileToolStripMenuItem});
             this.saveAsToolStripMenuItem.Enabled = false;
             this.saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
-            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(178, 26);
+            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
             this.saveAsToolStripMenuItem.Text = "Save As";
-            this.saveAsToolStripMenuItem.Click += new System.EventHandler(this.saveAsToolStripMenuItem_Click);
+            this.saveAsToolStripMenuItem.Click += new System.EventHandler(this.SaveAsToolStripMenuItem_Click);
+            // 
+            // saveFSFileToolStripMenuItem
+            // 
+            this.saveFSFileToolStripMenuItem.Name = "saveFSFileToolStripMenuItem";
+            this.saveFSFileToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.saveFSFileToolStripMenuItem.Text = "Save FS File";
+            this.saveFSFileToolStripMenuItem.Click += new System.EventHandler(this.SaveFSFileToolStripMenuItem_Click);
+            // 
+            // savePrivateFileToolStripMenuItem
+            // 
+            this.savePrivateFileToolStripMenuItem.Enabled = false;
+            this.savePrivateFileToolStripMenuItem.Name = "savePrivateFileToolStripMenuItem";
+            this.savePrivateFileToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.savePrivateFileToolStripMenuItem.Text = "Save Private File";
+            this.savePrivateFileToolStripMenuItem.Click += new System.EventHandler(this.SavePrivateFileToolStripMenuItem_Click);
             // 
             // statisticsToolStripMenuItem
             // 
             this.statisticsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.generalStatisticsToolStripMenuItem});
-            this.statisticsToolStripMenuItem.Enabled = false;
             this.statisticsToolStripMenuItem.Name = "statisticsToolStripMenuItem";
             this.statisticsToolStripMenuItem.Size = new System.Drawing.Size(81, 24);
             this.statisticsToolStripMenuItem.Text = "Statistics";
@@ -240,13 +284,12 @@ namespace NetSnifferApp
             this.generalStatisticsToolStripMenuItem.Name = "generalStatisticsToolStripMenuItem";
             this.generalStatisticsToolStripMenuItem.Size = new System.Drawing.Size(205, 26);
             this.generalStatisticsToolStripMenuItem.Text = "General Statistics";
-            this.generalStatisticsToolStripMenuItem.Click += new System.EventHandler(this.generalStatisticsToolStripMenuItem_Click);
+            this.generalStatisticsToolStripMenuItem.Click += new System.EventHandler(this.GeneralStatisticsToolStripMenuItem_Click);
             // 
             // topologyToolStripMenuItem
             // 
             this.topologyToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.generalTopologyToolStripMenuItem});
-            this.topologyToolStripMenuItem.Enabled = false;
             this.topologyToolStripMenuItem.Name = "topologyToolStripMenuItem";
             this.topologyToolStripMenuItem.Size = new System.Drawing.Size(86, 24);
             this.topologyToolStripMenuItem.Text = "Topology";
@@ -256,7 +299,7 @@ namespace NetSnifferApp
             this.generalTopologyToolStripMenuItem.Name = "generalTopologyToolStripMenuItem";
             this.generalTopologyToolStripMenuItem.Size = new System.Drawing.Size(210, 26);
             this.generalTopologyToolStripMenuItem.Text = "General Topology";
-            this.generalTopologyToolStripMenuItem.Click += new System.EventHandler(this.generalTopologyToolStripMenuItem_Click);
+            this.generalTopologyToolStripMenuItem.Click += new System.EventHandler(this.GeneralTopologyToolStripMenuItem_Click);
             // 
             // attackToolStripMenuItem
             // 
@@ -273,15 +316,15 @@ namespace NetSnifferApp
             this.logToolStripMenuItem.Text = "Log";
             this.logToolStripMenuItem.Click += new System.EventHandler(this.LogToolStripMenuItem_Click);
             // 
-            // utilitisToolStripMenuItem
+            // utilitiesToolStripMenuItem
             // 
-            this.utilitisToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.utilitiesToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.arpTableToolStripMenuItem,
             this.routingTableToolStripMenuItem,
             this.ipconfigToolStripMenuItem});
-            this.utilitisToolStripMenuItem.Name = "utilitisToolStripMenuItem";
-            this.utilitisToolStripMenuItem.Size = new System.Drawing.Size(65, 24);
-            this.utilitisToolStripMenuItem.Text = "Utilitis";
+            this.utilitiesToolStripMenuItem.Name = "utilitiesToolStripMenuItem";
+            this.utilitiesToolStripMenuItem.Size = new System.Drawing.Size(73, 24);
+            this.utilitiesToolStripMenuItem.Text = "Utilities";
             // 
             // arpTableToolStripMenuItem
             // 
@@ -306,13 +349,15 @@ namespace NetSnifferApp
             // 
             // mainPanel
             // 
+            this.mainPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.mainPanel.Controls.Add(this.capturePanel);
             this.mainPanel.Controls.Add(this.startPanel);
-            this.mainPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.mainPanel.Location = new System.Drawing.Point(0, 30);
+            this.mainPanel.Location = new System.Drawing.Point(3, 44);
             this.mainPanel.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.mainPanel.Name = "mainPanel";
-            this.mainPanel.Size = new System.Drawing.Size(1016, 852);
+            this.mainPanel.Size = new System.Drawing.Size(1010, 879);
             this.mainPanel.TabIndex = 2;
             // 
             // capturePanel
@@ -322,7 +367,7 @@ namespace NetSnifferApp
             this.capturePanel.Location = new System.Drawing.Point(0, 0);
             this.capturePanel.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.capturePanel.Name = "capturePanel";
-            this.capturePanel.Size = new System.Drawing.Size(1016, 852);
+            this.capturePanel.Size = new System.Drawing.Size(1010, 879);
             this.capturePanel.TabIndex = 0;
             // 
             // tableLayoutPanel1
@@ -339,17 +384,17 @@ namespace NetSnifferApp
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10.13413F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 89.86588F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(1016, 852);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(1010, 879);
             this.tableLayoutPanel1.TabIndex = 7;
             // 
             // panel2
             // 
             this.panel2.Controls.Add(this.packetViewer);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel2.Location = new System.Drawing.Point(3, 90);
+            this.panel2.Location = new System.Drawing.Point(3, 93);
             this.panel2.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(1010, 758);
+            this.panel2.Size = new System.Drawing.Size(1004, 782);
             this.panel2.TabIndex = 1;
             // 
             // packetViewer
@@ -358,7 +403,7 @@ namespace NetSnifferApp
             this.packetViewer.Location = new System.Drawing.Point(0, 0);
             this.packetViewer.Margin = new System.Windows.Forms.Padding(3, 5, 3, 5);
             this.packetViewer.Name = "packetViewer";
-            this.packetViewer.Size = new System.Drawing.Size(1010, 758);
+            this.packetViewer.Size = new System.Drawing.Size(1004, 782);
             this.packetViewer.TabIndex = 0;
             this.packetViewer.AttackAdded += new System.EventHandler(this.PacketViewer_AttackAdded);
             // 
@@ -377,14 +422,14 @@ namespace NetSnifferApp
             this.startPanel.Location = new System.Drawing.Point(0, 0);
             this.startPanel.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.startPanel.Name = "startPanel";
-            this.startPanel.Size = new System.Drawing.Size(1016, 852);
+            this.startPanel.Size = new System.Drawing.Size(1010, 879);
             this.startPanel.TabIndex = 1;
             // 
             // label6
             // 
             this.label6.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(303, 770);
+            this.label6.Location = new System.Drawing.Point(300, 770);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(136, 20);
             this.label6.TabIndex = 8;
@@ -398,7 +443,7 @@ namespace NetSnifferApp
             0,
             0,
             0});
-            this.packetNumberUpDown.Location = new System.Drawing.Point(445, 765);
+            this.packetNumberUpDown.Location = new System.Drawing.Point(442, 765);
             this.packetNumberUpDown.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.packetNumberUpDown.Maximum = new decimal(new int[] {
             100000000,
@@ -408,7 +453,7 @@ namespace NetSnifferApp
             this.packetNumberUpDown.Name = "packetNumberUpDown";
             this.packetNumberUpDown.Size = new System.Drawing.Size(137, 27);
             this.packetNumberUpDown.TabIndex = 7;
-            this.packetNumberUpDown.ValueChanged += new System.EventHandler(this.packetNumberUpDown_ValueChanged);
+            this.packetNumberUpDown.ValueChanged += new System.EventHandler(this.PacketNumberUpDown_ValueChanged);
             // 
             // promiscuousCheckBox
             // 
@@ -416,20 +461,20 @@ namespace NetSnifferApp
             this.promiscuousCheckBox.AutoSize = true;
             this.promiscuousCheckBox.Checked = true;
             this.promiscuousCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.promiscuousCheckBox.Location = new System.Drawing.Point(622, 768);
+            this.promiscuousCheckBox.Location = new System.Drawing.Point(619, 768);
             this.promiscuousCheckBox.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.promiscuousCheckBox.Name = "promiscuousCheckBox";
             this.promiscuousCheckBox.Size = new System.Drawing.Size(114, 24);
             this.promiscuousCheckBox.TabIndex = 6;
             this.promiscuousCheckBox.Text = "Promiscuous";
             this.promiscuousCheckBox.UseVisualStyleBackColor = true;
-            this.promiscuousCheckBox.CheckedChanged += new System.EventHandler(this.promiscuousCheckBox_CheckedChanged);
+            this.promiscuousCheckBox.CheckedChanged += new System.EventHandler(this.PromiscuousCheckBox_CheckedChanged);
             // 
             // interfaceInfo
             // 
             this.interfaceInfo.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.interfaceInfo.Interface = null;
-            this.interfaceInfo.Location = new System.Drawing.Point(208, 134);
+            this.interfaceInfo.Location = new System.Drawing.Point(205, 134);
             this.interfaceInfo.Margin = new System.Windows.Forms.Padding(3, 5, 3, 5);
             this.interfaceInfo.Name = "interfaceInfo";
             this.interfaceInfo.Size = new System.Drawing.Size(596, 623);
@@ -439,7 +484,7 @@ namespace NetSnifferApp
             // 
             this.label2.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(278, 90);
+            this.label2.Location = new System.Drawing.Point(275, 90);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(101, 20);
             this.label2.TabIndex = 3;
@@ -449,7 +494,7 @@ namespace NetSnifferApp
             // 
             this.label1.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(278, 29);
+            this.label1.Location = new System.Drawing.Point(275, 29);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(70, 20);
             this.label1.TabIndex = 2;
@@ -460,36 +505,36 @@ namespace NetSnifferApp
             this.interfaceComboBox.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.interfaceComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.interfaceComboBox.FormattingEnabled = true;
-            this.interfaceComboBox.Location = new System.Drawing.Point(399, 24);
+            this.interfaceComboBox.Location = new System.Drawing.Point(396, 24);
             this.interfaceComboBox.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.interfaceComboBox.Name = "interfaceComboBox";
             this.interfaceComboBox.Size = new System.Drawing.Size(219, 28);
             this.interfaceComboBox.TabIndex = 0;
-            this.interfaceComboBox.SelectedIndexChanged += new System.EventHandler(this.interfaceComboBox_SelectedIndexChanged);
+            this.interfaceComboBox.SelectedIndexChanged += new System.EventHandler(this.InterfaceComboBox_SelectedIndexChanged);
             // 
             // captureFilter
             // 
             this.captureFilter.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.captureFilter.IsValidFilter = true;
-            this.captureFilter.Location = new System.Drawing.Point(399, 75);
+            this.captureFilter.Location = new System.Drawing.Point(396, 75);
             this.captureFilter.Margin = new System.Windows.Forms.Padding(3, 5, 3, 5);
             this.captureFilter.Name = "captureFilter";
             this.captureFilter.Size = new System.Drawing.Size(249, 49);
             this.captureFilter.TabIndex = 1;
-            this.captureFilter.FilterChanged += new System.EventHandler(this.captureFilter_FilterChanged);
+            this.captureFilter.FilterChanged += new System.EventHandler(this.CaptureFilter_FilterChanged);
             // 
             // startButton
             // 
             this.startButton.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.startButton.Enabled = false;
-            this.startButton.Location = new System.Drawing.Point(460, 813);
+            this.startButton.Location = new System.Drawing.Point(457, 813);
             this.startButton.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.startButton.Name = "startButton";
             this.startButton.Size = new System.Drawing.Size(86, 31);
             this.startButton.TabIndex = 5;
             this.startButton.Text = "Start";
             this.startButton.UseVisualStyleBackColor = true;
-            this.startButton.Click += new System.EventHandler(this.startButton_Click);
+            this.startButton.Click += new System.EventHandler(this.StartButton_Click);
             // 
             // imageList1
             // 
@@ -498,19 +543,62 @@ namespace NetSnifferApp
             this.imageList1.TransparentColor = System.Drawing.Color.Transparent;
             this.imageList1.Images.SetKeyName(0, "explamation_mark.jpg");
             // 
+            // tableLayoutPanel2
+            // 
+            this.tableLayoutPanel2.ColumnCount = 1;
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel2.Controls.Add(this.panel3, 0, 0);
+            this.tableLayoutPanel2.Controls.Add(this.mainPanel, 0, 1);
+            this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel2.Location = new System.Drawing.Point(0, 30);
+            this.tableLayoutPanel2.Name = "tableLayoutPanel2";
+            this.tableLayoutPanel2.RowCount = 2;
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(1016, 927);
+            this.tableLayoutPanel2.TabIndex = 6;
+            // 
+            // panel3
+            // 
+            this.panel3.Controls.Add(this.usernameLabel);
+            this.panel3.Controls.Add(this.linkLabel1);
+            this.panel3.Location = new System.Drawing.Point(3, 3);
+            this.panel3.Name = "panel3";
+            this.panel3.Size = new System.Drawing.Size(1010, 34);
+            this.panel3.TabIndex = 7;
+            // 
+            // usernameLabel
+            // 
+            this.usernameLabel.AutoSize = true;
+            this.usernameLabel.Location = new System.Drawing.Point(457, 6);
+            this.usernameLabel.Name = "usernameLabel";
+            this.usernameLabel.Size = new System.Drawing.Size(100, 20);
+            this.usernameLabel.TabIndex = 5;
+            this.usernameLabel.Text = "Not Signed In";
+            // 
+            // linkLabel1
+            // 
+            this.linkLabel1.AutoSize = true;
+            this.linkLabel1.Location = new System.Drawing.Point(899, 6);
+            this.linkLabel1.Name = "linkLabel1";
+            this.linkLabel1.Size = new System.Drawing.Size(54, 20);
+            this.linkLabel1.TabIndex = 4;
+            this.linkLabel1.TabStop = true;
+            this.linkLabel1.Text = "Sign In";
+            this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabel1_LinkClicked);
+            // 
             // ImprovedMainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1016, 882);
-            this.Controls.Add(this.mainPanel);
+            this.ClientSize = new System.Drawing.Size(1016, 957);
+            this.Controls.Add(this.tableLayoutPanel2);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.Name = "ImprovedMainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "NetSniffer";
-            this.Load += new System.EventHandler(this.ImprovedMainForm_Load);
             panel1.ResumeLayout(false);
             panel1.PerformLayout();
             this.controlFlowLayoutPanel.ResumeLayout(false);
@@ -523,6 +611,9 @@ namespace NetSnifferApp
             this.startPanel.ResumeLayout(false);
             this.startPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.packetNumberUpDown)).EndInit();
+            this.tableLayoutPanel2.ResumeLayout(false);
+            this.panel3.ResumeLayout(false);
+            this.panel3.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -564,10 +655,18 @@ namespace NetSnifferApp
         private System.Windows.Forms.Label captureFilterTitleLabel;
         private System.Windows.Forms.ToolStripMenuItem attackToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem logToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem utilitisToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem utilitiesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem arpTableToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem routingTableToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem ipconfigToolStripMenuItem;
         private System.Windows.Forms.ImageList imageList1;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
+        private System.Windows.Forms.Panel panel3;
+        private System.Windows.Forms.LinkLabel linkLabel1;
+        private System.Windows.Forms.Label usernameLabel;
+        private System.Windows.Forms.ToolStripMenuItem openFSFileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem openPrivateFileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem saveFSFileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem savePrivateFileToolStripMenuItem;
     }
 }

@@ -26,6 +26,7 @@ namespace NetSnifferApp
             set
             {
                 _host = value;
+
                 ipAddressLabel.Text = _host.IPAddress.ToString();
             }
         }

@@ -34,15 +34,15 @@ namespace NetSnifferApp
             System.Windows.Forms.Label label2;
             this.updateTimer = new System.Windows.Forms.Timer(this.components);
             this.titleLabel = new System.Windows.Forms.Label();
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.splitContainer = new System.Windows.Forms.SplitContainer();
             this.lanViewer = new NetSnifferApp.LanViewer();
             this.wanViewer = new NetSnifferApp.WanViewer();
             label1 = new System.Windows.Forms.Label();
             label2 = new System.Windows.Forms.Label();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
-            this.splitContainer1.Panel1.SuspendLayout();
-            this.splitContainer1.Panel2.SuspendLayout();
-            this.splitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
+            this.splitContainer.Panel1.SuspendLayout();
+            this.splitContainer.Panel2.SuspendLayout();
+            this.splitContainer.SuspendLayout();
             this.SuspendLayout();
             // 
             // label1
@@ -81,27 +81,27 @@ namespace NetSnifferApp
             // 
             // splitContainer1
             // 
-            this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.splitContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.splitContainer1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.splitContainer1.Cursor = System.Windows.Forms.Cursors.VSplit;
-            this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
-            this.splitContainer1.Location = new System.Drawing.Point(1, 62);
-            this.splitContainer1.Name = "splitContainer1";
+            this.splitContainer.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.splitContainer.Cursor = System.Windows.Forms.Cursors.VSplit;
+            this.splitContainer.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
+            this.splitContainer.Location = new System.Drawing.Point(1, 62);
+            this.splitContainer.Name = "splitContainer1";
             // 
             // splitContainer1.Panel1
             // 
-            this.splitContainer1.Panel1.Controls.Add(this.lanViewer);
-            this.splitContainer1.Panel1.Controls.Add(label1);
+            this.splitContainer.Panel1.Controls.Add(this.lanViewer);
+            this.splitContainer.Panel1.Controls.Add(label1);
             // 
             // splitContainer1.Panel2
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.wanViewer);
-            this.splitContainer1.Panel2.Controls.Add(label2);
-            this.splitContainer1.Size = new System.Drawing.Size(1795, 956);
-            this.splitContainer1.SplitterDistance = 478;
-            this.splitContainer1.TabIndex = 1;
+            this.splitContainer.Panel2.Controls.Add(this.wanViewer);
+            this.splitContainer.Panel2.Controls.Add(label2);
+            this.splitContainer.Size = new System.Drawing.Size(1795, 956);
+            this.splitContainer.SplitterDistance = 478;
+            this.splitContainer.TabIndex = 1;
             // 
             // lanViewer
             // 
@@ -131,18 +131,18 @@ namespace NetSnifferApp
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1800, 1030);
             this.Controls.Add(this.titleLabel);
-            this.Controls.Add(this.splitContainer1);
+            this.Controls.Add(this.splitContainer);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
             this.Name = "GeneralTopologyForm";
             this.Text = "GeneralTopologyForm";
             this.Load += new System.EventHandler(this.GeneralTopologyForm_Load);
-            this.splitContainer1.Panel1.ResumeLayout(false);
-            this.splitContainer1.Panel1.PerformLayout();
-            this.splitContainer1.Panel2.ResumeLayout(false);
-            this.splitContainer1.Panel2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
-            this.splitContainer1.ResumeLayout(false);
+            this.splitContainer.Panel1.ResumeLayout(false);
+            this.splitContainer.Panel1.PerformLayout();
+            this.splitContainer.Panel2.ResumeLayout(false);
+            this.splitContainer.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).EndInit();
+            this.splitContainer.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -152,7 +152,7 @@ namespace NetSnifferApp
 
         private System.Windows.Forms.Timer updateTimer;
         private System.Windows.Forms.Label titleLabel;
-        private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.SplitContainer splitContainer;
         private LanViewer lanViewer;
         private WanViewer wanViewer;
     }

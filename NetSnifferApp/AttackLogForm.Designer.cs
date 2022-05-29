@@ -30,59 +30,58 @@ namespace NetSnifferApp
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.timer1 = new System.Windows.Forms.Timer(this.components);
-            this.label1 = new System.Windows.Forms.Label();
+            this.updateTimer = new System.Windows.Forms.Timer(this.components);
             this.button1 = new System.Windows.Forms.Button();
+            this.attacksNumberLabel = new System.Windows.Forms.Label();
+            this.richTextBox = new System.Windows.Forms.RichTextBox();
             this.SuspendLayout();
             // 
-            // textBox1
+            // updateTimer
             // 
-            this.textBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBox1.Location = new System.Drawing.Point(12, 41);
-            this.textBox1.Multiline = true;
-            this.textBox1.Name = "textBox1";
-            this.textBox1.ReadOnly = true;
-            this.textBox1.Size = new System.Drawing.Size(776, 364);
-            this.textBox1.TabIndex = 0;
-            // 
-            // timer1
-            // 
-            this.timer1.Interval = 1000;
-            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(13, 13);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(89, 20);
-            this.label1.TabIndex = 1;
-            this.label1.Text = "Attacks Log:";
+            this.updateTimer.Interval = 500;
+            this.updateTimer.Tick += new System.EventHandler(this.UpdateTime_Tick);
             // 
             // button1
             // 
             this.button1.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.button1.Location = new System.Drawing.Point(331, 411);
+            this.button1.Location = new System.Drawing.Point(353, 409);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(94, 29);
             this.button1.TabIndex = 2;
             this.button1.Text = "Save Log";
             this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.button1.Click += new System.EventHandler(this.Button1_Click);
+            // 
+            // label2
+            // 
+            this.attacksNumberLabel.AutoSize = true;
+            this.attacksNumberLabel.Location = new System.Drawing.Point(21, 9);
+            this.attacksNumberLabel.Name = "label2";
+            this.attacksNumberLabel.Size = new System.Drawing.Size(99, 20);
+            this.attacksNumberLabel.TabIndex = 3;
+            this.attacksNumberLabel.Text = "Attacks No.: 0";
+            // 
+            // richTextBox
+            // 
+            this.richTextBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.richTextBox.Location = new System.Drawing.Point(21, 41);
+            this.richTextBox.Name = "richTextBox";
+            this.richTextBox.ReadOnly = true;
+            this.richTextBox.Size = new System.Drawing.Size(758, 349);
+            this.richTextBox.TabIndex = 4;
+            this.richTextBox.Text = "";
+            this.richTextBox.LinkClicked += new System.Windows.Forms.LinkClickedEventHandler(this.RichTextBox_LinkClicked);
             // 
             // AttackLogForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.richTextBox);
+            this.Controls.Add(this.attacksNumberLabel);
             this.Controls.Add(this.button1);
-            this.Controls.Add(this.label1);
-            this.Controls.Add(this.textBox1);
             this.Name = "AttackLogForm";
-            this.Text = "AttackLogForm";
+            this.Text = "Attack Log";
             this.Load += new System.EventHandler(this.AttackLogForm_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -90,10 +89,9 @@ namespace NetSnifferApp
         }
 
         #endregion
-
-        private System.Windows.Forms.TextBox textBox1;
-        private System.Windows.Forms.Timer timer1;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Timer updateTimer;
         private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Label attacksNumberLabel;
+        private System.Windows.Forms.RichTextBox richTextBox;
     }
 }

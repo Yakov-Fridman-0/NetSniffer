@@ -7,13 +7,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-
 using NetSnifferLib;
 
 namespace NetSnifferApp
 {
-    public partial class OpenCaptureDialog : Form
+    public partial class OpenPrivateCaptureDialog : Form
     {
+        public string Username { get; init; }
+
         public string FileName { get; private set; }
 
         public string CaptureFilterString { get; private set; }
@@ -25,11 +26,16 @@ namespace NetSnifferApp
 
         bool openFile = true;
 
-        public OpenCaptureDialog()
+        public OpenPrivateCaptureDialog()
         {
             InitializeComponent();
+        }
 
+        protected override void OnLoad(EventArgs e)
+        {
             okButton.Enabled = false;
+
+            filesComboBox.Items.AddRange(AccountManager.GetUserFiles(Username));
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -49,7 +55,7 @@ namespace NetSnifferApp
             base.OnFormClosing(e);
         }
 
-        private void PacketNumberUpDown_ValueChanged(object sender, EventArgs e)
+        private void PacketNumberUpDown_ValueChanged_1(object sender, EventArgs e)
         {
             NumberOfPackets = (int)packetNumberUpDown.Value;
         }
@@ -75,37 +81,34 @@ namespace NetSnifferApp
             }
         }
 
+        private void OkButton_Click(object sender, EventArgs e)
+        {
+            openFile = true;
+            Close();
+        }
+
         private void CancelButton_Click(object sender, EventArgs e)
         {
             openFile = false;
             Close();
         }
 
-
-        private void OpenButton_Click(object sender, EventArgs e)
+        private void FilesComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            openFile = true;
-            Close();
-        }
+            var filename = (string)filesComboBox.SelectedItem;
 
-        private void ChooseFileButton_Click(object sender, EventArgs e)
-        {
-            var openFileDialog = new OpenFileDialog()
+            if (filename == null)
             {
-                FileName = "Select a file",
-                Filter = "Pcap files (*.pcap)|*.pcap",
-                Title = "Open pcap file",
-            };
+                isFileChosen = false;
+                okButton.Enabled = false;
+            }
+            else
+            {
+                isFileChosen = true;
+                FileName = filename;
 
-            var result = openFileDialog.ShowDialog();
-            if (result != DialogResult.OK)
-                return;
-            FileName = openFileDialog.FileName;
-
-            fileNameTextBox.Text = FileName;
-
-            isFileChosen = true;
-            okButton.Enabled = isValidFilter;
+                okButton.Enabled = isValidFilter;
+            }
         }
     }
 }

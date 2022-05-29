@@ -15,10 +15,73 @@ namespace NetSnifferApp
     public partial class GeneralTopologyForm : Form
     {
         bool _isLive = true;
+        bool _captureStarted = false;
+        bool _captureEnded = false;
 
-        public LanMap LanMap { get; } = LanMap.Empty;
+        public LanMap LanMap { get; private set; } = LanMap.Empty;
 
-        public WanMap WanMap { get; } = WanMap.Empty;
+        public WanMap WanMap { get; private set; } = WanMap.Empty;
+
+
+        public bool CaptureStarted
+        {
+            get => _captureStarted;
+            set
+            {
+                _captureStarted = value;
+
+                if (_captureStarted)
+                {
+                    splitContainer.Location = new Point(0, 0);
+                    splitContainer.Dock = DockStyle.Fill;
+
+                    bigSize = splitContainer.Size;
+                }
+                else
+                {
+                    titleLabel.Visible = true;
+                    titleLabel.Text = "Waiting for capture to start";
+                    CenterTitleLabel();
+
+                    splitContainer.Location = new Point(1, 62);
+                    splitContainer.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right | AnchorStyles.Left;
+
+                    smallSize = splitContainer.Size;
+                }
+            }
+        }
+
+        Size bigSize;
+        Size smallSize;
+
+        public bool CaptureEnded
+        {
+            get => _captureEnded;
+            set
+            {
+                _captureEnded = value;
+
+                if (_captureEnded)
+                {
+                    //SuspendLayout();
+                    titleLabel.Visible = true;
+                    titleLabel.Text = "Capture Stopped";
+                    CenterTitleLabel();
+
+                    splitContainer.Location = new Point(1, 62);
+                    splitContainer.Size = ClientSize - (Size)splitContainer.Location;
+                    //splitContainer.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right | AnchorStyles.Left;
+
+                    //ResumeLayout();
+
+                    //splitContainer.SuspendLayout();
+                    //splitContainer.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right | AnchorStyles.Left;
+                    //splitContainer.Dock = DockStyle.None;
+                    //splitContainer.Location = new Point(1, 62);
+                    //splitContainer.ResumeLayout();
+                }
+            }
+        }
 
         public bool IsLive
         {
@@ -33,16 +96,18 @@ namespace NetSnifferApp
 
                     titleLabel.Visible = false;
 
-                    splitContainer1.Location = new Point(0, 0);
-                    splitContainer1.Dock = DockStyle.Fill;
+                    splitContainer.Location = new Point(0, 0);
+                    //splitContainer.Dock = DockStyle.Fill;
+                    splitContainer.Size = ClientSize;
+                    splitContainer.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right | AnchorStyles.Left;
                 }
                 else
                 {
                     titleLabel.Visible = true;
                     titleLabel.Text = "Topology from dump file";
 
-                    splitContainer1.Location = new Point(1, 62);
-                    splitContainer1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right | AnchorStyles.Left;
+                    splitContainer.Location = new Point(1, 62);
+                    splitContainer.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right | AnchorStyles.Left;
                 }
             }
         }
@@ -62,11 +127,29 @@ namespace NetSnifferApp
         public void StopRequestingUpdates()
         {
             updateTimer.Stop();
-            titleLabel.Text = "Capture Stopped";
-            titleLabel.BringToFront();
+            //titleLabel.Text = "Capture Stopped";
+            //titleLabel.BringToFront();
+        }
+
+        public void Clear()
+        {
+            LanMap = LanMap.Empty;
+            WanMap = WanMap.Empty;
+
+            lanViewer.Clear();
+            wanViewer.Clear();
         }
 
         object updateTopologyLock = new();
+
+        private void CenterTitleLabel()
+        {
+            var y = titleLabel.Location.Y;
+
+            int newX = (ClientRectangle.Width - titleLabel.Width) / 2;
+
+            titleLabel.Location = new System.Drawing.Point(newX, y);
+        }
 
         async public Task UpdateTopologyAsync(LanMap lanMap, WanMap wanMap)
         {

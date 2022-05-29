@@ -9,11 +9,11 @@ using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
 
-
 using NetSnifferLib;
 using NetSnifferLib.StatefulAnalysis;
 
 using PcapDotNet.Packets;
+using PcapDotNet.Packets.Dns;
 using PcapDotNet.Packets.Arp;
 using PcapDotNet.Packets.Ethernet;
 using PcapDotNet.Packets.IpV4;
@@ -42,22 +42,12 @@ namespace NetSnifferApp
             }
         }
 
-        //List<PacketData> filteredPacketDatas = new();
-
         readonly SortedDictionary<int, ListViewItem> allListViewItems = new();
-        // readonly SortedDictionary<int, ListViewItem> filteredListViewItems = new();
-        //readonly ActionBlock<Packet> itemBuilder;
 
         string displayFilterString = string.Empty;
         DisplayFilter displayFilter = DisplayFilter.EmptyFilter;
 
-        readonly object virtualListSizeLock = new();
-
-        ListViewItem[] cache;
-
-        //readonly object cacheLock = new();
-
-        int firstItem;
+        //readonly ActionBlock<PacketData> itemCreatorActionBlock;
 
         public PacketViewer()
         {
@@ -72,92 +62,11 @@ namespace NetSnifferApp
             #endregion
 
             packetsListView.VirtualMode = false;
-            //itemBuilder = new ActionBlock<Packet>(packet => AddPacketCoreAsync(packet));
+            //itemCreatorActionBlock = new ActionBlock<PacketData>(packetData => AddPacketDataCore(packetData));
 
             packetsListView.ListViewItemSorter = new ListViewItemComparer();
-            //packetsListView.Sorting = SortOrder.Ascending;
-            packetsListView.Sorting = SortOrder.None;
-
-
-            /*            packetsListView.RetrieveVirtualItem += PacketsListView_RetrieveVirtualItem;
-                        packetsListView.CacheVirtualItems += PacketsListView_CacheVirtualItems;*/
-            //packetsListView.SearchForVirtualItem += PacketsListView_SearchForVirtualItem;
-
-            //packetsListView.VirtualListSize = 0;
+            packetsListView.Sorting = SortOrder.Ascending;
         }
-
-/*        private void PacketsListView_CacheVirtualItems(object sender, CacheVirtualItemsEventArgs e)
-        {
-            //We've gotten a request to refresh the cache.
-            //First check if it's really neccesary.
-
-            if (cache != null && e.StartIndex >= firstItem && e.EndIndex <= firstItem + cache.Length)
-            {
-                //If the newly requested cache is a subset of the old cache, 
-                //no need to rebuild everything, so do nothing.
-                return;
-            }
-
-            //int length = e.EndIndex - e.StartIndex + 1; //indexes are inclusive
-            int length = e.EndIndex - e.StartIndex;
-            if (firstItem == e.StartIndex && cache != null && cache.Length == length) return;
-
-            firstItem = e.StartIndex;
-
-            cache = new ListViewItem[length];
-            for (int index = 0; index < length; index++)
-                cache[index] = filteredListViewItems.Values.ElementAt(firstItem + index);
-
-            //cache = filteredListViewItems.Values.Skip(firstItem).Take(length).ToArray();
-
-            //for (int i = 0; i < length; i++)
-            //{
-            //    //var packetData = filteredPacketDatas[i + firstItem];
-
-            //        //packetData.Description != null ? CreateItemWithAnalysis(packetData) : CreateItemWithoutAnalysis(packetData);
-            //}
-        }
-
-        private void PacketsListView_SearchForVirtualItem(object sender, SearchForVirtualItemEventArgs e)
-        {
-            throw new NotImplementedException();
-        }
-
-        //int lastIndexShown;
-
-        private void PacketsListView_RetrieveVirtualItem(object sender, RetrieveVirtualItemEventArgs e)
-        {
-            //lastIndexShown = e.ItemIndex;
-            //Caching is not required but improves performance on large sets.
-            //To leave out caching, don't connect the CacheVirtualItems event 
-            //and make sure myCache is null.
-
-            //check to see if the requested item is currently in the cache
-            if (cache != null && e.ItemIndex >= firstItem && e.ItemIndex < firstItem + cache.Length)
-            {
-                //A cache hit, so get the ListViewItem from the cache instead of making a new one.
-                e.Item = cache[e.ItemIndex - firstItem];
-            }
-            else
-            {
-                    e.Item = filteredListViewItems.Values.ElementAt( e.ItemIndex);
-
-                //A cache miss, so create a new ListViewItem and pass it back.
-                //int index = e.ItemIndex;
-
-                //PacketData packetData;
-
-                //lock (filteredPacketDatas)
-                //{
-                //    packetData = filteredPacketDatas[index];
-                //}
-
-                //if (packetData.Description != null)
-                //    e.Item = CreateItemWithAnalysis(packetData);
-                //else
-                //    e.Item = CreateItemWithoutAnalysis(packetData);
-            }
-        }*/
 
         public IEnumerable<Packet> GetSelectedPackets()
         {
@@ -168,83 +77,45 @@ namespace NetSnifferApp
             return packets;
         }
 
-        private void AddPacketCore(Packet packet)
+        private void AddPacketDataCore(PacketData packetData)
         {
-            var packetData = CreatePacketData(packet);
+            ListViewItem item;
 
-            //int indexToInsert;
+            packetData.AttackDetected += MarkAttack;
+            item = CreateItemWithoutAnalysis(packetData);
 
-            /*            lock (allPacketDatas)
-                        {
-                            indexToInsert = ~allPacketDatas.BinarySearch(
-                                0, 
-                                allPacketDatas.Count, 
-                                PacketData.CreatePacketDataWithId(packetData.PacketId), 
-                                PacketData.IdComparer);
+            //Invoke(new MethodInvoker(delegate
+            //{
+            //    packetsListView.Items.Add(item);
+            //}));
 
-                            allPacketDatas.Insert(indexToInsert, packetData);
-                        }*/
-
-            var item = CreateItemWithoutAnalysis(packetData);
-
-            lock (updateSync)
-            {
+            lock(allListViewItems)
                 allListViewItems.Add(packetData.PacketId, item);
-            }
 
-            //packetsListView.Invoke( 
-            //    new MethodInvoker(() =>
-            //    {
-            //        packetsListView.Items.Add(item);
-            //        packetsListView.Update();
-            //    }));
-
-            //if (packetsListView.Items.Count != 0)
-            //    packetsListView.BeginInvoke(new MethodInvoker(() => packetsListView.Items[^1].EnsureVisible()));
-
-            packetData.AnalyzeAsync();
-        }
-
-
-        private Task AddPacketCoreAsync(Packet packet)
-        {
-            return Task.Run(() => AddPacketCore(packet));
+            if (packetData.Description == null)
+                packetData.DescriptionReady += FillPacketDescription;
+            else
+                FillPacketDescription(packetData.PacketId, packetData.Description);
         }
 
         public void Clear()
         {
-            //packetsListView.Invalidate();
-
-            /*            lock (allPacketDatas)
-                        {   
-                            allPacketDatas.Clear();
-                            filteredPacketDatas.Clear();
-                        }*/
-
-            //lock (virtualListSizeLock)
-
-            lock (updateSync)
+            lock (allListViewItems)
             {
                 allListViewItems.Clear();
             }
-
-/*            lock (filteredListViewItems)
-            {
-                filteredListViewItems.Clear();
-                cache = null;
-            }*/
 
             if (packetsListView.InvokeRequired)
             {
                 packetsListView.Invoke(new MethodInvoker(
                 delegate
                 {
-                    packetsListView.VirtualListSize = 0;
+                    packetsListView.Items.Clear();
                 }));
             }
             else
             {
-                packetsListView.VirtualListSize = 0;
+                packetsListView.Items.Clear();
             }
 
             displayFilterString = string.Empty;
@@ -254,228 +125,94 @@ namespace NetSnifferApp
             displayFilterControl.IsValidFilter = true;
         }
 
-        public async void AddPacket(Packet packet)
+        public void AddPacket(PacketData packetData)
         {
-            await AddPacketCoreAsync(packet);
-            //itemBuilder.Post(packet);
+            AddPacketDataCore(packetData);
+            //itemCreatorActionBlock.Post(packetData);
         }
 
-        //public void AddRange(IEnumerable<Packet> packets)
-        //{
-        //    foreach (var packet in packets)
-
-        //        itemBuilder.Post(packet);
-        //}
-
-        PacketData CreatePacketData(Packet packet)
-        {
-            int id = IdManager.GetNewPacketId(packet);
-
-            var packetData = new PacketData(id, packet);
-
-            packetData.DescriptionReady += FillPacketDescription;
-
-            packetData.AttackDetected += MarkAttack;
-
-            return packetData;
-        }
-
-        static ListViewItem CreateItemWithoutAnalysis(PacketData packetData)
+        ListViewItem CreateItemWithoutAnalysis(PacketData packetData)
         {
             var subItems = new string[7] { packetData.PacketId.ToString(), "", "", "", "", "", "" };
 
-            var item = new ListViewItem(subItems)
+            ListViewItem item = null;
+
+            Invoke(new MethodInvoker(
+            delegate
             {
-                Tag = packetData
-            };
+                item = new ListViewItem(subItems)
+                {
+                    //Text = packetData.PacketId.ToString(),
+                    Tag = packetData
+                };
+            }));
 
             return item;
         }
 
-        //static ListViewItem CreateItemWithAnalysis(PacketData packetData)
-        //{
-        //    var description = packetData.Description;
+        readonly object fillPacketSync = new();
 
-        //    var subItems = new string[7]
-        //    {
-        //         packetData.PacketId.ToString(),
-        //        description.TimeStamp.ToString(),
-        //        description.Protocol,
-        //        AddressFormat.ToString(description.Source),
-        //        AddressFormat.ToString(description.Destination),
-        //        description.Length.ToString(),
-        //        description.Info
-        //    };
-
-        //    Color foreColor = Color.Empty;
-
-        //    return new ListViewItem(subItems)
-        //    {
-        //        BackColor = (packetData.Attacks.Length == 0) ? GetPacketColors(packetData.Packet, out foreColor) : Color.Red,
-        //        ForeColor = (packetData.Attacks.Length == 0) ? foreColor : Color.White
-        //    };
-        //}
+        public bool IsFillingPacket = false;
 
         void FillPacketDescription(int packetId, PacketDescription description)
         {
-            lock (fillPacketSync)
-            { 
-          
+            var packetData = PacketData.GetPacketDataByPacketId(packetId);
 
-            /*            var packetData = PacketData.GetPacketDataByPacketId(packetId);
+            ListViewItem item;
 
-                        if (displayFilter.PacketMatches(packetData))
-                        {
-                            lock (filteredPacketDatas)
-                            {
-                                int indexToInsert = ~filteredPacketDatas.BinarySearch(
-                                    0,
-                                    filteredPacketDatas.Count,
-                                    PacketData.CreatePacketDataWithId(packetData.PacketId),
-                                    PacketData.IdComparer);
-
-                                if (indexToInsert != filteredPacketDatas.Count - 1)
-                                    filteredPacketDatas.Insert(indexToInsert, packetData);
-                                else
-                                    filteredPacketDatas.Add(packetData);
-                            }
-
-                            packetsListView.Invoke(new MethodInvoker(delegate
-                            {
-                                packetsListView.BeginUpdate();
-                                //lock (virtualListSizeLock)
-
-                                F.VirtualListSize++;
-
-                                packetsListView.EndUpdate();
-                            }));F
-
-                            //await Task.Factory.FromAsync(result, new Action<IAsyncResult>(result => { }));
-                        }*/
-
-                var packetData = PacketData.GetPacketDataByPacketId(packetId);
-                bool hasAttacks = packetData.Attacks.Length != 0;
-
-                ListViewItem item;
-
+            lock (allListViewItems)
                 item = allListViewItems[packetId];
 
-                var matches = displayFilter.PacketMatches(packetData);
+            bool matches;
+
+            lock (fillPacketSync)
+            {
+                IsFillingPacket = true;
+                bool hasAttacks = packetData.Attacks.Length != 0;
+
+                matches = displayFilter.PacketMatches(packetData);
 
                 bool invokeRequired = packetsListView.InvokeRequired;
 
                 if (hasAttacks)
                 {
-                    if (invokeRequired)
-                    {
-                        packetsListView.Invoke(new MethodInvoker(
-                        delegate
-                        {
-                            MarkItemAsAttack(item);
-                        }
-                        ));
-                    }
-                    else
+                    packetsListView.Invoke(new MethodInvoker(
+                    delegate
                     {
                         MarkItemAsAttack(item);
                     }
+                    ));
+ 
                 }
                 else
                 {
-                    GetPacketColors(IdManager.GetPacket(packetId), out Color foreColor, out Color backColor);
+                    GetPacketColors(packetData, out Color foreColor, out Color backColor);
 
-                    if (invokeRequired)
-                    {
-                        packetsListView.Invoke(new MethodInvoker(
-                        delegate
-                        {
-                            SetItemColors(item, foreColor, backColor);
-                        }
-                        ));
-                    }
-                    else
+                    packetsListView.Invoke(new MethodInvoker(
+                    delegate
                     {
                         SetItemColors(item, foreColor, backColor);
                     }
+                    ));
                 }
 
-                if (invokeRequired)
+                packetsListView.Invoke(new MethodInvoker(() =>
+                {
+                    UpdateItem(item, description);
+                }));
+
+                //IsFillingPacket = false;
+            }
+
+            if (matches)
+            {
+                lock (updateSync)
                 {
                     packetsListView.Invoke(new MethodInvoker(() =>
                     {
-                        UpdateItem(item, description);
+                        packetsListView.Items.Add(item);
                     }));
                 }
-                else
-                {
-                    UpdateItem(item, description);
-                }
-
-                //lock (updateSync)
-                //{
-                    if (matches && item.ListView == null)
-                    {
-                        // filteredListViewItems.Add(packetId, item);
-                        //packetsListView.VirtualListSize = filteredListViewItems.Count;
-
-                        int index;
-
-                        index = allListViewItems.Keys.ToList().BinarySearch(packetId);
-
-                        index = index < 0 ? ~index : index;
-                        if (invokeRequired)
-                        {
-                            packetsListView.Invoke(new MethodInvoker(() =>
-                            {
-                                if (index > packetsListView.Items.Count)
-                                {
-                                    if (item.ListView == null)
-                                        packetsListView.Items.Add(item); // TODO: check synchronization error
-                                }
-                                else
-                                {
-                                    if (item.ListView == null)
-                                        packetsListView.Items.Insert(index, item);
-                                }
-                                //packetsListView.Items.Add(item);
-                                //packetsListView.VirtualListSize = filteredListViewItems.Count;
-                            }));
-                        }
-                        else
-                        {
-                            if (index > packetsListView.Items.Count)
-                                packetsListView.Items.Add(item);
-                            else
-                                packetsListView.Items.Insert(index, item);
-
-                            //packetsListView.Items.Add(item);
-                            //packetsListView.VirtualListSize = filteredListViewItems.Count;
-                        }
-                        /*if (packetsListView.InvokeRequired)
-                        {
-                            packetsListView.Invoke(new MethodInvoker(
-                                delegate
-                                {
-                                    packetsListView.VirtualListSize++;
-                                }
-                                ));
-                        }
-                        else
-                        {
-                            packetsListView.VirtualListSize++;
-                        }*/
-                    }
-                //}
-
-                //IAsyncResult result = packetsListView.BeginInvoke((MethodInvoker)delegate
-                //{
-                //    if (matches && item.ListView == null)
-                //    {
-                //        packetsListView.Items.Add(item);
-                //    }
-                //});
-
-                //await Task.Factory.FromAsync(result, new Action<IAsyncResult>(asyncResult => { }));
             }
         }
 
@@ -497,6 +234,67 @@ namespace NetSnifferApp
             subItems[6].Text = description.Info;
         }
 
+        static void GetPacketColors(PacketData packetData, out Color foreColor, out Color backColor)
+        {
+            var protocols = packetData.Protocols;
+
+            if (protocols.Length == 0)
+            {
+                foreColor = Color.White;
+                backColor = Color.Gray;
+
+                return;
+            }
+
+            var lastProtocol = protocols[^1];
+
+            switch (lastProtocol)
+            {
+                case "eth":
+                    foreColor = Color.Black;
+                    backColor = Color.White;
+                    break;
+
+                case "arp":
+                    foreColor = Color.Black;
+
+                    if (((ArpDatagram)packetData["arp"]).Operation == ArpOperation.Reply)
+                        backColor = Color.Goldenrod;
+                    else
+                        backColor = Color.Gold;
+                    break;
+
+                case "ip":
+                    foreColor = Color.Black;
+                    backColor = Color.OliveDrab;
+                    break;
+
+                case "udp":
+                    foreColor = Color.White;
+                    backColor = Color.DarkViolet;
+                    break;
+
+                case "tcp":
+                    foreColor = Color.White;
+                    backColor = Color.ForestGreen;
+                    break;
+
+                case "dns":
+                    foreColor = Color.White;
+
+                    if (((DnsDatagram)packetData["dns"]).IsResponse)
+                        backColor = Color.FromArgb(0x663399); // Rebecca purple
+                    else
+                        backColor = Color.FromArgb(0x6a5acd);
+                    break;
+
+                default:
+                    foreColor = Color.Black;
+                    backColor = Color.White;
+                    break;
+            }
+        }
+
         static void GetPacketColors(Packet packet, out Color foreColor, out Color backColor)
         {
             if (packet.DataLink.Kind != DataLinkKind.Ethernet)
@@ -507,6 +305,7 @@ namespace NetSnifferApp
                 return;
             }
 
+            
             if (packet.Ethernet.EtherType == EthernetType.Arp)
             {
                 foreColor = Color.Black;
@@ -563,15 +362,9 @@ namespace NetSnifferApp
         {
             AttackAdded.Invoke(this, new EventArgs());
 
-            /*            packetsListView.Invoke(new MethodInvoker(() =>
-                        {
-                            //cache = null;
-                            packetsListView.Invalidate();
-                        }));*/
-
             ListViewItem item;
 
-            lock (updateSync)
+            lock (allListViewItems)
                 item = allListViewItems[packetId];
 
             if (packetsListView.InvokeRequired)
@@ -601,8 +394,6 @@ namespace NetSnifferApp
                 var index = packetsListView.SelectedIndices[0];
 
                 var packetData = (PacketData)packetsListView.Items[index].Tag;
-                //var packetId = filteredListViewItems.Keys.ElementAt(index);
-                //var packetData = PacketData.GetPacketDataByPacketId(packetId);
 
                 byte[] buffer = packetData.Packet.Buffer;
 
@@ -668,13 +459,7 @@ namespace NetSnifferApp
             }
         }
 
-        Task UpdateVisiblePacketsAsync()
-        {
-            return Task.Run(() => UpdateVisiblePackets());
-        }
-
         readonly object updateSync = new();
-        readonly object fillPacketSync= new();
 
         public event EventHandler AttackAdded = delegate { };
 
@@ -686,88 +471,12 @@ namespace NetSnifferApp
                 packetsListView.BeginUpdate();
 
                 packetsListView.Items.AddRange(allListViewItems.Values.Where(item => displayFilter.PacketMatches((PacketData)item.Tag)).ToArray());
-/*                foreach (var item  in allListViewItems.Values)
-                {
-                    if (displayFilter.PacketMatches((PacketData)item.Tag))
-                    {
-                        packetsListView.Items.Add(item);
-                    }
-                }*/
 
                 packetsListView.EndUpdate();
-/*                filteredListViewItems.Clear();
-
-                foreach (var (index, item) in allListViewItems)
-                {
-                    var packetData = PacketData.GetPacketDataByPacketId(index);
-
-                    if (displayFilter.PacketMatches(packetData))
-                    {
-                        filteredListViewItems.Add(index, item);
-                    }
-                }
-
-                cache = null;
-                packetsListView.VirtualListSize = filteredListViewItems.Count;*/
             }
-
-            //lock (allPacketDatas)
-            //{
-            //    cache = null;
-
-            //    lock (filteredPacketDatas)
-            //    {
-            //        filteredPacketDatas = allPacketDatas.Where(packetData => displayFilter.PacketMatches(packetData)).ToList();
-            //    }
-
-            //    packetsListView.Invoke(new MethodInvoker(
-            //        delegate
-            //        {
-            //            packetsListView.SuspendLayout();
-
-            //            lock (virtualListSizeLock)
-            //                packetsListView.VirtualListSize = filteredPacketDatas.Count;
-
-            //            packetsListView.ResumeLayout();
-            //            packetsListView.Invalidate();
-            //        }));
-
-            //    int i = 0;
-
-            //    packetsListView.Invoke(new MethodInvoker(() => packetsListView.BeginUpdate()));
-            //    foreach (var )
-            //    {
-            //        i++;
-
-            //        if (i == 50)
-            //        {
-            //            packetsListView.BeginInvoke((MethodInvoker)delegate
-            //                {
-            //                    packetsListView.EndUpdate();
-            //                    packetsListView.BeginUpdate();
-            //                });
-
-            //            i = 0;
-            //        }
-
-            //        if (displayFilter.PacketMatches(packetData))
-            //        {
-            //            if (listViewItem.ListView == null)
-            //            {
-            //                packetsListView.Invoke(new MethodInvoker(() => packetsListView.Items.Add(listViewItem)));
-            //            }
-            //        }
-            //        else
-            //        {
-            //            if (listViewItem.ListView != null)
-            //                packetsListView.Invoke(new MethodInvoker(() => packetsListView.Items.Remove(listViewItem)));
-            //        }
-            //    }
-            //    packetsListView.Invoke(new MethodInvoker(() => packetsListView.EndUpdate()));
-            //}
         }
 
-        private void DisplayFilter1_FilterChanged(object sender, string e)
+        private void DisplayFilter_FilterChanged(object sender, string e)
         {
             displayFilterString = e;
 
@@ -775,7 +484,6 @@ namespace NetSnifferApp
             {
                 displayFilterControl.IsValidFilter = true;
                 UpdateVisiblePackets();
-                //await UpdateVisiblePacketsAsync();
             }
             else
             {
@@ -787,8 +495,6 @@ namespace NetSnifferApp
         {
             FillBinaryDataTextBox(binaryDataTextBox.Text);
         }
-
-        //int prevWidth = 0;
 
         private void PacketsListView_Resize(object sender, EventArgs e)
         {

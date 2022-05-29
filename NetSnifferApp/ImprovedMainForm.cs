@@ -22,35 +22,48 @@ namespace NetSnifferApp
 {
     public partial class ImprovedMainForm : Form
     {
-        readonly ActionBlock<Packet> addPacketActionBlock;
+        //readonly ActionBlock<Packet> addPacketActionBlock;
 
         GeneralStatisticsForm statisticsForm = null;
         GeneralTopologyForm topologyForm = null;
 
+        GeneralTopologyForm spareTopologyForm = null;
+        bool hasSpareTopologyForm = false;
+
         bool isLiveCapture = true;
+        bool captureStarted = false;
         bool isCapturing = false;
         bool captureEnded = false;
         bool isCaptureUnsaved = false;
 
-        
+
         NetworkInterface selectedInterface;
         bool isPromiscuous = true;
         string captureFilterString = string.Empty;
-        int numberOfPackets;
-        string fileName;
+        int numberOfPackets = 0;
+
+        string fileName = string.Empty;
+
+        bool isPrivateFile = false;
+        string privateFileName = string.Empty;
 
 
         NetSniffer sniffer;
 
-
         bool isValidFilter = true;
         bool isOperationalInterface = false;
+
+        readonly AccountManager accountManager;
+
+        bool isSignedIn = false;
+        string username = null;
 
         public ImprovedMainForm()
         {
             InitializeComponent();
 
-            addPacketActionBlock = new ActionBlock<Packet>(new Action<Packet>(packet => packetViewer.AddPacket(packet)));
+            //addPacketActionBlock = new ActionBlock<Packet>(new Action<Packet>(packet => packetViewer.AddPacket(packet)));
+            accountManager = AccountManager.Create();
         }
 
         protected override void OnLoad(EventArgs e)
@@ -60,6 +73,9 @@ namespace NetSnifferApp
             SwitchToStartPanel();
             var items = NetInterfaceItem.CreateItems(NetworkInterface.GetAllNetworkInterfaces());
             interfaceComboBox.Items.AddRange(items);
+
+            spareTopologyForm = new();
+            hasSpareTopologyForm = true;
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -72,7 +88,7 @@ namespace NetSnifferApp
                 {
                     case DialogResult.Yes:
                         StopLiveCapture();
-                        bool saved = SaveCapture();
+                        bool saved = SaveCaptureOnFS();
                         
                         if (saved)
                             base.OnFormClosing(e);
@@ -91,46 +107,16 @@ namespace NetSnifferApp
             }
         }
 
-        private void openToolStripMenuItem1_Click(object sender, EventArgs e)
-        {
-            var openCaptureDialog = new OpenCaptureDialog();
-
-            var result = openCaptureDialog.ShowDialog();
-
-            if (result == DialogResult.OK)
-            {
-                
-                if (isCapturing)
-                {
-                    if (isLiveCapture)
-                        StopLiveCapture();
-                    else
-                        StopOfflineCapture();
-                        
-                }
-                
-                isLiveCapture = false;
-                fileName = openCaptureDialog.FileName;
-                captureFilterString = openCaptureDialog.CaptureFilterString;
-                numberOfPackets = openCaptureDialog.NumberOfPackets;
-
-                if (statisticsForm != null)
-                {
-                    statisticsForm.Clear(); 
-                }
-
-                SwitchToCapturePanel();
-                AdjustCapturePanel();
-
-                StartOfflineCapture();
-            }
-        }
-
         void StartOfflineCapture()
         {
+            captureStarted = true;
             isCapturing = true;
             isCaptureUnsaved = false;
 
+            if (isPrivateFile)
+            {
+                var fileName = AccountManager.CreateTempFile(username, privateFileName);
+            }
             var args = new OfflineSnifferArgs()
             {
                 FileName = fileName,
@@ -140,19 +126,40 @@ namespace NetSnifferApp
 
             sniffer = new OfflineSniffer(args);
 
+            
+            if (statisticsForm != null)
+            {
+                statisticsForm.IsLive = false;
+            }
+            if (topologyForm != null)
+            {
+                topologyForm.IsLive = false;
+            }
+
             sniffer.PacketReceived += Sniffer_PacketReceived;
             sniffer.PacketLimitReached += Sniffer_PacketLimitReached;
             sniffer.CaptureStopped += OfflineSniffer_CaptureStopped;
+
+            if (isPrivateFile)
+                sniffer.CaptureStopped += DeleteTempFile;
+
             sniffer.StartAsync();
         }
 
         private void OfflineSniffer_CaptureStopped(object sender, EventArgs e)
         {
+            captureEnded = true;
+        }
 
+        private void DeleteTempFile(object sender, EventArgs e)
+        {
+            AccountManager.DeleteTempFile(fileName);
         }
 
         void StartLiveCapture()
         {
+            captureStarted = true;
+
             isCapturing = true;
             isLiveCapture = true;
             isCaptureUnsaved = true;
@@ -168,11 +175,26 @@ namespace NetSnifferApp
             sniffer = new LiveSniffer(args);
             
             isCaptureUnsaved = true;
-            isCapturing = true;
+            isCapturing = true;   
 
             sniffer.PacketReceived += Sniffer_PacketReceived;
             sniffer.PacketLimitReached += Sniffer_PacketLimitReached;
             sniffer.StartAsync();
+
+            if (statisticsForm != null)
+            {
+                statisticsForm.IsLive = true;
+                statisticsForm.CaptureStarted = true;
+
+                ActivateStatisticsForm();
+            }
+            if (topologyForm != null)
+            {
+                topologyForm.IsLive = true;
+                topologyForm.CaptureStarted = true;
+
+                ActivateTopologyForm();
+            }
         }
 
         private void Sniffer_PacketLimitReached(object sender, EventArgs e)
@@ -180,23 +202,25 @@ namespace NetSnifferApp
 
         }
 
-        private void Sniffer_PacketReceived(object sender, Packet e)
+        private void Sniffer_PacketReceived(object sender, PacketData e)
         {
-            addPacketActionBlock.Post(e);
+            packetViewer.AddPacket(e);
         }
 
         void StopLiveCapture()
         {
+            captureEnded = true;
             isCapturing = false;
 
             if (statisticsForm != null)
             {
+                statisticsForm.CaptureStopped = true;
                 statisticsForm.StopRequestingUpdates();
             }
 
             if (topologyForm != null)
             {
-                //topologyForm.StopRequestingUpdates();
+                topologyForm.CaptureEnded = true;
             }
 
             sniffer.PacketReceived -= Sniffer_PacketReceived;
@@ -277,92 +301,113 @@ namespace NetSnifferApp
             saveAsToolStripMenuItem.Enabled = false;
             newCaptureToolStripMenuItem.Enabled = false;
 
-            statisticsToolStripMenuItem.Enabled = false;
-            topologyToolStripMenuItem.Enabled = false;
+            //statisticsToolStripMenuItem.Enabled = false;
+            //topologyToolStripMenuItem.Enabled = false;
         }
 
-        private void generalStatisticsToolStripMenuItem_Click(object sender, EventArgs e)
+        private void GeneralStatisticsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (statisticsForm != null)
                 return;
 
-            statisticsForm = new GeneralStatisticsForm
+            if (captureStarted)
             {
-                IsLive = isLiveCapture
-            };
+                statisticsForm = new GeneralStatisticsForm
+                {
+                    CaptureStarted = true,
+                    IsLive = isLiveCapture
+                };
 
-            statisticsForm.SetBaseTime(sniffer.StartingTime);
-            
+                statisticsForm.SetBaseTime(sniffer.StartingTime);
+
+                if (captureEnded)
+                {
+                    statisticsForm.CaptureStopped = true;
+                    statisticsForm.UpdateStatistics(PacketAnalyzer.Analyzer.GetGeneralStatistics());
+                }
+                else if (isLiveCapture)
+                {
+                    ActivateStatisticsForm();
+                }
+            }
+            else
+            {
+                statisticsForm = new GeneralStatisticsForm
+                {
+                    CaptureStarted = false
+                };
+            }
+
+            statisticsForm.FormClosed += StatisticsForm_FormClosed;
             statisticsForm.Show();
-
-            if (captureEnded)
-            {
-                statisticsForm.UpdateStatistics(PacketAnalyzer.Analyzer.GetGeneralStatistics());
-            }
-            else if (isLiveCapture)
-            {
-                statisticsForm.StatisticsUpdateRequested += StatisticsForm_NewStatisticsRequested;
-                statisticsForm.FormClosed += StatisticsForm_FormClosed;
-                statisticsForm.StartRequestingUpdates();
-            }
         }
 
-        private void generalTopologyToolStripMenuItem_Click(object sender, EventArgs e)
+        void ActivateStatisticsForm()
         {
-            if (topologyForm == null)
+            statisticsForm.StatisticsUpdateRequested += StatisticsForm_NewStatisticsRequested;
+            statisticsForm.StartRequestingUpdates();
+
+            sniffer.SniffingStarted.WaitOne();
+            statisticsForm.SetBaseTime(sniffer.StartingTime);
+        }
+
+        private void GeneralTopologyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (topologyForm != null)
+                return;
+
+            if (hasSpareTopologyForm)
+            {
+                hasSpareTopologyForm = false;
+                topologyForm = spareTopologyForm;
+            }
+            else
+            {
                 topologyForm = new();
+            }
 
-            topologyForm.IsLive = true;
+            if (captureStarted)
+            {
+                if (captureEnded)
+                {
+                    topologyForm.CaptureEnded = true;
 
+                    topologyForm.FormClosed += TopologyForm_FormClosed;
+                    topologyForm.Show();
+                    topologyForm.UpdateTopology(
+                        PacketAnalyzer.Analyzer.GetLanMap(),
+                        PacketAnalyzer.Analyzer.GetWanMap());
+
+                    return;
+                }
+                else if (isLiveCapture)
+                {
+                    topologyForm.IsLive = true;
+                    ActivateTopologyForm();
+                }
+            }
+            else
+            {
+                topologyForm.CaptureStarted = false;
+            }
+
+            topologyForm.FormClosed += TopologyForm_FormClosed;
             topologyForm.Show();
-
-            if (captureEnded)
-            {
-                topologyForm.UpdateTopology(
-                    PacketAnalyzer.Analyzer.GetLanMap(),
-                    PacketAnalyzer.Analyzer.GetWanMap());
-            }
-            else if (isLiveCapture)
-            {
-                topologyForm.TopologyUpdateRequested += TopologyForm_TopologyUpdateRequested;
-                topologyForm.FormClosed += TopologyForm_FormClosed;
-                topologyForm.StartReuqestingUpdates();
-            }
         }
 
-        async void DoIt()
+        void ActivateTopologyForm()
         {
-            await Task.Run(() => CreateForm());
+            topologyForm.TopologyUpdateRequested += TopologyForm_TopologyUpdateRequested;
+            topologyForm.StartReuqestingUpdates();
         }
-
-        void CreateForm()
-        {
-            /*            topologyForm = new GeneralTopologyForm
-                        {
-                            IsLive = isLiveCapture
-                        };*/
-
-
-        }
-
         private void TopologyForm_FormClosed(object sender, FormClosedEventArgs e)
         {
             topologyForm = null;
         }
 
-        //ActionBlock<(LanMap LanMap, WanMap WanMap)> lanUpdatedBlock;
 
         private void TopologyForm_TopologyUpdateRequested(object sender, EventArgs e)
         {
-            //if (lanUpdatedBlock == null)
-            //    lanUpdatedBlock = new (new Action<(LanMap LanMap, WanMap WanMap)>(
-            //        async ((LanMap LanMap, WanMap WanMap) tuple) =>
-            //    {
-            //        await topologyForm.UpdateTopologyAsync(tuple.LanMap, tuple.WanMap);
-            //    }));
-
-            //lanUpdatedBlock.Post((PacketAnalyzer.Analyzer.GetLanMap(), PacketAnalyzer.Analyzer.GetWanMap()));
-
             topologyForm.UpdateTopology(PacketAnalyzer.Analyzer.GetLanMap(), PacketAnalyzer.Analyzer.GetWanMap());
         }
 
@@ -377,7 +422,7 @@ namespace NetSnifferApp
                 statisticsForm.UpdateStatistics(PacketAnalyzer.Analyzer.GetGeneralStatistics());
         }
 
-        private void interfaceComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        private void InterfaceComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             var item = (NetInterfaceItem)(interfaceComboBox.SelectedItem);
 
@@ -409,7 +454,7 @@ namespace NetSnifferApp
             return @interface.OperationalStatus is OperationalStatus.Up or OperationalStatus.Unknown or OperationalStatus.Testing;
         }
 
-        private void startButton_Click(object sender, EventArgs e)
+        private void StartButton_Click(object sender, EventArgs e)
         {
             SwitchToCapturePanel();
             AdjustCapturePanel();
@@ -417,12 +462,12 @@ namespace NetSnifferApp
             StartLiveCapture();
         }
 
-        private void promiscuousCheckBox_CheckedChanged(object sender, EventArgs e)
+        private void PromiscuousCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             isPromiscuous = promiscuousCheckBox.Checked;
         }
 
-        private void captureFilter_FilterChanged(object sender, EventArgs e)
+        private void CaptureFilter_FilterChanged(object sender, EventArgs e)
         {
             string filter = captureFilter.Filter;
 
@@ -441,19 +486,12 @@ namespace NetSnifferApp
             }
         }
 
-        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
+        private void SaveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (isCapturing)
-            {
-                MessageBox.Show("Stop cature before saving", "Capture Running", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
-            }
-            else
-            {
-                SaveCapture();
-            }
+
         }
 
-        bool SaveCapture()
+        bool SaveCaptureOnFS()
         {
             var saveCaptureDialog = new SaveCaptureDialog();
             var result = saveCaptureDialog.ShowDialog();
@@ -475,10 +513,13 @@ namespace NetSnifferApp
             }
         }
 
-        private void newCaptureToolStripMenuItem_Click(object sender, EventArgs e)
+        private void NewCaptureToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (isCapturing)
                 StopLiveCapture();
+            
+            if (topologyForm != null)
+                topologyForm.StopRequestingUpdates();
 
             if (isCaptureUnsaved)
             {
@@ -487,16 +528,45 @@ namespace NetSnifferApp
                 switch (dialogResult)
                 {
                     case DialogResult.Yes:
-                        var saved = SaveCapture();
+                        var saved = SaveCaptureOnFS();
 
                         if (saved)
                         {
+                            packetViewer.Clear();
+
+                            if (statisticsForm != null)
+                            {
+                                statisticsForm.Clear();
+                                statisticsForm.SetBaseTime(DateTime.Now);
+                                statisticsForm.IsLive = true;
+                                statisticsForm.StartRequestingUpdates();
+                            }
+                            if (topologyForm != null)
+                            {
+                                topologyForm.Clear();
+                            }
+
                             SwitchToStartPanel();
                         }
                         break;
 
                     case DialogResult.No:
                         isCaptureUnsaved = false;
+
+                        packetViewer.Clear();
+
+                        if (statisticsForm != null)
+                        {
+                            statisticsForm.Clear();
+                            statisticsForm.SetBaseTime(DateTime.Now);
+                            statisticsForm.IsLive = true;
+                            statisticsForm.StartRequestingUpdates();
+                        }
+                        if (topologyForm != null)
+                        {
+                            topologyForm.Clear();
+                        }
+
                         SwitchToStartPanel();
                         break;
 
@@ -506,11 +576,15 @@ namespace NetSnifferApp
             }
         }
 
-        private void restartButton_Click(object sender, EventArgs e)
+        private void RestartButton_Click(object sender, EventArgs e)
         {
+            StopLiveCapture();
+
             isLiveCapture = true;
             isCapturing = true;
             isCaptureUnsaved = true;
+
+            packetViewer.Clear();
 
             if (statisticsForm != null)
             {
@@ -519,14 +593,17 @@ namespace NetSnifferApp
                 statisticsForm.IsLive = true;
                 statisticsForm.StartRequestingUpdates();
             }
+            if (topologyForm != null)
+            {
+                topologyForm.Clear();
+            }
 
             AdjustCapturePanel();
 
-            packetViewer.Clear();
             StartLiveCapture();
         }
 
-        private void stopButton_Click(object sender, EventArgs e)
+        private void StopButton_Click(object sender, EventArgs e)
         {
             StopLiveCapture();
 
@@ -534,7 +611,7 @@ namespace NetSnifferApp
             stopButton.Enabled = false;
         }
 
-        private void packetNumberUpDown_ValueChanged(object sender, EventArgs e)
+        private void PacketNumberUpDown_ValueChanged(object sender, EventArgs e)
         {
             numberOfPackets = (int)packetNumberUpDown.Value;
         }
@@ -549,11 +626,6 @@ namespace NetSnifferApp
             attackToolStripMenuItem.Image = null;
 
             attackLogForm.Show();
-        }
-
-        private void ImprovedMainForm_Load(object sender, EventArgs e)
-        {
-            topologyForm = new();
         }
 
         private void ArpTableToolStripMenuItem_Click(object sender, EventArgs e)
@@ -577,7 +649,151 @@ namespace NetSnifferApp
         private void PacketViewer_AttackAdded(object sender, EventArgs e)
         {
             if (attackLogForm == null)
-                attackToolStripMenuItem.Image = imageList1.Images[0];
+                Invoke (new MethodInvoker( () => attackToolStripMenuItem.Image = imageList1.Images[0]));
+        }
+
+        private void LinkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            if (isSignedIn)
+            {
+                isSignedIn = false;
+                username = null;
+
+                openPrivateFileToolStripMenuItem.Enabled = false;
+                savePrivateFileToolStripMenuItem.Enabled = false;
+
+                usernameLabel.Text = "Not Signed In";
+                linkLabel1.Text = "Sign In";
+            }
+            else
+            {
+                var signInForm = new SignInForm()
+                {
+                    AccountManager = accountManager
+                };
+
+                signInForm.ShowDialog();
+
+                if (signInForm.IsSignedIn)
+                {
+                    openPrivateFileToolStripMenuItem.Enabled = true;
+                    savePrivateFileToolStripMenuItem.Enabled = true;
+
+                    isSignedIn = true;
+                    username = signInForm.Username;
+
+                    usernameLabel.Text = username;
+                    linkLabel1.Text = "Log Out";
+                }
+            }
+        }
+
+        private void SaveFSFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (isCapturing)
+            {
+                MessageBox.Show("Stop cature before saving", "Capture Running", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
+            }
+            else
+            {
+                SaveCaptureOnFS();
+            }
+        }
+
+        private void SavePrivateFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var saveCaptureDialog = new SavePrivateCaptureDialog();
+            var result = saveCaptureDialog.ShowDialog();
+
+            if (result == DialogResult.OK)
+            {
+                string fileName = System.IO.Path.GetRandomFileName();
+
+                sniffer.SaveCapture(fileName, saveCaptureDialog.DispalyFilterString);
+                AccountManager.MoveFileToStorage(username, saveCaptureDialog.PrivateFileName, fileName);
+
+                if (isCaptureUnsaved)
+                {
+                    isCaptureUnsaved = false;
+                }
+            }
+        }
+
+        private void OpenFSFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var openCaptureDialog = new OpenCaptureDialog();
+
+            var result = openCaptureDialog.ShowDialog();
+
+            if (result == DialogResult.OK)
+            {
+                if (isCapturing)
+                {
+                    if (isLiveCapture)
+                        StopLiveCapture();
+                    else
+                        StopOfflineCapture();
+                }
+
+                isLiveCapture = false;
+
+                isPrivateFile = false;
+
+                fileName = openCaptureDialog.FileName;
+                captureFilterString = openCaptureDialog.CaptureFilterString;
+                numberOfPackets = openCaptureDialog.NumberOfPackets;
+
+                if (statisticsForm != null)
+                {
+                    statisticsForm.Clear();
+                }
+
+                SwitchToCapturePanel();
+                AdjustCapturePanel();
+
+                StartOfflineCapture();
+            }
+        }
+
+        private void OpenPrivateFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var openCaptureDialog = new OpenPrivateCaptureDialog()
+            {
+                Username = username
+            };
+
+            var result = openCaptureDialog.ShowDialog();
+
+            if (result == DialogResult.OK)
+            {
+                if (isCapturing)
+                {
+                    if (isLiveCapture)
+                        StopLiveCapture();
+                    else
+                        StopOfflineCapture();
+                }
+
+                isLiveCapture = false;
+
+                isPrivateFile = true;
+                privateFileName = openCaptureDialog.FileName;
+
+                fileName = AccountManager.CreateTempFile(username, privateFileName);
+
+                captureFilterString = openCaptureDialog.CaptureFilterString;
+                numberOfPackets = openCaptureDialog.NumberOfPackets;
+
+                if (statisticsForm != null)
+                {
+                    statisticsForm.Clear();
+                }
+
+                SwitchToCapturePanel();
+                AdjustCapturePanel();
+
+                StartOfflineCapture();
+            }
         }
     }
 }
