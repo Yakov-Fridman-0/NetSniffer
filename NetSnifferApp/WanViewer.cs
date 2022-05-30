@@ -45,6 +45,8 @@ namespace NetSnifferApp
 
         WanHostControl selectedHostControl = null;
 
+        readonly Dictionary<WanHostControl, Point> prevLocations = new();
+
         public WanViewer()
         {
             InitializeComponent();
@@ -108,6 +110,9 @@ namespace NetSnifferApp
 
         public void AddHost(WanHost host)
         {
+            if (hostControls.ContainsKey(host))
+                return;
+
             var control = new WanHostControl
             {
                 IsLive = IsLive,
@@ -154,33 +159,79 @@ namespace NetSnifferApp
         public void ShowNewTracert()
         {
             if (pendingTracerts.TryDequeue(out WanHost host))
-                ShowTracert(hostControls[host]);
+                ShowTracertSimple(hostControls[host]);
+                //ShowTracert(hostControls[host]);
+        }
+
+        void ShowTracertSimple(WanHostControl senderControl)
+        {
+            foreach (var (hostControl, prevLocation) in prevLocations)
+            {
+                hostControl.Location = prevLocation;
+                hostControl.ReturnToBaseColors();
+            }
+
+            if (tracertControl != null)
+                tracertControl.ReturnToBaseColors();
+            tracertControl = senderControl;
+
+            prevLocations.Clear();
+
+            List<WanHost> hops = PacketAnalyzer.Analyzer.topologyBuilder.wanMapBuilder.CompletedTracerts[senderControl.Host];
+
+            if (hops.Count(hop => hop == null) == hops.Count)
+            {
+                return;
+            }
+
+            var copy = new List<WanHost>(hops);
+            copy.RemoveAt(0);
+
+            //var router = copy[0];
+            //var routerControl = hostControls[router];
+
+            //var angle = Math.Atan2(routerControl.Location.Y - centerY, routerControl.Location.X - centerX);
+
+            //var prevLocation = new Point((int)(routerControl.Location.X - radious * Math.Cos(angle)), (int)(routerControl.Location.Y - radious * Math.Sin(angle)));
+
+            BuildChainFromTracertSimple(copy);
         }
 
         void ShowTracert(WanHostControl senderControl)
         {
             List<WanHost> hops = PacketAnalyzer.Analyzer.topologyBuilder.wanMapBuilder.CompletedTracerts[senderControl.Host];
 
-            var index = hops.FindIndex(host => !orderedHosts.Contains(host));
-
-            if (index == -1)
+            if (hops.Count(hop => hop == null) == hops.Count)
+            {
                 return;
+            }
+
+            var copy = new List<WanHost>(hops);
+            copy.RemoveAt(0);
+
+            //var index = hops.FindIndex(host => !orderedHosts.Contains(host));
+            var index = hops.FindLastIndex(copy => orderedHosts.Contains(copy));
 
             var prevIndex = index - 1;
 
-            if (prevIndex == -1)
+            if (index == -1)
             {
-                var copy = new List<WanHost>(hops);
-                copy.RemoveAt(0);
-
                 var host = copy[0];
-                var control = hostControls[host];
+
+                WanHostControl control;
+                
+                if (!hostControls.ContainsKey(host))
+                {
+                    AddHost(host);
+                }
+
+                control = hostControls[host];
 
                 var angle = Math.Atan2(control.Location.Y - centerY, control.Location.X - centerX);
 
                 var prevLocation = new Point((int)(control.Location.X - radious * Math.Cos(angle)), (int)(control.Location.Y - radious * Math.Sin(angle)));
 
-                BuildChainFromTracert(hops, control, angle, prevLocation, null);
+                BuildChainFromTracert(copy, control, angle, prevLocation, null);
             }
             else
             {
@@ -479,12 +530,49 @@ namespace NetSnifferApp
                 var sign = (completeIndex % 2 - 0.5) * 2;
                 var newAngle = baseAngle + sign * (angleDiff * ((completeIndex + 1) / 2));
 
-                var nextControl = hostControls[nextHost];
+                var nextControl = hostControls.GetValueOrDefault(nextHost, null);
+
+                if (nextControl == null)
+                {
+                    AddHost(nextHost);
+                    nextControl = hostControls[nextHost];
+                }
+
 
                 if (!angleOfHostControl.ContainsKey(nextControl))
                     angleOfHostControl.Add(nextControl, newAngle);
 
                 BuildChainFromTracert(tracert, nextControl, newAngle, newLocation, host);
+            }
+        }
+
+        WanHostControl tracertControl = null;
+
+        void BuildChainFromTracertSimple(List<WanHost> tracert)
+        {
+            var router = tracert[0];
+            var routerControl = hostControls[router];
+
+            var angle = Math.Atan2(routerControl.Location.Y - centerY, routerControl.Location.X - centerX);
+
+            Point newLocation = routerControl.Location;
+
+            foreach (var host in tracert.Skip(1))
+            {
+                var nextLocationX = (int)(newLocation.X + radious * Math.Cos(angle));
+                var nextLocationY = (int)(newLocation.Y + radious * Math.Sin(angle));
+
+                newLocation = new Point(nextLocationX, nextLocationY);
+
+                if (host != null)
+                {
+                    var control = hostControls[host];
+                    
+                    prevLocations[control] = control.Location;
+                    control.ReturnToSpeicalColors();
+
+                    control.Location = newLocation;
+                }
             }
         }
 

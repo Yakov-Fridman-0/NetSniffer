@@ -55,10 +55,22 @@ namespace NetSnifferLib
             options.Ttl = ttl;
 
             // Create a buffer of 32 bytes of data to be transmitted.
-            string data = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-            byte[] buffer = Encoding.ASCII.GetBytes(data);
+            //string data = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+            //byte[] buffer = Encoding.ASCII.GetBytes(data);
+
+            byte[] buffer = new byte[64];
             int timeout = 1000;
-            PingReply reply = pingSender.Send(destination, timeout, buffer, options);
+
+            PingReply reply = null;
+            try
+            {
+                reply = pingSender.Send(destination, timeout, buffer, options);
+            }
+            catch (System.Net.NetworkInformation.PingException e)
+            {
+                reply = null;
+            }
+
             return reply;
         }
     }

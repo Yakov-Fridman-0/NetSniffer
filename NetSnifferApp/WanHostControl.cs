@@ -170,6 +170,33 @@ namespace NetSnifferApp
             Invalidate();
         }
 
+        public void ReturnToBaseColors()
+        {
+            regularColor = Color.FromKnownColor(KnownColor.Control);
+            selectedColor = Color.Yellow;
+
+            BackColor = (IsSelected) ? selectedColor : regularColor;
+        }
+
+        public void ReturnToSpeicalColors()
+        {
+            if (IsRouter)
+            {
+                if (IsLanRouter)
+                {
+                    regularColor = Color.DarkBlue;
+                    selectedColor = Color.DarkOrange;
+                }
+                else
+                {
+                    regularColor = Color.RoyalBlue;
+                    selectedColor = Color.Orange;
+                }
+            }
+
+            BackColor = (IsSelected) ? selectedColor : regularColor;
+        }
+
         private void TracertToolStripMenuItem_Click(object sender, EventArgs e)
         {
             regularColor = Color.DeepSkyBlue;

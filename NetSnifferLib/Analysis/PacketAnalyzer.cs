@@ -223,21 +223,28 @@ namespace NetSnifferLib.Analysis
             {
                 PingReply reply = ((LiveSniffer)Sniffer).Ping(destination, (byte)hops);
 
-                switch (reply.Status)
+                if (reply == null)
                 {
-                    case IPStatus.TimedOut:
-                        results.AddHop(null, hops);
-                        break;
-                    case IPStatus.TtlExpired:
-                        results.AddHop(reply.Address, hops);
-                        break;
-                    case IPStatus.Success:
-                        results.IsComplete = true;
-                        results.Successfull = true;
+                    results.AddHop(null, hops);
+                }
+                else
+                {
+                    switch (reply.Status)
+                    {
+                        case IPStatus.TimedOut:
+                            results.AddHop(null, hops);
+                            break;
+                        case IPStatus.TtlExpired:
+                            results.AddHop(reply.Address, hops);
+                            break;
+                        case IPStatus.Success:
+                            results.IsComplete = true;
+                            results.Successfull = true;
 
-                        topologyBuilder.IntegrateTracertResults(results);
-                        TracertCompleted.Invoke(this, destination);
-                        return;
+                            topologyBuilder.IntegrateTracertResults(results);
+                            TracertCompleted.Invoke(this, destination);
+                            return;
+                    }
                 }
             }
 
