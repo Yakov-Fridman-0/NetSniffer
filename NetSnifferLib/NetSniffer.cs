@@ -58,19 +58,24 @@ namespace NetSnifferLib
 
             eventRaiser = new ActionBlock<Packet>(packet =>
             {
-                allPackets.Add(packet);
-
-                packetsNum++;
-
-                var packetData = PacketData.Create(packet);
-                PacketReceived.Invoke(this, packetData);
-
-                if (packetsNum == MaxPacketNumber)
-                    PacketLimitReached.Invoke(this, EventArgs.Empty);
-
-                packetData.AnalyzeAsync();
+                OnPacketReceivedCore(packet);
             }
             );
+        }
+
+        void OnPacketReceivedCore(Packet packet)
+        {
+            allPackets.Add(packet);
+
+            packetsNum++;
+
+            var packetData = PacketData.Create(packet);
+            PacketReceived.Invoke(this, packetData);
+
+            if (packetsNum == MaxPacketNumber)
+                PacketLimitReached.Invoke(this, EventArgs.Empty);
+
+            packetData.AnalyzeAsync();
         }
 
         public void Start()

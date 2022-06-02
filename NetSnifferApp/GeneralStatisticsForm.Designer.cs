@@ -404,7 +404,7 @@ namespace NetSnifferApp
             this.freezeButtom.Name = "freezeButtom";
             this.freezeButtom.Size = new System.Drawing.Size(86, 31);
             this.freezeButtom.TabIndex = 29;
-            this.freezeButtom.Text = "Zreeze";
+            this.freezeButtom.Text = "Freeze";
             this.freezeButtom.UseVisualStyleBackColor = true;
             this.freezeButtom.Click += new System.EventHandler(this.FreezeButtom_Click);
             // 

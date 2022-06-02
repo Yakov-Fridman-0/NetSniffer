@@ -38,7 +38,7 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
   </component>
-  <component name="RunManager" selected="Python.syn_flood">
+  <component name="RunManager" selected="Python.man_in_the_middle">
     <configuration name="man_in_the_middle" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="PythonAttacks" />
       <option name="INTERPRETER_OPTIONS" value="" />
